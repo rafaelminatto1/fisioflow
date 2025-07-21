@@ -1,0 +1,66 @@
+version: 2
+updates:
+  # Atualizações do npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "rafaelminatto1"
+    assignees:
+      - "rafaelminatto1"
+    commit-message:
+      prefix: "⬆️ deps:"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "npm"
+    # Agrupar atualizações menores
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier*"
+          - "jest*"
+          - "@testing-library/*"
+          - "vite*"
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "@react*"
+      testing-tools:
+        patterns:
+          - "jest*"
+          - "@testing-library/*"
+          - "@jest/*"
+    # Ignorar atualizações específicas se necessário
+    ignore:
+      # Exemplo: ignorar major updates do React por enquanto
+      # - dependency-name: "react"
+      #   update-types: ["version-update:semver-major"]
+      
+  # Atualizações do GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "rafaelminatto1"
+    assignees:
+      - "rafaelminatto1"
+    commit-message:
+      prefix: "⬆️ actions:"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"

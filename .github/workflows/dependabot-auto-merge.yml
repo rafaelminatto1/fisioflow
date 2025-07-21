@@ -1,0 +1,47 @@
+name: 🤖 Dependabot Auto-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  dependabot:
+    name: 🔄 Auto-merge Dependabot PRs
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: 📦 Install dependencies
+      run: npm ci
+    
+    - name: 🧪 Run tests
+      run: npm test
+    
+    - name: 🔍 Run linting
+      run: npm run lint
+    
+    - name: 🏗️ Build application
+      run: npm run build
+    
+    - name: ✅ Auto-approve Dependabot PR
+      if: success()
+      uses: hmarr/auto-approve-action@v3
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🔀 Auto-merge Dependabot PR
+      if: success()
+      uses: pascalgn/merge-action@v0.15.6
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        merge_method: squash
+        merge_commit_message: "🤖 Auto-merge dependabot PR: {pull_request_title}"

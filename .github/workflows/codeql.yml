@@ -1,0 +1,50 @@
+name: 🔍 CodeQL Security Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * 1'  # Segunda-feira às 6h UTC (3h BRT)
+
+jobs:
+  analyze:
+    name: 🛡️ Analyze Code
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
+        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🔍 Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+        # Se você quiser especificar queries customizadas, descomente a linha abaixo
+        # queries: security-extended,security-and-quality
+
+    # Autobuild tenta construir qualquer código compilado (C/C++, C#, Go, ou Java).
+    # Se este passo falhar, remova-o e execute os comandos de build manualmente
+    - name: 🏗️ Autobuild
+      uses: github/codeql-action/autobuild@v2
+
+    # ℹ️ Comandos de build manuais podem ser executados aqui se necessário:
+    # - run: |
+    #     echo "Run, Build Application using script"
+    #     ./location_of_script_within_repo/buildscript.sh
+
+    - name: 📊 Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:${{matrix.language}}"
