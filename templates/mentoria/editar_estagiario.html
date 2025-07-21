@@ -1,0 +1,1365 @@
+{% extends "base.html" %} {% block title %}{{ title }}{% endblock %} {% block
+extra_css %}
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  rel="stylesheet"
+/>
+<style>
+  .edit-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .edit-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: rotate(45deg);
+  }
+
+  .form-section {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .form-section:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .section-title {
+    color: #495057;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .section-title i {
+    color: #667eea;
+    margin-right: 0.75rem;
+    font-size: 1.2rem;
+  }
+
+  .section-body {
+    padding: 2rem;
+  }
+
+  .current-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #e9ecef;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .current-photo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .current-photo-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 3rem;
+    border: 4px solid #e9ecef;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .current-photo-placeholder:hover {
+    transform: scale(1.05);
+  }
+
+  .photo-upload-area {
+    border: 3px dashed #dee2e6;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+
+  .photo-upload-area:hover {
+    border-color: #667eea;
+    background: #f0f7ff;
+    transform: translateY(-2px);
+  }
+
+  .photo-upload-area.dragover {
+    border-color: #667eea;
+    background: #e3f2fd;
+    transform: scale(1.02);
+  }
+
+  .form-floating label {
+    color: #6c757d;
+    font-weight: 500;
+  }
+
+  .form-floating .form-control:focus ~ label,
+  .form-floating .form-control:not(:placeholder-shown) ~ label {
+    color: #667eea;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  }
+
+  .btn-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+  }
+
+  .btn-outline-gradient {
+    border: 2px solid #667eea;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    color: #667eea;
+    background: transparent;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-gradient:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    border-color: transparent;
+  }
+
+  .btn-danger-gradient {
+    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .btn-danger-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+    color: white;
+  }
+
+  .required-field::after {
+    content: ' *';
+    color: #dc3545;
+    font-weight: bold;
+  }
+
+  .field-hint {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+  }
+
+  .input-group-text {
+    background: #f8f9fa;
+    border-color: #ced4da;
+    color: #6c757d;
+  }
+
+  .save-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-radius: 25px;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    transform: translateX(300px);
+    transition: all 0.3s ease;
+  }
+
+  .save-indicator.show {
+    transform: translateX(0);
+  }
+
+  .progress-indicator {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e9ecef;
+  }
+
+  .progress-indicator .progress {
+    height: 8px;
+    border-radius: 10px;
+    background: #e9ecef;
+  }
+
+  .progress-indicator .progress-bar {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+  }
+
+  .floating-save {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .floating-save:hover {
+    transform: scale(1.1);
+    color: white;
+    box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .photo-preview-new {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #28a745;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    margin-top: 1rem;
+  }
+
+  .change-summary {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 1px solid #ffeaa7;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: none;
+  }
+
+  .change-summary.show {
+    display: block;
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .danger-zone {
+    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    border: 2px solid #feb2b2;
+    border-radius: 15px;
+    padding: 1.5rem;
+  }
+
+  .danger-zone h6 {
+    color: #c53030;
+    font-weight: 700;
+  }
+
+  @media (max-width: 768px) {
+    .edit-header {
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .section-body {
+      padding: 1.5rem;
+    }
+
+    .floating-save {
+      width: 50px;
+      height: 50px;
+      font-size: 1.2rem;
+      bottom: 20px;
+      right: 20px;
+    }
+
+    .save-indicator {
+      right: 10px;
+      top: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid fade-in py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a
+          href="{{ url_for('mentoria_estagiarios.listar_estagiarios') }}"
+          class="text-decoration-none"
+        >
+          <i class="fas fa-user-graduate me-1"></i>Estagiários
+        </a>
+      </li>
+      <li class="breadcrumb-item">
+        <a
+          href="{{ url_for('mentoria_estagiarios.perfil_estagiario', id=intern.id) }}"
+          class="text-decoration-none"
+        >
+          {{ intern.name }}
+        </a>
+      </li>
+      <li class="breadcrumb-item active">Editar</li>
+    </ol>
+  </nav>
+
+  <!-- Header -->
+  <div class="edit-header">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1 class="h2 font-weight-bold mb-2">
+          <i class="fas fa-edit me-3"></i>
+          Editar Estagiário
+        </h1>
+        <p class="mb-2 opacity-75">
+          {{ intern.name }} - {{ intern.university }}
+        </p>
+        <p class="mb-0 opacity-75">
+          Atualize as informações e dados do estagiário
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end mt-md-0 mt-3">
+        <div
+          class="d-flex flex-column flex-md-row justify-content-md-end gap-2"
+        >
+          <a
+            href="{{ url_for('mentoria_estagiarios.perfil_estagiario', id=intern.id) }}"
+            class="btn btn-outline-light"
+          >
+            <i class="fas fa-arrow-left me-2"></i>Voltar ao Perfil
+          </a>
+          <button class="btn btn-light" onclick="previewChanges()">
+            <i class="fas fa-eye me-2"></i>Visualizar Mudanças
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicador de progresso de edição -->
+  <div class="progress-indicator">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <small class="text-muted font-weight-bold">Progresso da Edição</small>
+      <small class="text-muted" id="edit-progress-text">0% editado</small>
+    </div>
+    <div class="progress">
+      <div class="progress-bar" id="edit-progress-bar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <!-- Resumo de mudanças -->
+  <div class="change-summary" id="change-summary">
+    <h6 class="text-warning">
+      <i class="fas fa-exclamation-triangle me-2"></i>Mudanças Pendentes
+    </h6>
+    <div id="changes-list"></div>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" novalidate id="editForm">
+    {{ form.hidden_tag() }}
+
+    <!-- Seção 1: Foto e Dados Básicos -->
+    <div class="form-section">
+      <div class="section-header">
+        <h4 class="section-title">
+          <i class="fas fa-user"></i>
+          Foto e Dados Pessoais
+        </h4>
+      </div>
+      <div class="section-body">
+        <!-- Foto atual e upload -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h6 class="text-muted mb-3">Foto Atual</h6>
+            <div class="text-center">
+              {% if intern.photo_url %}
+              <img
+                src="{{ url_for('static', filename='uploads/estagiarios/' + intern.photo_url) }}"
+                alt="{{ intern.name }}"
+                class="current-photo"
+                id="current-photo"
+              />
+              {% else %}
+              <div class="current-photo-placeholder" id="current-photo">
+                {{ intern.name[0].upper() }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted mb-3">Nova Foto</h6>
+            <div
+              class="photo-upload-area"
+              onclick="document.getElementById('photo').click()"
+            >
+              <div id="photo-preview-container">
+                <i class="fas fa-camera fa-2x text-muted mb-2"></i>
+                <h6 class="text-muted">Clique para alterar a foto</h6>
+                <small class="text-muted">ou arraste uma imagem aqui</small>
+              </div>
+              {{ form.photo(style="display: none;", accept="image/*") }}
+            </div>
+            {% if form.photo.errors %}
+            <div class="text-danger small mt-2">
+              {% for error in form.photo.errors %}
+              <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+            {% endif %}
+            <div class="field-hint">
+              Formatos aceitos: PNG, JPG, JPEG, GIF (máx. 5MB)
+            </div>
+          </div>
+        </div>
+
+        <!-- Nome e Email -->
+        <div class="row mb-3">
+          <div class="col-md-8">
+            <div class="form-floating">
+              {{ form.name(class="form-control" + (" is-invalid" if
+              form.name.errors else ""), placeholder="Nome completo",
+              **{"data-original": intern.name}) }} {{
+              form.name.label(class="required-field") }} {% if form.name.errors
+              %}
+              <div class="invalid-feedback">
+                {% for error in form.name.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-floating">
+              {{ form.email(class="form-control" + (" is-invalid" if
+              form.email.errors else ""), placeholder="email@exemplo.com",
+              **{"data-original": intern.email}) }} {{
+              form.email.label(class="required-field") }} {% if
+              form.email.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.email.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Telefone e CPF -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.phone(class="form-control" + (" is-invalid" if
+              form.phone.errors else ""), placeholder="(11) 99999-9999",
+              **{"data-original": intern.phone or ""}) }} {{ form.phone.label()
+              }} {% if form.phone.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.phone.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.cpf(class="form-control" + (" is-invalid" if
+              form.cpf.errors else ""), placeholder="000.000.000-00",
+              **{"data-original": intern.cpf or ""}) }} {{ form.cpf.label() }}
+              {% if form.cpf.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.cpf.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Data de nascimento -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.birth_date(class="form-control" + (" is-invalid" if
+              form.birth_date.errors else ""), **{"data-original":
+              intern.birth_date.isoformat() if intern.birth_date else ""}) }} {{
+              form.birth_date.label() }} {% if form.birth_date.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.birth_date.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção 2: Dados Acadêmicos -->
+    <div class="form-section">
+      <div class="section-header">
+        <h4 class="section-title">
+          <i class="fas fa-graduation-cap"></i>
+          Dados Acadêmicos
+        </h4>
+      </div>
+      <div class="section-body">
+        <!-- Matrícula e Semestre -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.student_id(class="form-control" + (" is-invalid" if
+              form.student_id.errors else ""), placeholder="2023001234",
+              **{"data-original": intern.student_id}) }} {{
+              form.student_id.label(class="required-field") }} {% if
+              form.student_id.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.student_id.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.semester(class="form-control" + (" is-invalid" if
+              form.semester.errors else ""), placeholder="8", min="1", max="20",
+              **{"data-original": intern.semester}) }} {{
+              form.semester.label(class="required-field") }} {% if
+              form.semester.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.semester.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Universidade e Curso -->
+        <div class="row mb-3">
+          <div class="col-md-8">
+            <div class="form-floating">
+              {{ form.university(class="form-control" + (" is-invalid" if
+              form.university.errors else ""), placeholder="Universidade de São
+              Paulo", **{"data-original": intern.university}) }} {{
+              form.university.label(class="required-field") }} {% if
+              form.university.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.university.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-floating">
+              {{ form.course(class="form-control" + (" is-invalid" if
+              form.course.errors else ""), placeholder="Fisioterapia",
+              **{"data-original": intern.course or "Fisioterapia"}) }} {{
+              form.course.label(class="required-field") }} {% if
+              form.course.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.course.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Previsão de formatura -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.expected_graduation(class="form-control" + (" is-invalid"
+              if form.expected_graduation.errors else ""), **{"data-original":
+              intern.expected_graduation.isoformat() if
+              intern.expected_graduation else ""}) }} {{
+              form.expected_graduation.label() }} {% if
+              form.expected_graduation.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.expected_graduation.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção 3: Dados do Estágio -->
+    <div class="form-section">
+      <div class="section-header">
+        <h4 class="section-title">
+          <i class="fas fa-briefcase"></i>
+          Dados do Estágio
+        </h4>
+      </div>
+      <div class="section-body">
+        <!-- Supervisor -->
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="form-floating">
+              {{ form.supervisor_id(class="form-select" + (" is-invalid" if
+              form.supervisor_id.errors else ""), **{"data-original":
+              intern.supervisor_id or ""}) }} {{ form.supervisor_id.label() }}
+              {% if form.supervisor_id.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.supervisor_id.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Datas do estágio -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.start_date(class="form-control" + (" is-invalid" if
+              form.start_date.errors else ""), **{"data-original":
+              intern.start_date.isoformat() if intern.start_date else ""}) }} {{
+              form.start_date.label(class="required-field") }} {% if
+              form.start_date.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.start_date.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.end_date(class="form-control" + (" is-invalid" if
+              form.end_date.errors else ""), **{"data-original":
+              intern.end_date.isoformat() if intern.end_date else ""}) }} {{
+              form.end_date.label() }} {% if form.end_date.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.end_date.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.status(class="form-select" + (" is-invalid" if
+              form.status.errors else ""), **{"data-original":
+              intern.status.value}) }} {{
+              form.status.label(class="required-field") }} {% if
+              form.status.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.status.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção 4: Informações Adicionais -->
+    <div class="form-section">
+      <div class="section-header">
+        <h4 class="section-title">
+          <i class="fas fa-info-circle"></i>
+          Informações Adicionais
+        </h4>
+      </div>
+      <div class="section-body">
+        <!-- Biografia -->
+        <div class="row mb-3">
+          <div class="col-12">
+            <div class="form-floating">
+              {{ form.bio(class="form-control" + (" is-invalid" if
+              form.bio.errors else ""), style="height: 120px",
+              placeholder="Biografia do estagiário...", **{"data-original":
+              intern.bio or ""}) }} {{ form.bio.label() }} {% if form.bio.errors
+              %}
+              <div class="invalid-feedback">
+                {% for error in form.bio.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Habilidades e Objetivos -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.skills(class="form-control" + (" is-invalid" if
+              form.skills.errors else ""), style="height: 100px",
+              placeholder="Habilidades...", **{"data-original": intern.skills or
+              ""}) }} {{ form.skills.label() }} {% if form.skills.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.skills.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-floating">
+              {{ form.goals(class="form-control" + (" is-invalid" if
+              form.goals.errors else ""), style="height: 100px",
+              placeholder="Objetivos...", **{"data-original": intern.goals or
+              ""}) }} {{ form.goals.label() }} {% if form.goals.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.goals.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zona de perigo -->
+    <div class="form-section">
+      <div class="section-header">
+        <h4 class="section-title">
+          <i class="fas fa-exclamation-triangle"></i>
+          Zona de Perigo
+        </h4>
+      </div>
+      <div class="section-body">
+        <div class="danger-zone">
+          <h6><i class="fas fa-warning me-2"></i>Ações Irreversíveis</h6>
+          <p class="mb-3">
+            As ações abaixo são permanentes e não podem ser desfeitas.
+            Certifique-se de que realmente deseja prosseguir.
+          </p>
+          <button
+            type="button"
+            class="btn btn-danger-gradient"
+            onclick="confirmDeactivate()"
+          >
+            <i class="fas fa-user-times me-2"></i>
+            Desativar Estagiário
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botões de ação -->
+    <div class="row">
+      <div class="col-12">
+        <div
+          class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3"
+        >
+          <div class="d-flex gap-2">
+            <a
+              href="{{ url_for('mentoria_estagiarios.perfil_estagiario', id=intern.id) }}"
+              class="btn btn-outline-gradient"
+            >
+              <i class="fas fa-arrow-left me-2"></i>
+              Cancelar
+            </a>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="saveDraft()"
+            >
+              <i class="fas fa-save me-2"></i>
+              Salvar Rascunho
+            </button>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="resetForm()"
+            >
+              <i class="fas fa-undo me-2"></i>
+              Restaurar Original
+            </button>
+            <button type="submit" class="btn btn-gradient">
+              <i class="fas fa-save me-2"></i>
+              Salvar Alterações
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Indicador de salvamento -->
+<div class="save-indicator" id="save-indicator">
+  <i class="fas fa-check me-2"></i>
+  Alterações salvas automaticamente
+</div>
+
+<!-- Botão flutuante para salvar -->
+<button
+  type="button"
+  class="floating-save"
+  id="floating-save"
+  onclick="document.getElementById('editForm').submit()"
+>
+  <i class="fas fa-save"></i>
+</button>
+
+<!-- Modal de confirmação -->
+<div class="modal fade" id="deactivateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          Confirmar Desativação
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Tem certeza que deseja desativar o estagiário
+          <strong>{{ intern.name }}</strong>?
+        </p>
+        <div class="alert alert-warning">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Esta ação irá:</strong>
+          <ul class="mb-0 mt-2">
+            <li>Alterar o status para "Inativo"</li>
+            <li>Manter todos os dados históricos</li>
+            <li>Remover das listas de estagiários ativos</li>
+            <li>Poder ser revertida posteriormente</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <form
+          method="POST"
+          action="{{ url_for('mentoria_estagiarios.deletar_estagiario', id=intern.id) }}"
+          class="d-inline"
+        >
+          <button type="submit" class="btn btn-danger-gradient">
+            <i class="fas fa-user-times me-2"></i>
+            Confirmar Desativação
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  let originalData = {};
+  let hasChanges = false;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('editForm');
+    const progressBar = document.getElementById('edit-progress-bar');
+    const progressText = document.getElementById('edit-progress-text');
+    const floatingSave = document.getElementById('floating-save');
+    const changeSummary = document.getElementById('change-summary');
+
+    // Capturar dados originais
+    captureOriginalData();
+
+    // Configurar event listeners
+    setupEventListeners();
+
+    // Configurar upload de foto
+    setupPhotoUpload();
+
+    // Carregar rascunho salvo se existir
+    loadDraft();
+  });
+
+  function captureOriginalData() {
+    const form = document.getElementById('editForm');
+    const formData = new FormData(form);
+
+    // Capturar dados dos atributos data-original
+    document.querySelectorAll('[data-original]').forEach((field) => {
+      originalData[field.name] = field.getAttribute('data-original');
+    });
+
+    // Capturar valores dos selects
+    document.querySelectorAll('select').forEach((select) => {
+      originalData[select.name] = select.value;
+    });
+  }
+
+  function setupEventListeners() {
+    const formFields = document.querySelectorAll('input, select, textarea');
+
+    formFields.forEach((field) => {
+      field.addEventListener('input', handleFieldChange);
+      field.addEventListener('change', handleFieldChange);
+      field.addEventListener('blur', validateField);
+    });
+
+    // Auto-save a cada 30 segundos
+    setInterval(autoSave, 30000);
+  }
+
+  function handleFieldChange(e) {
+    const field = e.target;
+
+    // Verificar se houve mudança
+    checkForChanges();
+
+    // Atualizar progresso
+    updateProgress();
+
+    // Mostrar indicador de mudanças
+    showChanges();
+
+    // Validar campo
+    validateField(e);
+  }
+
+  function checkForChanges() {
+    hasChanges = false;
+    const changedFields = [];
+
+    document.querySelectorAll('input, select, textarea').forEach((field) => {
+      const originalValue = originalData[field.name] || '';
+      const currentValue = field.value || '';
+
+      if (originalValue !== currentValue) {
+        hasChanges = true;
+        changedFields.push({
+          name: field.name,
+          label: field.labels?.[0]?.textContent || field.name,
+          original: originalValue,
+          current: currentValue,
+        });
+      }
+    });
+
+    // Atualizar resumo de mudanças
+    updateChangesSummary(changedFields);
+
+    // Mostrar/esconder botão flutuante
+    const floatingSave = document.getElementById('floating-save');
+    if (hasChanges) {
+      floatingSave.style.display = 'flex';
+    } else {
+      floatingSave.style.display = 'none';
+    }
+  }
+
+  function updateChangesSummary(changedFields) {
+    const changeSummary = document.getElementById('change-summary');
+    const changesList = document.getElementById('changes-list');
+
+    if (changedFields.length > 0) {
+      let changesHtml = '<ul class="mb-0">';
+      changedFields.forEach((field) => {
+        changesHtml += `<li><strong>${field.label}:</strong> "${field.original}" → "${field.current}"</li>`;
+      });
+      changesHtml += '</ul>';
+
+      changesList.innerHTML = changesHtml;
+      changeSummary.classList.add('show');
+    } else {
+      changeSummary.classList.remove('show');
+    }
+  }
+
+  function updateProgress() {
+    const totalFields = document.querySelectorAll(
+      'input, select, textarea'
+    ).length;
+    let filledFields = 0;
+
+    document.querySelectorAll('input, select, textarea').forEach((field) => {
+      if (field.value.trim() !== '') {
+        filledFields++;
+      }
+    });
+
+    const progress = Math.round((filledFields / totalFields) * 100);
+    const progressBar = document.getElementById('edit-progress-bar');
+    const progressText = document.getElementById('edit-progress-text');
+
+    progressBar.style.width = progress + '%';
+    progressText.textContent = progress + '% preenchido';
+  }
+
+  function validateField(e) {
+    const field = e.target;
+    const value = field.value.trim();
+
+    // Remover classes de validação anteriores
+    field.classList.remove('is-valid', 'is-invalid');
+
+    // Validações específicas
+    if (field.name === 'email' && value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailRegex.test(value)) {
+        field.classList.add('is-valid');
+      } else {
+        field.classList.add('is-invalid');
+      }
+    } else if (field.name === 'cpf' && value) {
+      const cpfClean = value.replace(/\D/g, '');
+      if (cpfClean.length === 11) {
+        field.classList.add('is-valid');
+      }
+    } else if (field.hasAttribute('required')) {
+      if (value) {
+        field.classList.add('is-valid');
+      } else {
+        field.classList.add('is-invalid');
+      }
+    } else if (value) {
+      field.classList.add('is-valid');
+    }
+  }
+
+  function setupPhotoUpload() {
+    const photoUploadArea = document.querySelector('.photo-upload-area');
+    const photoInput = document.getElementById('photo');
+    const photoPreviewContainer = document.getElementById(
+      'photo-preview-container'
+    );
+
+    photoUploadArea.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      photoUploadArea.classList.add('dragover');
+    });
+
+    photoUploadArea.addEventListener('dragleave', function (e) {
+      e.preventDefault();
+      photoUploadArea.classList.remove('dragover');
+    });
+
+    photoUploadArea.addEventListener('drop', function (e) {
+      e.preventDefault();
+      photoUploadArea.classList.remove('dragover');
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        photoInput.files = files;
+        previewPhoto(files[0]);
+      }
+    });
+
+    photoInput.addEventListener('change', function (e) {
+      if (e.target.files.length > 0) {
+        previewPhoto(e.target.files[0]);
+      }
+    });
+  }
+
+  function previewPhoto(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const photoPreviewContainer = document.getElementById(
+        'photo-preview-container'
+      );
+      photoPreviewContainer.innerHTML = `
+            <img src="${e.target.result}" alt="Nova foto" class="photo-preview-new">
+            <div class="mt-2">
+                <small class="text-success"><i class="fas fa-check me-1"></i>Nova foto selecionada</small>
+            </div>
+        `;
+    };
+    reader.readAsDataURL(file);
+
+    // Marcar como mudança
+    handleFieldChange({ target: { name: 'photo', value: 'changed' } });
+  }
+
+  function saveDraft() {
+    const formData = new FormData(document.getElementById('editForm'));
+    const draftData = {};
+
+    for (let [key, value] of formData.entries()) {
+      draftData[key] = value;
+    }
+
+    localStorage.setItem(
+      'intern_edit_draft_{{ intern.id }}',
+      JSON.stringify(draftData)
+    );
+
+    // Mostrar indicador de salvamento
+    const saveIndicator = document.getElementById('save-indicator');
+    saveIndicator.classList.add('show');
+    setTimeout(() => {
+      saveIndicator.classList.remove('show');
+    }, 3000);
+  }
+
+  function loadDraft() {
+    const savedDraft = localStorage.getItem(
+      'intern_edit_draft_{{ intern.id }}'
+    );
+    if (
+      savedDraft &&
+      confirm('Foi encontrado um rascunho de edição. Deseja carregá-lo?')
+    ) {
+      const draftData = JSON.parse(savedDraft);
+
+      Object.keys(draftData).forEach((key) => {
+        const field = document.querySelector(`[name="${key}"]`);
+        if (field && draftData[key]) {
+          field.value = draftData[key];
+        }
+      });
+
+      // Triggerar eventos para atualizar validações
+      document.querySelectorAll('input, select, textarea').forEach((field) => {
+        field.dispatchEvent(new Event('input'));
+      });
+    }
+  }
+
+  function autoSave() {
+    if (hasChanges) {
+      saveDraft();
+    }
+  }
+
+  function resetForm() {
+    if (
+      confirm(
+        'Tem certeza que deseja restaurar todos os campos para os valores originais?'
+      )
+    ) {
+      document.querySelectorAll('input, select, textarea').forEach((field) => {
+        const originalValue = originalData[field.name] || '';
+        field.value = originalValue;
+      });
+
+      // Limpar preview de foto
+      const photoPreviewContainer = document.getElementById(
+        'photo-preview-container'
+      );
+      photoPreviewContainer.innerHTML = `
+            <i class="fas fa-camera fa-2x text-muted mb-2"></i>
+            <h6 class="text-muted">Clique para alterar a foto</h6>
+            <small class="text-muted">ou arraste uma imagem aqui</small>
+        `;
+
+      // Triggerar eventos
+      document.querySelectorAll('input, select, textarea').forEach((field) => {
+        field.dispatchEvent(new Event('input'));
+      });
+
+      // Limpar rascunho
+      localStorage.removeItem('intern_edit_draft_{{ intern.id }}');
+    }
+  }
+
+  function previewChanges() {
+    // Implementar modal de preview das mudanças
+    alert('Funcionalidade de preview será implementada');
+  }
+
+  function confirmDeactivate() {
+    const modal = new bootstrap.Modal(
+      document.getElementById('deactivateModal')
+    );
+    modal.show();
+  }
+
+  function showChanges() {
+    // Implementar notificação visual de mudanças
+  }
+
+  // Máscaras de input
+  document.addEventListener('DOMContentLoaded', function () {
+    // Máscara para telefone
+    const phoneInput = document.querySelector('[name="phone"]');
+    if (phoneInput) {
+      phoneInput.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 10) {
+          value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+        } else if (value.length > 5) {
+          value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+        } else if (value.length > 2) {
+          value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+        } else {
+          value = value.replace(/^(\d*)/, '($1');
+        }
+        e.target.value = value;
+      });
+    }
+
+    // Máscara para CPF
+    const cpfInput = document.querySelector('[name="cpf"]');
+    if (cpfInput) {
+      cpfInput.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+        e.target.value = value;
+      });
+    }
+  });
+
+  // Validação antes do submit
+  document.getElementById('editForm').addEventListener('submit', function (e) {
+    let isValid = true;
+
+    // Validar campos obrigatórios
+    document.querySelectorAll('[required]').forEach((field) => {
+      if (!field.value.trim()) {
+        field.classList.add('is-invalid');
+        isValid = false;
+      }
+    });
+
+    if (!isValid) {
+      e.preventDefault();
+      alert('Por favor, preencha todos os campos obrigatórios.');
+
+      // Scroll para o primeiro campo inválido
+      const firstInvalid = document.querySelector('.is-invalid');
+      if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalid.focus();
+      }
+    } else {
+      // Limpar rascunho ao salvar com sucesso
+      localStorage.removeItem('intern_edit_draft_{{ intern.id }}');
+    }
+  });
+
+  // Atalhos de teclado
+  document.addEventListener('keydown', function (e) {
+    // Ctrl+S para salvar
+    if (e.ctrlKey && e.key === 's') {
+      e.preventDefault();
+      document.getElementById('editForm').submit();
+    }
+
+    // Ctrl+Z para restaurar
+    if (e.ctrlKey && e.key === 'z') {
+      e.preventDefault();
+      resetForm();
+    }
+
+    // Escape para cancelar
+    if (e.key === 'Escape') {
+      window.location.href =
+        '{{ url_for("mentoria_estagiarios.perfil_estagiario", id=intern.id) }}';
+    }
+  });
+
+  // Confirmação antes de sair sem salvar
+  window.addEventListener('beforeunload', function (e) {
+    if (hasChanges) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  });
+</script>
+{% endblock %}

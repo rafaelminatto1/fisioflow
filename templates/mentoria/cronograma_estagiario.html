@@ -1,0 +1,1050 @@
+{% extends "base.html" %} {% block title %}{{ title }}{% endblock %} {% block
+extra_css %}
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  rel="stylesheet"
+/>
+<link
+  href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
+  rel="stylesheet"
+/>
+<style>
+  .header-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header-gradient::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 80%;
+    height: 120%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: rotate(25deg);
+  }
+
+  .schedule-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border: none;
+    transition: all 0.3s ease;
+    margin-bottom: 2rem;
+  }
+
+  .schedule-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .schedule-card .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 15px 15px 0 0 !important;
+    padding: 1.5rem;
+  }
+
+  .schedule-card .card-title {
+    color: #495057;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .schedule-card .card-title i {
+    color: #667eea;
+    margin-right: 0.75rem;
+    font-size: 1.2rem;
+  }
+
+  .stat-mini {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .stat-mini:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+  }
+
+  .stat-mini.success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  }
+
+  .stat-mini.warning {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+  }
+
+  .stat-mini.info {
+    background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+  }
+
+  .stat-mini-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-mini-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .activity-item {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .activity-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, #667eea, #764ba2);
+  }
+
+  .activity-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+  }
+
+  .activity-item.lecture::before {
+    background: linear-gradient(to bottom, #007bff, #6f42c1);
+  }
+
+  .activity-item.practice::before {
+    background: linear-gradient(to bottom, #28a745, #20c997);
+  }
+
+  .activity-item.evaluation::before {
+    background: linear-gradient(to bottom, #dc3545, #e83e8c);
+  }
+
+  .activity-item.presentation::before {
+    background: linear-gradient(to bottom, #ffc107, #fd7e14);
+  }
+
+  .activity-item.meeting::before {
+    background: linear-gradient(to bottom, #6c757d, #495057);
+  }
+
+  .activity-type-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .activity-lecture {
+    background: linear-gradient(135deg, #007bff 0%, #6f42c1 100%);
+    color: white;
+  }
+
+  .activity-practice {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+  }
+
+  .activity-evaluation {
+    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+    color: white;
+  }
+
+  .activity-presentation {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    color: white;
+  }
+
+  .activity-meeting {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+  }
+
+  .activity-case_study {
+    background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+    color: white;
+  }
+
+  .activity-research {
+    background: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);
+    color: white;
+  }
+
+  .activity-other {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+  }
+
+  .status-scheduled {
+    color: #007bff;
+    background: rgba(0, 123, 255, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .status-completed {
+    color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .status-cancelled {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .btn-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+  }
+
+  .btn-outline-gradient {
+    border: 2px solid #667eea;
+    border-radius: 25px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    color: #667eea;
+    background: transparent;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-gradient:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    border-color: transparent;
+  }
+
+  .calendar-container {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .fc-theme-standard {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .fc-theme-standard .fc-scrollgrid {
+    border-radius: 10px;
+  }
+
+  .fc-event {
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .fc-event-lecture {
+    background: linear-gradient(135deg, #007bff 0%, #6f42c1 100%);
+  }
+
+  .fc-event-practice {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  }
+
+  .fc-event-evaluation {
+    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+  }
+
+  .fc-event-presentation {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+  }
+
+  .fc-event-meeting {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  }
+
+  .view-toggle {
+    background: #f8f9fa;
+    border-radius: 25px;
+    padding: 0.25rem;
+    display: inline-flex;
+    margin-bottom: 1rem;
+  }
+
+  .view-toggle .btn {
+    border-radius: 20px;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .view-toggle .btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+  }
+
+  .floating-add {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .floating-add:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+    color: white;
+  }
+
+  .timeline-view {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .timeline-view::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #667eea, #764ba2);
+    border-radius: 1px;
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+    margin-left: 1rem;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2rem;
+    top: 1rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #667eea;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .timeline-item.completed::before {
+    background: #28a745;
+  }
+
+  .timeline-item.cancelled::before {
+    background: #dc3545;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .floating-add {
+      width: 50px;
+      height: 50px;
+      font-size: 1.2rem;
+      bottom: 20px;
+      right: 20px;
+    }
+
+    .timeline-view {
+      padding-left: 1.5rem;
+    }
+
+    .timeline-item {
+      margin-left: 0.5rem;
+    }
+
+    .header-gradient {
+      padding: 1.5rem;
+      text-align: center;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid fade-in py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a
+          href="{{ url_for('mentoria_estagiarios.listar_estagiarios') }}"
+          class="text-decoration-none"
+        >
+          <i class="fas fa-user-graduate me-1"></i>Estagiários
+        </a>
+      </li>
+      <li class="breadcrumb-item">
+        <a
+          href="{{ url_for('mentoria_estagiarios.perfil_estagiario', id=intern.id) }}"
+          class="text-decoration-none"
+        >
+          {{ intern.name }}
+        </a>
+      </li>
+      <li class="breadcrumb-item active">Cronograma</li>
+    </ol>
+  </nav>
+
+  <!-- Header -->
+  <div class="header-gradient">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1 class="h2 font-weight-bold mb-2">
+          <i class="fas fa-calendar-alt me-3"></i>
+          Cronograma de Atividades
+        </h1>
+        <p class="mb-2 opacity-75">
+          {{ intern.name }} - {{ intern.university }}
+        </p>
+        <p class="mb-0 opacity-75">
+          Acompanhe e gerencie as atividades programadas do estágio
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end mt-md-0 mt-3">
+        <div
+          class="d-flex flex-column flex-md-row justify-content-md-end gap-2"
+        >
+          <a
+            href="{{ url_for('mentoria_estagiarios.perfil_estagiario', id=intern.id) }}"
+            class="btn btn-outline-light"
+          >
+            <i class="fas fa-user me-2"></i>Perfil
+          </a>
+          <button class="btn btn-light" onclick="addActivity()">
+            <i class="fas fa-plus me-2"></i>Nova Atividade
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estatísticas do cronograma -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="stat-mini">
+        <span class="stat-mini-number"
+          >{{ schedule_stats.total_activities }}</span
+        >
+        <span class="stat-mini-label">Total Atividades</span>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="stat-mini success">
+        <span class="stat-mini-number"
+          >{{ schedule_stats.completed_activities }}</span
+        >
+        <span class="stat-mini-label">Concluídas</span>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="stat-mini warning">
+        <span class="stat-mini-number"
+          >{{ schedule_stats.scheduled_activities }}</span
+        >
+        <span class="stat-mini-label">Agendadas</span>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="stat-mini info">
+        <span class="stat-mini-number"
+          >{{ "%.0f"|format(schedule_stats.total_hours) }}h</span
+        >
+        <span class="stat-mini-label">Carga Horária</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alternador de visualização -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="view-toggle">
+        <button
+          class="btn active"
+          onclick="switchView('list')"
+          id="list-view-btn"
+        >
+          <i class="fas fa-list me-2"></i>Lista
+        </button>
+        <button
+          class="btn"
+          onclick="switchView('calendar')"
+          id="calendar-view-btn"
+        >
+          <i class="fas fa-calendar me-2"></i>Calendário
+        </button>
+        <button
+          class="btn"
+          onclick="switchView('timeline')"
+          id="timeline-view-btn"
+        >
+          <i class="fas fa-project-diagram me-2"></i>Timeline
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visualização em Lista -->
+  <div id="list-view" class="view-content">
+    <div class="schedule-card">
+      <div class="card-header">
+        <h5 class="card-title">
+          <i class="fas fa-list"></i>
+          Lista de Atividades
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if activities %}
+        <div class="row">
+          {% for activity in activities %}
+          <div class="col-lg-6 col-xl-4 mb-3">
+            <div class="activity-item {{ activity.type }}">
+              <div
+                class="d-flex justify-content-between align-items-start mb-2"
+              >
+                <h6 class="fw-bold mb-1">{{ activity.title }}</h6>
+                <span class="activity-type-badge activity-{{ activity.type }}">
+                  {% if activity.type == 'lecture' %}Aula {% elif activity.type
+                  == 'practice' %}Prática {% elif activity.type == 'evaluation'
+                  %}Avaliação {% elif activity.type == 'presentation'
+                  %}Apresentação {% elif activity.type == 'case_study' %}Caso {%
+                  elif activity.type == 'research' %}Pesquisa {% elif
+                  activity.type == 'meeting' %}Reunião {% else %}Outro {% endif
+                  %}
+                </span>
+              </div>
+
+              <p class="text-muted small mb-3">{{ activity.description }}</p>
+
+              <div class="row mb-3 text-center">
+                <div class="col-4">
+                  <small class="text-muted d-block">Data</small>
+                  <strong>{{ activity.start_date.strftime('%d/%m') }}</strong>
+                </div>
+                <div class="col-4">
+                  <small class="text-muted d-block">Duração</small>
+                  <strong>{{ activity.hours }}h</strong>
+                </div>
+                <div class="col-4">
+                  <small class="text-muted d-block">Status</small>
+                  <span class="status-{{ activity.status }}">
+                    {% if activity.status == 'scheduled' %}Agendado {% elif
+                    activity.status == 'completed' %}Concluído {% else
+                    %}Cancelado {% endif %}
+                  </span>
+                </div>
+              </div>
+
+              {% if activity.location %}
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  {{ activity.location }}
+                </small>
+              </div>
+              {% endif %}
+
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-outline-primary btn-sm flex-fill"
+                  onclick="editActivity({{ activity.id }})"
+                >
+                  <i class="fas fa-edit me-1"></i>Editar
+                </button>
+                {% if activity.status == 'scheduled' %}
+                <button
+                  class="btn btn-outline-success btn-sm"
+                  onclick="markCompleted({{ activity.id }})"
+                >
+                  <i class="fas fa-check"></i>
+                </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-5 text-center">
+          <i class="fas fa-calendar-plus fa-4x text-muted mb-3"></i>
+          <h5 class="text-muted">Nenhuma atividade programada</h5>
+          <p class="text-muted">
+            Comece criando atividades para organizar o cronograma do estágio.
+          </p>
+          <button class="btn btn-gradient" onclick="addActivity()">
+            <i class="fas fa-plus me-2"></i>Criar Primeira Atividade
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Visualização em Calendário -->
+  <div id="calendar-view" class="view-content" style="display: none">
+    <div class="calendar-container">
+      <div id="calendar"></div>
+    </div>
+  </div>
+
+  <!-- Visualização em Timeline -->
+  <div id="timeline-view" class="view-content" style="display: none">
+    <div class="schedule-card">
+      <div class="card-header">
+        <h5 class="card-title">
+          <i class="fas fa-project-diagram"></i>
+          Timeline do Estágio
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if activities %}
+        <div class="timeline-view">
+          {% for activity in activities|sort(attribute='start_date') %}
+          <div class="timeline-item {{ activity.status }}">
+            <div class="activity-item">
+              <div
+                class="d-flex justify-content-between align-items-start mb-2"
+              >
+                <div>
+                  <h6 class="fw-bold mb-1">{{ activity.title }}</h6>
+                  <small class="text-muted">
+                    <i class="fas fa-calendar me-1"></i>
+                    {{ activity.start_date.strftime('%d/%m/%Y') }}
+                    <span class="mx-2">•</span>
+                    <i class="fas fa-clock me-1"></i>
+                    {{ activity.hours }}h {% if activity.location %}
+                    <span class="mx-2">•</span>
+                    <i class="fas fa-map-marker-alt me-1"></i>
+                    {{ activity.location }} {% endif %}
+                  </small>
+                </div>
+                <span class="activity-type-badge activity-{{ activity.type }}">
+                  {% if activity.type == 'lecture' %}Aula {% elif activity.type
+                  == 'practice' %}Prática {% elif activity.type == 'evaluation'
+                  %}Avaliação {% elif activity.type == 'presentation'
+                  %}Apresentação {% elif activity.type == 'case_study' %}Caso {%
+                  elif activity.type == 'research' %}Pesquisa {% elif
+                  activity.type == 'meeting' %}Reunião {% else %}Outro {% endif
+                  %}
+                </span>
+              </div>
+              <p class="text-muted mb-0">{{ activity.description }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-5 text-center">
+          <i class="fas fa-project-diagram fa-4x text-muted mb-3"></i>
+          <h5 class="text-muted">Timeline vazia</h5>
+          <p class="text-muted">
+            Adicione atividades para visualizar a progressão do estágio.
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Botão flutuante para adicionar atividade -->
+<button class="floating-add" onclick="addActivity()" title="Nova Atividade">
+  <i class="fas fa-plus"></i>
+</button>
+
+<!-- Modal para nova/edição de atividade -->
+<div class="modal fade" id="activityModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="activityModalTitle">Nova Atividade</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="activityForm">
+          <div class="row mb-3">
+            <div class="col-md-8">
+              <label class="form-label">Título da Atividade *</label>
+              <input type="text" class="form-control" name="title" required />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Tipo *</label>
+              <select class="form-select" name="type" required>
+                <option value="lecture">Aula Teórica</option>
+                <option value="practice">Prática Clínica</option>
+                <option value="evaluation">Avaliação</option>
+                <option value="case_study">Estudo de Caso</option>
+                <option value="research">Pesquisa</option>
+                <option value="presentation">Apresentação</option>
+                <option value="meeting">Reunião</option>
+                <option value="other">Outro</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Descrição</label>
+            <textarea
+              class="form-control"
+              name="description"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Data de Início *</label>
+              <input
+                type="date"
+                class="form-control"
+                name="start_date"
+                required
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Data de Término</label>
+              <input type="date" class="form-control" name="end_date" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Carga Horária *</label>
+              <input
+                type="number"
+                class="form-control"
+                name="hours"
+                min="0.5"
+                max="40"
+                step="0.5"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Local</label>
+              <input type="text" class="form-control" name="location" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Prioridade</label>
+              <select class="form-select" name="priority">
+                <option value="low">Baixa</option>
+                <option value="medium" selected>Média</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Materiais Necessários</label>
+            <textarea class="form-control" name="materials" rows="2"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-gradient" onclick="saveActivity()">
+          <i class="fas fa-save me-2"></i>Salvar Atividade
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+  let calendar;
+  let currentView = 'list';
+
+  document.addEventListener('DOMContentLoaded', function() {
+      initializeCalendar();
+      animateStats();
+  });
+
+  function initializeCalendar() {
+      const calendarEl = document.getElementById('calendar');
+
+      calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          headerToolbar: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,listWeek'
+          },
+          locale: 'pt-br',
+          buttonText: {
+              today: 'Hoje',
+              month: 'Mês',
+              week: 'Semana',
+              list: 'Lista'
+          },
+          events: [
+              {% for activity in activities %}
+              {
+                  id: '{{ activity.id }}',
+                  title: '{{ activity.title }}',
+                  start: '{{ activity.start_date.isoformat() }}',
+                  {% if activity.end_date %}
+                  end: '{{ activity.end_date.isoformat() }}',
+                  {% endif %}
+                  className: 'fc-event-{{ activity.type }}',
+                  extendedProps: {
+                      type: '{{ activity.type }}',
+                      description: '{{ activity.description }}',
+                      location: '{{ activity.location or "" }}',
+                      hours: {{ activity.hours }},
+                      status: '{{ activity.status }}'
+                  }
+              },
+              {% endfor %}
+          ],
+          eventClick: function(info) {
+              showEventDetails(info.event);
+          },
+          selectable: true,
+          select: function(info) {
+              addActivity(info.startStr);
+          }
+      });
+
+      calendar.render();
+  }
+
+  function switchView(viewType) {
+      // Atualizar botões
+      document.querySelectorAll('.view-toggle .btn').forEach(btn => {
+          btn.classList.remove('active');
+      });
+      document.getElementById(viewType + '-view-btn').classList.add('active');
+
+      // Mostrar/esconder visualizações
+      document.querySelectorAll('.view-content').forEach(content => {
+          content.style.display = 'none';
+      });
+      document.getElementById(viewType + '-view').style.display = 'block';
+
+      // Re-renderizar calendário se necessário
+      if (viewType === 'calendar' && calendar) {
+          setTimeout(() => {
+              calendar.updateSize();
+          }, 100);
+      }
+
+      currentView = viewType;
+  }
+
+  function animateStats() {
+      const statNumbers = document.querySelectorAll('.stat-mini-number');
+      statNumbers.forEach(element => {
+          const text = element.textContent;
+          const number = parseInt(text);
+
+          if (!isNaN(number)) {
+              let currentNumber = 0;
+              const increment = number / 20;
+
+              const timer = setInterval(() => {
+                  currentNumber += increment;
+                  if (currentNumber >= number) {
+                      element.textContent = text; // Manter formato original
+                      clearInterval(timer);
+                  } else {
+                      element.textContent = Math.floor(currentNumber) + (text.includes('h') ? 'h' : '');
+                  }
+              }, 50);
+          }
+      });
+  }
+
+  function addActivity(selectedDate = null) {
+      document.getElementById('activityModalTitle').textContent = 'Nova Atividade';
+      document.getElementById('activityForm').reset();
+
+      if (selectedDate) {
+          document.querySelector('[name="start_date"]').value = selectedDate;
+      } else {
+          // Definir data padrão para amanhã
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          document.querySelector('[name="start_date"]').value = tomorrow.toISOString().split('T')[0];
+      }
+
+      const modal = new bootstrap.Modal(document.getElementById('activityModal'));
+      modal.show();
+  }
+
+  function editActivity(activityId) {
+      document.getElementById('activityModalTitle').textContent = 'Editar Atividade';
+
+      // Carregar dados da atividade (simulado)
+      const form = document.getElementById('activityForm');
+      form.reset();
+
+      // Em uma implementação real, carregaria os dados via AJAX
+      console.log('Editing activity:', activityId);
+
+      const modal = new bootstrap.Modal(document.getElementById('activityModal'));
+      modal.show();
+  }
+
+  function saveActivity() {
+      const form = document.getElementById('activityForm');
+      const formData = new FormData(form);
+
+      // Validação básica
+      if (!formData.get('title') || !formData.get('start_date') || !formData.get('hours')) {
+          alert('Por favor, preencha todos os campos obrigatórios.');
+          return;
+      }
+
+      // Simular salvamento
+      console.log('Saving activity:', Object.fromEntries(formData));
+
+      // Fechar modal e recarregar página
+      bootstrap.Modal.getInstance(document.getElementById('activityModal')).hide();
+
+      // Em uma implementação real, faria uma requisição AJAX
+      setTimeout(() => {
+          location.reload();
+      }, 500);
+  }
+
+  function markCompleted(activityId) {
+      if (confirm('Marcar esta atividade como concluída?')) {
+          // Implementar requisição AJAX
+          console.log('Marking activity as completed:', activityId);
+
+          // Simulação de sucesso
+          location.reload();
+      }
+  }
+
+  function showEventDetails(event) {
+      const props = event.extendedProps;
+
+      const details = `
+          <strong>${event.title}</strong><br>
+          <small class="text-muted">
+              <i class="fas fa-calendar me-1"></i>${event.start.toLocaleDateString('pt-BR')}<br>
+              <i class="fas fa-clock me-1"></i>${props.hours}h<br>
+              ${props.location ? `<i class="fas fa-map-marker-alt me-1"></i>${props.location}<br>` : ''}
+              <i class="fas fa-info-circle me-1"></i>${props.description || 'Sem descrição'}
+          </small>
+      `;
+
+      // Criar tooltip ou modal simples
+      alert(details.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim());
+  }
+
+  // Atalhos de teclado
+  document.addEventListener('keydown', function(e) {
+      // N para nova atividade
+      if (e.key === 'n' || e.key === 'N') {
+          if (!e.target.matches('input, textarea, select')) {
+              addActivity();
+          }
+      }
+
+      // 1, 2, 3 para alternar visualizações
+      if (e.key === '1') {
+          switchView('list');
+      } else if (e.key === '2') {
+          switchView('calendar');
+      } else if (e.key === '3') {
+          switchView('timeline');
+      }
+  });
+
+  // Auto-refresh dos dados
+  setInterval(() => {
+      // Implementar refresh automático se necessário
+      console.log('Auto-refresh check...');
+  }, 300000); // 5 minutos
+
+  // Responsividade do calendário
+  window.addEventListener('resize', function() {
+      if (calendar && currentView === 'calendar') {
+          calendar.updateSize();
+      }
+  });
+</script>
+{% endblock %}

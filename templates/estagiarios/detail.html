@@ -1,0 +1,565 @@
+{% extends "base.html" %} {% block title %}{{ title }}{% endblock %} {% block
+content %}
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{{ url_for('estagiarios.list_interns') }}">Estagiários</a>
+          </li>
+          <li class="breadcrumb-item active">{{ intern.name }}</li>
+        </ol>
+      </nav>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0 text-gray-800">
+          <i class="fas fa-user-graduate me-2"></i>
+          {{ intern.name }}
+        </h1>
+        <div class="btn-group">
+          <a
+            href="{{ url_for('estagiarios.edit_intern', id=intern.id) }}"
+            class="btn btn-primary"
+          >
+            <i class="fas fa-edit me-1"></i>
+            Editar
+          </a>
+          <a
+            href="{{ url_for('estagiarios.assign_case', id=intern.id) }}"
+            class="btn btn-success"
+          >
+            <i class="fas fa-tasks me-1"></i>
+            Atribuir Caso
+          </a>
+          <a
+            href="{{ url_for('estagiarios.list_interns') }}"
+            class="btn btn-secondary"
+          >
+            <i class="fas fa-arrow-left me-1"></i>
+            Voltar
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Coluna da esquerda - Informações do estagiário -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+      <!-- Card do perfil -->
+      <div class="card mb-4 shadow">
+        <div class="card-body text-center">
+          <div class="mb-3">
+            {% if intern.photo_url %}
+            <img
+              src="{{ url_for('static', filename='uploads/estagiarios/' + intern.photo_url) }}"
+              alt="{{ intern.name }}"
+              class="rounded-circle border"
+              style="width: 120px; height: 120px; object-fit: cover"
+            />
+            {% else %}
+            <div
+              class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto border"
+              style="width: 120px; height: 120px"
+            >
+              <i class="fas fa-user fa-3x text-muted"></i>
+            </div>
+            {% endif %}
+          </div>
+
+          <h4 class="mb-1">{{ intern.name }}</h4>
+          <p class="text-muted mb-2">{{ intern.university }}</p>
+
+          <div class="mb-3">
+            {% if intern.status.value == 'active' %}
+            <span class="badge bg-success fs-6">Ativo</span>
+            {% elif intern.status.value == 'completed' %}
+            <span class="badge bg-primary fs-6">Concluído</span>
+            {% elif intern.status.value == 'suspended' %}
+            <span class="badge bg-warning fs-6">Suspenso</span>
+            {% else %}
+            <span class="badge bg-secondary fs-6">Inativo</span>
+            {% endif %}
+          </div>
+
+          {% if intern.bio %}
+          <div class="text-start">
+            <h6 class="text-primary">Sobre:</h6>
+            <p class="text-muted small">{{ intern.bio }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Card de informações -->
+      <div class="card mb-4 shadow">
+        <div class="card-header py-3">
+          <h6 class="font-weight-bold text-primary m-0">
+            Informações do Estagiário
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Email:</div>
+            <div class="col-7">{{ intern.email }}</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Telefone:</div>
+            <div class="col-7">{{ intern.phone or '-' }}</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Matrícula:</div>
+            <div class="col-7">
+              <span class="badge bg-info">{{ intern.student_id }}</span>
+            </div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Semestre:</div>
+            <div class="col-7">{{ intern.semester }}º</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Supervisor:</div>
+            <div class="col-7">
+              {{ intern.supervisor_name or 'Não definido' }}
+            </div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Início:</div>
+            <div class="col-7">
+              {{ intern.start_date.strftime('%d/%m/%Y') if intern.start_date
+              else '-' }}
+            </div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Término:</div>
+            <div class="col-7">
+              {{ intern.end_date.strftime('%d/%m/%Y') if intern.end_date else
+              'Em andamento' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card de estatísticas de progresso -->
+      <div class="card shadow">
+        <div class="card-header py-3">
+          <h6 class="font-weight-bold text-primary m-0">
+            Estatísticas de Progresso
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3 text-center">
+            <div class="progress mb-2" style="height: 8px">
+              <div
+                class="progress-bar bg-success"
+                style="width: {{ progress_stats.completion_rate }}%"
+              ></div>
+            </div>
+            <span class="text-muted small"
+              >{{ "%.1f"|format(progress_stats.completion_rate) }}%
+              concluído</span
+            >
+          </div>
+
+          <div class="row text-center">
+            <div class="col-6 border-end">
+              <div class="fw-bold text-success fs-4">
+                {{ progress_stats.completed_assignments }}
+              </div>
+              <div class="text-muted small">Concluídos</div>
+            </div>
+            <div class="col-6">
+              <div class="fw-bold text-warning fs-4">
+                {{ progress_stats.pending_assignments }}
+              </div>
+              <div class="text-muted small">Pendentes</div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row text-center">
+            <div class="col-6 border-end">
+              <div class="fw-bold text-primary fs-5">
+                {{ progress_stats.total_assignments }}
+              </div>
+              <div class="text-muted small">Total de Casos</div>
+            </div>
+            <div class="col-6">
+              <div class="fw-bold text-danger fs-5">
+                {{ progress_stats.overdue_assignments }}
+              </div>
+              <div class="text-muted small">Em Atraso</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coluna da direita - Atividades e casos -->
+    <div class="col-xl-8 col-lg-7">
+      <!-- Tabs de navegação -->
+      <ul class="nav nav-tabs" id="internTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            id="assignments-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#assignments"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-clipboard-list me-2"></i>Casos Atribuídos
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="competencies-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#competencies"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-award me-2"></i>Competências
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="timeline-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#timeline"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-history me-2"></i>Timeline
+          </button>
+        </li>
+      </ul>
+
+      <!-- Conteúdo das tabs -->
+      <div class="tab-content" id="internTabContent">
+        <!-- Tab de casos atribuídos -->
+        <div class="tab-pane fade show active" id="assignments" role="tabpanel">
+          <div
+            class="card border-top-0 shadow"
+            style="border-top-left-radius: 0; border-top-right-radius: 0"
+          >
+            <div class="card-header py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="font-weight-bold text-primary m-0">
+                  Casos Educacionais Atribuídos
+                </h6>
+                <a
+                  href="{{ url_for('estagiarios.assign_case', id=intern.id) }}"
+                  class="btn btn-sm btn-success"
+                >
+                  <i class="fas fa-plus me-1"></i>Atribuir Novo Caso
+                </a>
+              </div>
+            </div>
+            <div class="card-body">
+              {% if assignments %}
+              <div class="table-responsive">
+                <table class="table-hover table">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Caso</th>
+                      <th>Especialidade</th>
+                      <th>Atribuído em</th>
+                      <th>Prazo</th>
+                      <th>Status</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for assignment in assignments %}
+                    <tr>
+                      <td>
+                        <div class="fw-bold">{{ assignment.case.title }}</div>
+                        <small class="text-muted"
+                          >{{ assignment.case.description[:50] }}...</small
+                        >
+                      </td>
+                      <td>
+                        <span class="badge bg-secondary"
+                          >{{ assignment.case.specialty }}</span
+                        >
+                      </td>
+                      <td>
+                        {{ assignment.assigned_date.strftime('%d/%m/%Y') }}
+                      </td>
+                      <td>
+                        {% if assignment.due_date %} {% set days_left =
+                        (assignment.due_date - (assignment.submitted_date or
+                        assignment.assigned_date.date())).days %} {% if
+                        days_left < 0 %}
+                        <span class="text-danger">
+                          <i class="fas fa-exclamation-triangle"></i>
+                          {{ assignment.due_date.strftime('%d/%m/%Y') }}
+                        </span>
+                        {% elif days_left <= 3 %}
+                        <span class="text-warning">
+                          <i class="fas fa-clock"></i>
+                          {{ assignment.due_date.strftime('%d/%m/%Y') }}
+                        </span>
+                        {% else %}
+                        <span class="text-success">
+                          {{ assignment.due_date.strftime('%d/%m/%Y') }}
+                        </span>
+                        {% endif %} {% else %}
+                        <span class="text-muted">Sem prazo</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if assignment.status.value == 'completed' %}
+                        <span class="badge bg-success">Concluído</span>
+                        {% elif assignment.status.value == 'in_progress' %}
+                        <span class="badge bg-primary">Em Progresso</span>
+                        {% elif assignment.status.value == 'overdue' %}
+                        <span class="badge bg-danger">Em Atraso</span>
+                        {% else %}
+                        <span class="badge bg-warning">Pendente</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <div class="btn-group btn-group-sm">
+                          <button
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="viewAssignment({{ assignment.id }})"
+                            title="Ver detalhes"
+                          >
+                            <i class="fas fa-eye"></i>
+                          </button>
+                          {% if assignment.status.value != 'completed' %}
+                          <button
+                            class="btn btn-outline-success btn-sm"
+                            onclick="updateAssignmentStatus({{ assignment.id }}, 'completed')"
+                            title="Marcar como concluído"
+                          >
+                            <i class="fas fa-check"></i>
+                          </button>
+                          {% endif %}
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <div class="py-5 text-center">
+                <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhum caso atribuído</h5>
+                <p class="text-muted">
+                  Atribua casos educacionais para acompanhar o desenvolvimento
+                  do estagiário.
+                </p>
+                <a
+                  href="{{ url_for('estagiarios.assign_case', id=intern.id) }}"
+                  class="btn btn-primary"
+                >
+                  <i class="fas fa-plus me-1"></i>Atribuir Primeiro Caso
+                </a>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab de competências -->
+        <div class="tab-pane fade" id="competencies" role="tabpanel">
+          <div
+            class="card border-top-0 shadow"
+            style="border-top-left-radius: 0; border-top-right-radius: 0"
+          >
+            <div class="card-header py-3">
+              <h6 class="font-weight-bold text-primary m-0">
+                Desenvolvimento de Competências
+              </h6>
+            </div>
+            <div class="card-body">
+              {% if competencies %}
+              <div class="row">
+                {% for competency in competencies %}
+                <div class="col-md-6 mb-3">
+                  <div class="card border-left-primary">
+                    <div class="card-body">
+                      <h6 class="card-title">{{ competency.name }}</h6>
+                      <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                          <span class="text-muted small">Nível:</span>
+                          <span class="fw-bold"
+                            >{{ competency.level.value.title() }}</span
+                          >
+                        </div>
+                        <div class="progress mt-1" style="height: 6px">
+                          {% set level_percent = {'beginner': 25,
+                          'intermediate': 50, 'advanced': 75, 'expert': 100} %}
+                          <div
+                            class="progress-bar bg-primary"
+                            style="width: {{ level_percent[competency.level.value] }}%"
+                          ></div>
+                        </div>
+                      </div>
+                      {% if competency.notes %}
+                      <p class="card-text small text-muted">
+                        {{ competency.notes }}
+                      </p>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="py-5 text-center">
+                <i class="fas fa-award fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhuma competência avaliada</h5>
+                <p class="text-muted">
+                  As competências serão registradas conforme o progresso do
+                  estagiário.
+                </p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab de timeline -->
+        <div class="tab-pane fade" id="timeline" role="tabpanel">
+          <div
+            class="card border-top-0 shadow"
+            style="border-top-left-radius: 0; border-top-right-radius: 0"
+          >
+            <div class="card-header py-3">
+              <h6 class="font-weight-bold text-primary m-0">
+                Timeline de Atividades
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="timeline">
+                <!-- Timeline será implementada aqui -->
+                <div class="py-5 text-center">
+                  <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                  <h5 class="text-muted">Timeline em desenvolvimento</h5>
+                  <p class="text-muted">
+                    O histórico completo de atividades será exibido aqui.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+  }
+
+  .card {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+  }
+
+  .progress {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: none;
+    color: #6c757d;
+  }
+
+  .nav-tabs .nav-link.active {
+    background: none;
+    border-bottom-color: #4e73df;
+    color: #4e73df;
+    font-weight: 600;
+  }
+
+  .nav-tabs .nav-link:hover {
+    border-bottom-color: #4e73df;
+    color: #4e73df;
+  }
+
+  .table th {
+    border-top: none;
+    font-weight: 600;
+    color: #5a5c69;
+  }
+
+  .btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .timeline {
+    position: relative;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 2rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e3e6f0;
+  }
+</style>
+
+<script>
+  function viewAssignment(assignmentId) {
+    // Implementar modal ou redirecionamento para ver detalhes do caso
+    console.log('Viewing assignment:', assignmentId);
+    alert('Funcionalidade de visualização de caso será implementada');
+  }
+
+  function updateAssignmentStatus(assignmentId, status) {
+    if (confirm('Tem certeza que deseja marcar este caso como concluído?')) {
+      // Implementar chamada AJAX para atualizar status
+      fetch(`/mentoria/api/assignment/${assignmentId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document
+            .querySelector('meta[name=csrf-token]')
+            .getAttribute('content'),
+        },
+        body: JSON.stringify({ status: status }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Erro ao atualizar status do caso');
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          alert('Erro ao atualizar status do caso');
+        });
+    }
+  }
+
+  // Ativar tooltips
+  document.addEventListener('DOMContentLoaded', function () {
+    var tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[title]')
+    );
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>
+{% endblock %}

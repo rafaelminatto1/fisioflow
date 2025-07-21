@@ -1,0 +1,443 @@
+{% extends "base.html" %} {% block title %}{{ title }}{% endblock %} {% block
+content %}
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{{ url_for('estagiarios.list_interns') }}">Estagiários</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{{ url_for('estagiarios.view_intern', id=intern.id) }}"
+              >{{ intern.name }}</a
+            >
+          </li>
+          <li class="breadcrumb-item active">Atribuir Caso</li>
+        </ol>
+      </nav>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0 text-gray-800">
+          <i class="fas fa-tasks me-2"></i>
+          Atribuir Caso Educacional
+        </h1>
+        <a
+          href="{{ url_for('estagiarios.view_intern', id=intern.id) }}"
+          class="btn btn-secondary"
+        >
+          <i class="fas fa-arrow-left me-1"></i>
+          Voltar ao Perfil
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Informações do estagiário -->
+    <div class="col-lg-4 mb-4">
+      <div class="card shadow">
+        <div class="card-header py-3">
+          <h6 class="font-weight-bold text-primary m-0">
+            Estagiário Selecionado
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            {% if intern.photo_url %}
+            <img
+              src="{{ url_for('static', filename='uploads/estagiarios/' + intern.photo_url) }}"
+              alt="{{ intern.name }}"
+              class="rounded-circle me-3"
+              style="width: 60px; height: 60px; object-fit: cover"
+            />
+            {% else %}
+            <div
+              class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3"
+              style="width: 60px; height: 60px"
+            >
+              <i class="fas fa-user fa-lg text-muted"></i>
+            </div>
+            {% endif %}
+            <div>
+              <h5 class="mb-1">{{ intern.name }}</h5>
+              <p class="text-muted mb-0">{{ intern.university }}</p>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Matrícula:</div>
+            <div class="col-7">{{ intern.student_id }}</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Semestre:</div>
+            <div class="col-7">{{ intern.semester }}º</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Supervisor:</div>
+            <div class="col-7">
+              {{ intern.supervisor_name or 'Não definido' }}
+            </div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 fw-bold text-muted">Status:</div>
+            <div class="col-7">
+              {% if intern.status.value == 'active' %}
+              <span class="badge bg-success">Ativo</span>
+              {% elif intern.status.value == 'completed' %}
+              <span class="badge bg-primary">Concluído</span>
+              {% elif intern.status.value == 'suspended' %}
+              <span class="badge bg-warning">Suspenso</span>
+              {% else %}
+              <span class="badge bg-secondary">Inativo</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulário de atribuição -->
+    <div class="col-lg-8">
+      <div class="card shadow">
+        <div class="card-header py-3">
+          <h6 class="font-weight-bold text-primary m-0">
+            Detalhes da Atribuição
+          </h6>
+        </div>
+        <div class="card-body">
+          <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+
+            <!-- Seleção do caso educacional -->
+            <div class="mb-4">
+              {{ form.case_id.label(class="form-label required") }}
+              <select
+                name="case_id"
+                id="case_id"
+                class="form-select{{ ' is-invalid' if form.case_id.errors else '' }}"
+                required
+              >
+                <option value="">Selecione um caso educacional</option>
+                {% for case_id, case_title in form.case_id.choices %} {% if
+                case_id %}
+                <option
+                  value="{{ case_id }}"
+                  {%
+                  if
+                  form.case_id.data
+                  and
+                  form.case_id.data|string=""
+                  ="case_id|string"
+                  %}selected{%
+                  endif
+                  %}
+                >
+                  {{ case_title }}
+                </option>
+                {% endif %} {% endfor %}
+              </select>
+              {% if form.case_id.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.case_id.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Preview do caso selecionado -->
+            <div id="casePreview" class="mb-4" style="display: none">
+              <div class="card bg-light border-primary">
+                <div class="card-header bg-primary text-white">
+                  <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Detalhes do Caso Selecionado
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div id="caseDetails">
+                    <!-- Conteúdo será preenchido via JavaScript -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Datas -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                {{ form.assigned_date.label(class="form-label required") }} {{
+                form.assigned_date(class="form-control" + (" is-invalid" if
+                form.assigned_date.errors else "")) }} {% if
+                form.assigned_date.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.assigned_date.errors %}
+                  <div>{{ error }}</div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6">
+                {{ form.due_date.label(class="form-label required") }} {{
+                form.due_date(class="form-control" + (" is-invalid" if
+                form.due_date.errors else "")) }} {% if form.due_date.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.due_date.errors %}
+                  <div>{{ error }}</div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Observações -->
+            <div class="mb-4">
+              {{ form.notes.label(class="form-label") }} {{
+              form.notes(class="form-control" + (" is-invalid" if
+              form.notes.errors else ""), rows="4", placeholder="Instruções
+              específicas, objetivos de aprendizagem, materiais de apoio, etc.")
+              }} {% if form.notes.errors %}
+              <div class="invalid-feedback">
+                {% for error in form.notes.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+              <small class="form-text text-muted">
+                Use este campo para fornecer instruções específicas sobre o que
+                o estagiário deve focar neste caso.
+              </small>
+            </div>
+
+            <!-- Botões de ação -->
+            <div class="d-flex justify-content-between">
+              <a
+                href="{{ url_for('estagiarios.view_intern', id=intern.id) }}"
+                class="btn btn-secondary"
+              >
+                <i class="fas fa-times me-1"></i>
+                Cancelar
+              </a>
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-check me-1"></i>
+                Atribuir Caso
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Dicas e orientações -->
+      <div class="card mt-4 shadow">
+        <div class="card-header py-3">
+          <h6 class="font-weight-bold text-info m-0">
+            <i class="fas fa-lightbulb me-2"></i>
+            Dicas para Atribuição de Casos
+          </h6>
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2">
+              <i class="fas fa-check-circle text-success me-2"></i>
+              <strong>Considere o nível do estagiário:</strong> Casos mais
+              complexos para alunos avançados
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-check-circle text-success me-2"></i>
+              <strong>Defina prazos realistas:</strong> Considere a complexidade
+              do caso e outras atividades
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-check-circle text-success me-2"></i>
+              <strong>Forneça orientações claras:</strong> Use o campo de
+              observações para dar direcionamentos
+            </li>
+            <li class="mb-0">
+              <i class="fas fa-check-circle text-success me-2"></i>
+              <strong>Acompanhe o progresso:</strong> Verifique regularmente o
+              andamento dos casos atribuídos
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .required::after {
+    content: ' *';
+    color: #dc3545;
+  }
+
+  .card {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+  }
+
+  #casePreview {
+    animation: slideDown 0.3s ease-in-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<script>
+  // Dados simulados dos casos educacionais para preview
+  const casesData = {
+    1: {
+      title: 'Caso de Lombalgia Aguda',
+      specialty: 'Ortopedia',
+      difficulty: 'Intermediário',
+      description:
+        'Paciente de 35 anos com dor lombar após esforço físico. Avaliação completa e elaboração de plano de tratamento.',
+      objectives: [
+        'Realizar avaliação postural',
+        'Identificar fatores de risco',
+        'Propor protocolo de exercícios',
+      ],
+      estimatedTime: '2-3 semanas',
+    },
+    2: {
+      title: 'Reabilitação Pós-Cirúrgica de LCA',
+      specialty: 'Ortopedia',
+      difficulty: 'Avançado',
+      description:
+        'Paciente de 28 anos, 4 semanas pós-cirurgia de reconstrução do LCA. Foco na progressão de exercícios.',
+      objectives: [
+        'Avaliar ADM do joelho',
+        'Progressão de carga',
+        'Treino proprioceptivo',
+      ],
+      estimatedTime: '4-6 semanas',
+    },
+    3: {
+      title: 'Paciente com AVC - Fase Subaguda',
+      specialty: 'Neurologia',
+      difficulty: 'Avançado',
+      description:
+        'Paciente de 62 anos com hemiparesia direita após AVC isquêmico há 3 meses.',
+      objectives: [
+        'Avaliação neurológica',
+        'Treino de marcha',
+        'Atividades funcionais',
+      ],
+      estimatedTime: '6-8 semanas',
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const caseSelect = document.getElementById('case_id');
+    const casePreview = document.getElementById('casePreview');
+    const caseDetails = document.getElementById('caseDetails');
+
+    // Mostrar/esconder preview do caso
+    caseSelect.addEventListener('change', function () {
+      const selectedCaseId = this.value;
+
+      if (selectedCaseId && casesData[selectedCaseId]) {
+        const caseData = casesData[selectedCaseId];
+
+        caseDetails.innerHTML = `
+                <h6 class="text-primary">${caseData.title}</h6>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Especialidade:</strong><br>
+                        <span class="badge bg-secondary">${caseData.specialty}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Dificuldade:</strong><br>
+                        <span class="badge bg-warning">${caseData.difficulty}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Tempo estimado:</strong><br>
+                        <span class="text-muted">${caseData.estimatedTime}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <strong>Descrição:</strong><br>
+                    <p class="text-muted">${caseData.description}</p>
+                </div>
+                <div>
+                    <strong>Objetivos de aprendizagem:</strong>
+                    <ul class="mb-0">
+                        ${caseData.objectives.map((obj) => `<li>${obj}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+
+        casePreview.style.display = 'block';
+      } else {
+        casePreview.style.display = 'none';
+      }
+    });
+
+    // Validação de datas
+    const assignedDate = document.getElementById('assigned_date');
+    const dueDate = document.getElementById('due_date');
+
+    function validateDates() {
+      if (assignedDate.value && dueDate.value) {
+        if (new Date(assignedDate.value) > new Date(dueDate.value)) {
+          dueDate.setCustomValidity(
+            'A data de entrega deve ser posterior à data de atribuição'
+          );
+        } else {
+          dueDate.setCustomValidity('');
+        }
+      }
+    }
+
+    assignedDate.addEventListener('change', validateDates);
+    dueDate.addEventListener('change', validateDates);
+
+    // Sugestão automática de data de entrega baseada na complexidade do caso
+    caseSelect.addEventListener('change', function () {
+      const selectedCaseId = this.value;
+      if (selectedCaseId && casesData[selectedCaseId] && assignedDate.value) {
+        const caseData = casesData[selectedCaseId];
+        const assignedDateObj = new Date(assignedDate.value);
+
+        // Calcular data sugerida baseada na dificuldade
+        let daysToAdd = 14; // padrão: 2 semanas
+        if (caseData.difficulty === 'Iniciante') {
+          daysToAdd = 7; // 1 semana
+        } else if (caseData.difficulty === 'Avançado') {
+          daysToAdd = 21; // 3 semanas
+        }
+
+        const suggestedDueDate = new Date(assignedDateObj);
+        suggestedDueDate.setDate(assignedDateObj.getDate() + daysToAdd);
+
+        // Só preencher se o campo estiver vazio
+        if (!dueDate.value) {
+          dueDate.value = suggestedDueDate.toISOString().split('T')[0];
+        }
+      }
+    });
+
+    // Trigger da mudança se já houver um caso selecionado (para edição)
+    if (caseSelect.value) {
+      caseSelect.dispatchEvent(new Event('change'));
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,401 @@
+{% extends "base.html" %} {% block title %}{{ title }}{% endblock %} {% block
+content %}
+<div class="container-fluid py-4">
+  <!-- Header com estatísticas -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0 text-gray-800">
+          <i class="fas fa-user-graduate me-2"></i>
+          Gestão de Estagiários
+        </h1>
+        <div class="btn-group">
+          <a
+            href="{{ url_for('estagiarios.create_intern') }}"
+            class="btn btn-primary"
+          >
+            <i class="fas fa-plus me-1"></i>
+            Novo Estagiário
+          </a>
+          <button
+            type="button"
+            class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+            data-bs-toggle="dropdown"
+          >
+            <span class="visually-hidden">Toggle Dropdown</span>
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <a
+                class="dropdown-item"
+                href="{{ url_for('estagiarios.export_excel') }}"
+              >
+                <i class="fas fa-file-excel me-2"></i>Exportar Excel
+              </a>
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="{{ url_for('estagiarios.export_pdf') }}"
+              >
+                <i class="fas fa-file-pdf me-2"></i>Exportar PDF
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards de estatísticas -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary h-100 py-2 shadow">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="font-weight-bold text-primary text-uppercase mb-1 text-xs"
+              >
+                Total de Estagiários
+              </div>
+              <div class="h5 font-weight-bold mb-0 text-gray-800">
+                {{ stats.total_interns }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-users fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success h-100 py-2 shadow">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="font-weight-bold text-success text-uppercase mb-1 text-xs"
+              >
+                Estagiários Ativos
+              </div>
+              <div class="h5 font-weight-bold mb-0 text-gray-800">
+                {{ stats.active_interns }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-user-check fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info h-100 py-2 shadow">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="font-weight-bold text-info text-uppercase mb-1 text-xs"
+              >
+                Estágios Concluídos
+              </div>
+              <div class="h5 font-weight-bold mb-0 text-gray-800">
+                {{ stats.completed_interns }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning h-100 py-2 shadow">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="font-weight-bold text-warning text-uppercase mb-1 text-xs"
+              >
+                Casos Pendentes
+              </div>
+              <div class="h5 font-weight-bold mb-0 text-gray-800">
+                {{ stats.pending_assignments }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros e busca -->
+  <div class="card mb-4 shadow">
+    <div class="card-header py-3">
+      <h6 class="font-weight-bold text-primary m-0">Filtros e Busca</h6>
+    </div>
+    <div class="card-body">
+      <form method="GET" action="{{ url_for('estagiarios.list_interns') }}">
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            {{ form.search.label(class="form-label") }} {{
+            form.search(class="form-control", placeholder="Nome, email ou
+            matrícula", value=request.args.get('search', '')) }}
+          </div>
+          <div class="col-md-2 mb-3">
+            {{ form.status_filter.label(class="form-label") }} {{
+            form.status_filter(class="form-select") }}
+          </div>
+          <div class="col-md-3 mb-3">
+            {{ form.supervisor_filter.label(class="form-label") }} {{
+            form.supervisor_filter(class="form-select") }}
+          </div>
+          <div class="col-md-2 mb-3">
+            {{ form.university_filter.label(class="form-label") }} {{
+            form.university_filter(class="form-control",
+            placeholder="Universidade",
+            value=request.args.get('university_filter', '')) }}
+          </div>
+          <div class="col-md-2 d-flex align-items-end mb-3">
+            <button type="submit" class="btn btn-primary me-2">
+              <i class="fas fa-search"></i> Buscar
+            </button>
+            <a
+              href="{{ url_for('estagiarios.list_interns') }}"
+              class="btn btn-secondary"
+            >
+              <i class="fas fa-undo"></i>
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lista de estagiários -->
+  <div class="card mb-4 shadow">
+    <div
+      class="card-header d-flex justify-content-between align-items-center py-3"
+    >
+      <h6 class="font-weight-bold text-primary m-0">Lista de Estagiários</h6>
+      <small class="text-muted">
+        Página {{ interns.page }} de {{ interns.pages }} ({{ interns.total }}
+        estagiários encontrados)
+      </small>
+    </div>
+    <div class="card-body p-0">
+      {% if interns.items %}
+      <div class="table-responsive">
+        <table class="table-hover mb-0 table">
+          <thead class="table-light">
+            <tr>
+              <th width="60">Foto</th>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Matrícula</th>
+              <th>Universidade</th>
+              <th>Supervisor</th>
+              <th>Status</th>
+              <th width="150">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for intern in interns.items %}
+            <tr>
+              <td class="text-center">
+                {% if intern.photo_url %}
+                <img
+                  src="{{ url_for('static', filename='uploads/estagiarios/' + intern.photo_url) }}"
+                  alt="{{ intern.name }}"
+                  class="rounded-circle"
+                  width="40"
+                  height="40"
+                  style="object-fit: cover"
+                />
+                {% else %}
+                <div
+                  class="bg-secondary rounded-circle d-flex align-items-center justify-content-center"
+                  style="width: 40px; height: 40px"
+                >
+                  <i class="fas fa-user text-white"></i>
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="fw-bold">{{ intern.name }}</div>
+                <small class="text-muted"
+                  >{{ intern.semester }}º semestre</small
+                >
+              </td>
+              <td>{{ intern.email }}</td>
+              <td>
+                <span class="badge bg-info">{{ intern.student_id }}</span>
+              </td>
+              <td>{{ intern.university }}</td>
+              <td>{{ intern.supervisor_name or '-' }}</td>
+              <td>
+                {% if intern.status.value == 'active' %}
+                <span class="badge bg-success">Ativo</span>
+                {% elif intern.status.value == 'completed' %}
+                <span class="badge bg-primary">Concluído</span>
+                {% elif intern.status.value == 'suspended' %}
+                <span class="badge bg-warning">Suspenso</span>
+                {% else %}
+                <span class="badge bg-secondary">Inativo</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <a
+                    href="{{ url_for('estagiarios.view_intern', id=intern.id) }}"
+                    class="btn btn-outline-primary"
+                    title="Ver detalhes"
+                  >
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a
+                    href="{{ url_for('estagiarios.edit_intern', id=intern.id) }}"
+                    class="btn btn-outline-secondary"
+                    title="Editar"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <a
+                    href="{{ url_for('estagiarios.assign_case', id=intern.id) }}"
+                    class="btn btn-outline-info"
+                    title="Atribuir caso"
+                  >
+                    <i class="fas fa-tasks"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginação -->
+      {% if interns.pages > 1 %}
+      <div class="card-footer">
+        <nav aria-label="Paginação">
+          <ul class="pagination justify-content-center mb-0">
+            {% if interns.has_prev %}
+            <li class="page-item">
+              <a
+                class="page-link"
+                href="{{ url_for('estagiarios.list_interns', page=interns.prev_num, **request.args) }}"
+              >
+                <i class="fas fa-angle-left"></i>
+              </a>
+            </li>
+            {% endif %} {% for page_num in interns.iter_pages() %} {% if
+            page_num %} {% if page_num != interns.page %}
+            <li class="page-item">
+              <a
+                class="page-link"
+                href="{{ url_for('estagiarios.list_interns', page=page_num, **request.args) }}"
+                >{{ page_num }}</a
+              >
+            </li>
+            {% else %}
+            <li class="page-item active">
+              <span class="page-link">{{ page_num }}</span>
+            </li>
+            {% endif %} {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+            {% endif %} {% endfor %} {% if interns.has_next %}
+            <li class="page-item">
+              <a
+                class="page-link"
+                href="{{ url_for('estagiarios.list_interns', page=interns.next_num, **request.args) }}"
+              >
+                <i class="fas fa-angle-right"></i>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %} {% else %}
+      <div class="py-5 text-center">
+        <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Nenhum estagiário encontrado</h5>
+        <p class="text-muted">
+          Cadastre o primeiro estagiário ou ajuste os filtros de busca.
+        </p>
+        <a
+          href="{{ url_for('estagiarios.create_intern') }}"
+          class="btn btn-primary"
+        >
+          <i class="fas fa-plus me-1"></i>
+          Cadastrar Primeiro Estagiário
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+  .border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+  }
+  .border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+  }
+  .border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+  }
+  .border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+  }
+
+  .card {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+  }
+
+  .table th {
+    border-top: none;
+    font-weight: 600;
+    color: #5a5c69;
+  }
+
+  .btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+</style>
+
+<script>
+  // Auto-refresh da página a cada 5 minutos para manter os dados atualizados
+  setTimeout(function () {
+    location.reload();
+  }, 300000);
+
+  // Implementar busca em tempo real (opcional)
+  document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('search');
+    if (searchInput) {
+      let timeoutId;
+      searchInput.addEventListener('input', function () {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(function () {
+          // Implementar busca AJAX aqui se necessário
+        }, 500);
+      });
+    }
+  });
+</script>
+{% endblock %}

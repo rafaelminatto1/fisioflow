@@ -1,0 +1,729 @@
+{% extends "base.html" %} {% block title %}{{ title }}{% endblock %} {% block
+extra_css %}
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  rel="stylesheet"
+/>
+<style>
+  .card-stats {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .card-stats:hover {
+    transform: translateY(-5px);
+  }
+
+  .card-stats .card-body {
+    padding: 1.5rem;
+  }
+
+  .card-stats.success {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+  }
+
+  .card-stats.warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  .card-stats.info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+
+  .intern-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .intern-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .intern-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #fff;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .intern-avatar-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    border: 3px solid #fff;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .status-badge {
+    border-radius: 25px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-active {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+    color: white;
+  }
+
+  .status-completed {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .status-inactive {
+    background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+    color: white;
+  }
+
+  .status-suspended {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+  }
+
+  .search-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  }
+
+  .btn-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+
+  .progress-bar-custom {
+    background: linear-gradient(90deg, #56ab2f 0%, #a8e6cf 100%);
+    border-radius: 10px;
+  }
+
+  .pagination-custom .page-link {
+    border: none;
+    border-radius: 10px;
+    margin: 0 3px;
+    color: #667eea;
+    font-weight: 500;
+  }
+
+  .pagination-custom .page-link:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .pagination-custom .page-item.active .page-link {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .floating-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+
+  @media (max-width: 768px) {
+    .floating-btn {
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      font-size: 1.2rem;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid fade-in py-4">
+  <!-- Header com estatísticas -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h2 text-dark font-weight-bold mb-2">
+            <i class="fas fa-user-graduate text-primary me-3"></i>
+            Gestão de Estagiários
+          </h1>
+          <p class="text-muted mb-0">
+            Acompanhe o desenvolvimento e progresso dos estagiários
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <a
+            href="{{ url_for('mentoria_estagiarios.novo_estagiario') }}"
+            class="btn btn-gradient"
+          >
+            <i class="fas fa-plus me-2"></i>
+            Novo Estagiário
+          </a>
+          <div class="dropdown">
+            <button
+              class="btn btn-outline-secondary dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+            >
+              <i class="fas fa-download me-2"></i>Exportar
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <a
+                  class="dropdown-item"
+                  href="{{ url_for('mentoria_estagiarios.exportar_excel') }}"
+                >
+                  <i class="fas fa-file-excel text-success me-2"></i>Excel
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards de estatísticas -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-uppercase text-white-50 font-weight-bold small">
+                Total
+              </div>
+              <div class="h3 font-weight-bold mb-0">
+                {{ stats.total_interns }}
+              </div>
+              <div class="small text-white-50">Estagiários cadastrados</div>
+            </div>
+            <div class="text-white-50">
+              <i class="fas fa-users fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card card-stats success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-uppercase text-white-50 font-weight-bold small">
+                Ativos
+              </div>
+              <div class="h3 font-weight-bold mb-0">
+                {{ stats.active_interns }}
+              </div>
+              <div class="small text-white-50">Em atividade</div>
+            </div>
+            <div class="text-white-50">
+              <i class="fas fa-user-check fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card card-stats info">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-uppercase text-white-50 font-weight-bold small">
+                Concluídos
+              </div>
+              <div class="h3 font-weight-bold mb-0">
+                {{ stats.completed_interns }}
+              </div>
+              <div class="small text-white-50">Formados</div>
+            </div>
+            <div class="text-white-50">
+              <i class="fas fa-graduation-cap fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-3">
+      <div class="card card-stats warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-uppercase text-white-50 font-weight-bold small">
+                Atenção
+              </div>
+              <div class="h3 font-weight-bold mb-0">
+                {{ stats.ending_soon }}
+              </div>
+              <div class="small text-white-50">Terminam em breve</div>
+            </div>
+            <div class="text-white-50">
+              <i class="fas fa-exclamation-triangle fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros e busca -->
+  <div class="card search-card mb-4">
+    <div class="card-body">
+      <form
+        method="GET"
+        action="{{ url_for('mentoria_estagiarios.listar_estagiarios') }}"
+      >
+        <div class="row align-items-end">
+          <div class="col-lg-3 col-md-6 mb-3">
+            {{ form.search.label(class="form-label font-weight-bold") }} {{
+            form.search(class="form-control", placeholder="Nome, email ou
+            matrícula...", value=request.args.get('search', '')) }}
+          </div>
+          <div class="col-lg-2 col-md-6 mb-3">
+            {{ form.status_filter.label(class="form-label font-weight-bold") }}
+            {{ form.status_filter(class="form-select") }}
+          </div>
+          <div class="col-lg-2 col-md-6 mb-3">
+            {{ form.supervisor_filter.label(class="form-label font-weight-bold")
+            }} {{ form.supervisor_filter(class="form-select") }}
+          </div>
+          <div class="col-lg-2 col-md-6 mb-3">
+            {{ form.university_filter.label(class="form-label font-weight-bold")
+            }} {{ form.university_filter(class="form-control",
+            placeholder="Universidade",
+            value=request.args.get('university_filter', '')) }}
+          </div>
+          <div class="col-lg-3 col-md-12 mb-3">
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-gradient flex-fill">
+                <i class="fas fa-search me-2"></i>Buscar
+              </button>
+              <a
+                href="{{ url_for('mentoria_estagiarios.listar_estagiarios') }}"
+                class="btn btn-outline-secondary"
+              >
+                <i class="fas fa-undo"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lista de estagiários -->
+  {% if interns.items %}
+  <div class="row">
+    {% for intern in interns.items %}
+    <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
+      <div class="card intern-card">
+        <div class="card-body p-4">
+          <!-- Header do card -->
+          <div class="d-flex align-items-center mb-3">
+            {% if intern.photo_url %}
+            <img
+              src="{{ url_for('static', filename='uploads/estagiarios/' + intern.photo_url) }}"
+              alt="{{ intern.name }}"
+              class="intern-avatar me-3"
+            />
+            {% else %}
+            <div class="intern-avatar-placeholder me-3">
+              {{ intern.name[0].upper() }}
+            </div>
+            {% endif %}
+
+            <div class="flex-grow-1">
+              <h5 class="card-title font-weight-bold mb-1">
+                {{ intern.name }}
+              </h5>
+              <p class="card-text text-muted small mb-0">
+                {{ intern.university }}
+              </p>
+            </div>
+
+            <div class="dropdown">
+              <button
+                class="btn btn-link text-muted"
+                type="button"
+                data-bs-toggle="dropdown"
+              >
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{{ url_for('mentoria_estagiarios.perfil_estagiario', id=intern.id) }}"
+                  >
+                    <i class="fas fa-eye me-2"></i>Ver Perfil
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{{ url_for('mentoria_estagiarios.editar_estagiario', id=intern.id) }}"
+                  >
+                    <i class="fas fa-edit me-2"></i>Editar
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{{ url_for('mentoria_estagiarios.cronograma_estagiario', id=intern.id) }}"
+                  >
+                    <i class="fas fa-calendar me-2"></i>Cronograma
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{{ url_for('mentoria_estagiarios.relatorio_individual', id=intern.id) }}"
+                  >
+                    <i class="fas fa-file-pdf me-2"></i>Relatório
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Informações principais -->
+          <div class="row mb-3">
+            <div class="col-6">
+              <small class="text-muted d-block">Matrícula</small>
+              <span class="badge bg-primary">{{ intern.student_id }}</span>
+            </div>
+            <div class="col-6 text-end">
+              <small class="text-muted d-block">Semestre</small>
+              <span class="font-weight-bold">{{ intern.semester }}º</span>
+            </div>
+          </div>
+
+          <!-- Status e supervisor -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <small class="text-muted">Status</small>
+              {% if intern.status.value == 'active' %}
+              <span class="status-badge status-active">Ativo</span>
+              {% elif intern.status.value == 'completed' %}
+              <span class="status-badge status-completed">Concluído</span>
+              {% elif intern.status.value == 'suspended' %}
+              <span class="status-badge status-suspended">Suspenso</span>
+              {% else %}
+              <span class="status-badge status-inactive">Inativo</span>
+              {% endif %}
+            </div>
+
+            {% if intern.supervisor_name %}
+            <div class="d-flex align-items-center">
+              <i class="fas fa-user-tie text-muted me-2"></i>
+              <small class="text-muted">{{ intern.supervisor_name }}</small>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Progresso (simulado) -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <small class="text-muted">Progresso Geral</small>
+              <small class="text-muted">75%</small>
+            </div>
+            <div class="progress" style="height: 6px">
+              <div
+                class="progress-bar progress-bar-custom"
+                style="width: 75%"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Botões de ação -->
+          <div class="d-flex gap-2">
+            <a
+              href="{{ url_for('mentoria_estagiarios.perfil_estagiario', id=intern.id) }}"
+              class="btn btn-outline-primary btn-sm flex-fill"
+            >
+              <i class="fas fa-eye me-1"></i>Perfil
+            </a>
+            <a
+              href="{{ url_for('mentoria_estagiarios.cronograma_estagiario', id=intern.id) }}"
+              class="btn btn-outline-success btn-sm flex-fill"
+            >
+              <i class="fas fa-calendar me-1"></i>Cronograma
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Paginação -->
+  {% if interns.pages > 1 %}
+  <div class="row">
+    <div class="col-12">
+      <nav aria-label="Paginação de estagiários">
+        <ul class="pagination pagination-custom justify-content-center">
+          {% if interns.has_prev %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="{{ url_for('mentoria_estagiarios.listar_estagiarios', page=interns.prev_num, **request.args) }}"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %} {% for page_num in interns.iter_pages() %} {% if page_num
+          %} {% if page_num != interns.page %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="{{ url_for('mentoria_estagiarios.listar_estagiarios', page=page_num, **request.args) }}"
+              >{{ page_num }}</a
+            >
+          </li>
+          {% else %}
+          <li class="page-item active">
+            <span class="page-link">{{ page_num }}</span>
+          </li>
+          {% endif %} {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+          {% endif %} {% endfor %} {% if interns.has_next %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="{{ url_for('mentoria_estagiarios.listar_estagiarios', page=interns.next_num, **request.args) }}"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      <div class="text-muted text-center">
+        <small>
+          Página {{ interns.page }} de {{ interns.pages }} ({{ interns.total }}
+          estagiários encontrados)
+        </small>
+      </div>
+    </div>
+  </div>
+  {% endif %} {% else %}
+  <!-- Estado vazio -->
+  <div class="row">
+    <div class="col-12">
+      <div class="py-5 text-center">
+        <div class="mb-4">
+          <i class="fas fa-user-graduate fa-5x text-muted opacity-50"></i>
+        </div>
+        <h4 class="text-muted mb-3">Nenhum estagiário encontrado</h4>
+        <p class="text-muted mb-4">
+          {% if request.args %} Ajuste os filtros de busca ou cadastre um novo
+          estagiário. {% else %} Comece cadastrando o primeiro estagiário no
+          sistema. {% endif %}
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+          <a
+            href="{{ url_for('mentoria_estagiarios.novo_estagiario') }}"
+            class="btn btn-gradient"
+          >
+            <i class="fas fa-plus me-2"></i>Cadastrar Estagiário
+          </a>
+          {% if request.args %}
+          <a
+            href="{{ url_for('mentoria_estagiarios.listar_estagiarios') }}"
+            class="btn btn-outline-secondary"
+          >
+            <i class="fas fa-undo me-2"></i>Limpar Filtros
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Botão flutuante para novo estagiário (mobile) -->
+<a
+  href="{{ url_for('mentoria_estagiarios.novo_estagiario') }}"
+  class="floating-btn d-md-none"
+  title="Novo Estagiário"
+>
+  <i class="fas fa-plus"></i>
+</a>
+{% endblock %} {% block extra_js %}
+<script>
+  // Animações e interações
+  document.addEventListener('DOMContentLoaded', function () {
+    // Animação de entrada das cards
+    const cards = document.querySelectorAll('.intern-card');
+    cards.forEach((card, index) => {
+      card.style.animationDelay = `${index * 0.1}s`;
+      card.classList.add('fade-in');
+    });
+
+    // Auto-refresh das notificações
+    function checkNotifications() {
+      fetch('{{ url_for("mentoria_estagiarios.verificar_notificacoes") }}')
+        .then((response) => response.json())
+        .then((notifications) => {
+          // Implementar sistema de notificações toast aqui
+          console.log('Notificações:', notifications);
+        })
+        .catch((error) => console.log('Erro ao carregar notificações:', error));
+    }
+
+    // Verificar notificações a cada 5 minutos
+    setInterval(checkNotifications, 300000);
+    checkNotifications(); // Verificar imediatamente
+
+    // Busca em tempo real (debounce)
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+      let searchTimeout;
+      searchInput.addEventListener('input', function () {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          // Implementar busca AJAX aqui se necessário
+        }, 500);
+      });
+    }
+
+    // Tooltips para badges de status
+    const statusBadges = document.querySelectorAll('.status-badge');
+    statusBadges.forEach((badge) => {
+      const tooltipText = {
+        Ativo: 'Estagiário em atividade regular',
+        Concluído: 'Estágio finalizado com sucesso',
+        Inativo: 'Estagiário temporariamente inativo',
+        Suspenso: 'Estágio suspenso temporariamente',
+      };
+
+      badge.setAttribute('title', tooltipText[badge.textContent.trim()] || '');
+      new bootstrap.Tooltip(badge);
+    });
+  });
+
+  // Função para confirmar exclusão
+  function confirmDelete(internId, internName) {
+    if (
+      confirm(`Tem certeza que deseja desativar o estagiário ${internName}?`)
+    ) {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action =
+        `{{ url_for('mentoria_estagiarios.deletar_estagiario', id=0) }}`.replace(
+          '0',
+          internId
+        );
+
+      const csrfToken = document.querySelector('meta[name=csrf-token]');
+      if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = csrfToken.getAttribute('content');
+        form.appendChild(csrfInput);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+    }
+  }
+
+  // Função para exportar dados
+  function exportData(format) {
+    const url =
+      format === 'excel'
+        ? '{{ url_for("mentoria_estagiarios.exportar_excel") }}'
+        : '{{ url_for("mentoria_estagiarios.exportar_pdf") }}';
+
+    window.open(url, '_blank');
+  }
+
+  // Atalhos de teclado
+  document.addEventListener('keydown', function (e) {
+    // Ctrl+N para novo estagiário
+    if (e.ctrlKey && e.key === 'n') {
+      e.preventDefault();
+      window.location.href =
+        '{{ url_for("mentoria_estagiarios.novo_estagiario") }}';
+    }
+
+    // Escape para limpar busca
+    if (e.key === 'Escape') {
+      const searchInput = document.querySelector('input[name="search"]');
+      if (searchInput && searchInput.value) {
+        searchInput.value = '';
+        searchInput.focus();
+      }
+    }
+  });
+</script>
+{% endblock %}

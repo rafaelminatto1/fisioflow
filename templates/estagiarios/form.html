@@ -1,0 +1,473 @@
+{% extends "base.html" %} {% block title %}{{ title }}{% endblock %} {% block
+content %}
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{{ url_for('estagiarios.list_interns') }}">Estagiários</a>
+          </li>
+          <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+      </nav>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0 text-gray-800">
+          <i
+            class="fas fa-{% if action == 'edit' %}edit{% else %}plus{% endif %} me-2"
+          ></i>
+          {{ title }}
+        </h1>
+        <a
+          href="{{ url_for('estagiarios.list_interns') }}"
+          class="btn btn-secondary"
+        >
+          <i class="fas fa-arrow-left me-1"></i>
+          Voltar à Lista
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-xl-8 col-lg-10">
+      <div class="card shadow">
+        <div class="card-header py-3">
+          <h6 class="font-weight-bold text-primary m-0">
+            {% if action == 'edit' %} Editar Dados do Estagiário {% else %}
+            Cadastro de Novo Estagiário {% endif %}
+          </h6>
+        </div>
+
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+
+            <!-- Foto do estagiário -->
+            <div class="row mb-4">
+              <div class="col-md-12">
+                <div class="text-center">
+                  <div class="mb-3">
+                    {% if intern and intern.photo_url %}
+                    <img
+                      id="photoPreview"
+                      src="{{ url_for('static', filename='uploads/estagiarios/' + intern.photo_url) }}"
+                      alt="Foto do estagiário"
+                      class="rounded-circle border"
+                      style="width: 120px; height: 120px; object-fit: cover"
+                    />
+                    {% else %}
+                    <div
+                      id="photoPreview"
+                      class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto border"
+                      style="width: 120px; height: 120px"
+                    >
+                      <i class="fas fa-user fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                  </div>
+
+                  <div class="mb-3">
+                    {{ form.photo.label(class="form-label") }} {{
+                    form.photo(class="form-control", accept="image/*",
+                    onchange="previewPhoto(this)") }} {% if form.photo.errors %}
+                    <div class="text-danger small mt-1">
+                      {% for error in form.photo.errors %}
+                      <div>{{ error }}</div>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="form-text text-muted">
+                      Formatos aceitos: PNG, JPG, JPEG, GIF. Tamanho máximo:
+                      5MB.
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dados pessoais -->
+            <fieldset class="mb-4">
+              <legend class="h5 text-primary border-bottom mb-3 pb-2">
+                <i class="fas fa-user me-2"></i>Dados Pessoais
+              </legend>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  {{ form.name.label(class="form-label required") }} {{
+                  form.name(class="form-control" + (" is-invalid" if
+                  form.name.errors else "")) }} {% if form.name.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.name.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  {{ form.email.label(class="form-label required") }} {{
+                  form.email(class="form-control" + (" is-invalid" if
+                  form.email.errors else "")) }} {% if form.email.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.email.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  {{ form.phone.label(class="form-label") }} {{
+                  form.phone(class="form-control" + (" is-invalid" if
+                  form.phone.errors else ""), placeholder="(11) 99999-9999") }}
+                  {% if form.phone.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.phone.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  {{ form.status.label(class="form-label required") }} {{
+                  form.status(class="form-select" + (" is-invalid" if
+                  form.status.errors else "")) }} {% if form.status.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.status.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Dados acadêmicos -->
+            <fieldset class="mb-4">
+              <legend class="h5 text-primary border-bottom mb-3 pb-2">
+                <i class="fas fa-graduation-cap me-2"></i>Dados Acadêmicos
+              </legend>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  {{ form.student_id.label(class="form-label required") }} {{
+                  form.student_id(class="form-control" + (" is-invalid" if
+                  form.student_id.errors else ""), placeholder="Ex: 2023001234")
+                  }} {% if form.student_id.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.student_id.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  {{ form.semester.label(class="form-label required") }} {{
+                  form.semester(class="form-control" + (" is-invalid" if
+                  form.semester.errors else ""), min="1", max="20") }} {% if
+                  form.semester.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.semester.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12 mb-3">
+                  {{ form.university.label(class="form-label required") }} {{
+                  form.university(class="form-control" + (" is-invalid" if
+                  form.university.errors else ""), placeholder="Ex: Universidade
+                  de São Paulo") }} {% if form.university.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.university.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Dados do estágio -->
+            <fieldset class="mb-4">
+              <legend class="h5 text-primary border-bottom mb-3 pb-2">
+                <i class="fas fa-briefcase me-2"></i>Dados do Estágio
+              </legend>
+
+              <div class="row">
+                <div class="col-md-12 mb-3">
+                  {{ form.supervisor_id.label(class="form-label") }} {{
+                  form.supervisor_id(class="form-select" + (" is-invalid" if
+                  form.supervisor_id.errors else "")) }} {% if
+                  form.supervisor_id.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.supervisor_id.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  {{ form.start_date.label(class="form-label required") }} {{
+                  form.start_date(class="form-control" + (" is-invalid" if
+                  form.start_date.errors else "")) }} {% if
+                  form.start_date.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.start_date.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  {{ form.end_date.label(class="form-label") }} {{
+                  form.end_date(class="form-control" + (" is-invalid" if
+                  form.end_date.errors else "")) }} {% if form.end_date.errors
+                  %}
+                  <div class="invalid-feedback">
+                    {% for error in form.end_date.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  <small class="form-text text-muted"
+                    >Deixe em branco se ainda não definido</small
+                  >
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Biografia/Observações -->
+            <fieldset class="mb-4">
+              <legend class="h5 text-primary border-bottom mb-3 pb-2">
+                <i class="fas fa-info-circle me-2"></i>Informações Adicionais
+              </legend>
+
+              <div class="mb-3">
+                {{ form.bio.label(class="form-label") }} {{
+                form.bio(class="form-control" + (" is-invalid" if
+                form.bio.errors else ""), rows="4", placeholder="Informações
+                adicionais sobre o estagiário, objetivos do estágio, observações
+                especiais, etc.") }} {% if form.bio.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.bio.errors %}
+                  <div>{{ error }}</div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+                <small class="form-text text-muted"
+                  >Máximo 500 caracteres</small
+                >
+              </div>
+            </fieldset>
+
+            <!-- Botões de ação -->
+            <div class="d-flex justify-content-between">
+              <div>
+                {% if action == 'edit' and intern %}
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal"
+                >
+                  <i class="fas fa-trash me-1"></i>
+                  Desativar Estagiário
+                </button>
+                {% endif %}
+              </div>
+
+              <div>
+                <a
+                  href="{{ url_for('estagiarios.list_interns') }}"
+                  class="btn btn-secondary me-2"
+                >
+                  <i class="fas fa-times me-1"></i>
+                  Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save me-1"></i>
+                  {% if action == 'edit' %}Atualizar{% else %}Cadastrar{% endif
+                  %}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmação de exclusão -->
+{% if action == 'edit' and intern %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar Desativação</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Tem certeza que deseja desativar o estagiário
+          <strong>{{ intern.name }}</strong>?
+        </p>
+        <p class="text-muted small">
+          Esta ação irá alterar o status do estagiário para "Inativo". Os dados
+          históricos serão mantidos, mas o estagiário não aparecerá mais como
+          ativo no sistema.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <form
+          method="POST"
+          action="{{ url_for('estagiarios.delete_intern', id=intern.id) }}"
+          class="d-inline"
+        >
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-trash me-1"></i>
+            Confirmar Desativação
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<style>
+  .required::after {
+    content: ' *';
+    color: #dc3545;
+  }
+
+  .card {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+  }
+
+  fieldset {
+    border: none;
+    background-color: #f8f9fc;
+    padding: 1.5rem;
+    border-radius: 0.375rem;
+  }
+
+  legend {
+    width: auto;
+    padding: 0 0.5rem;
+    margin-bottom: 0;
+    font-size: inherit;
+    background-color: transparent;
+  }
+
+  #photoPreview {
+    transition: all 0.3s ease;
+  }
+
+  #photoPreview:hover {
+    transform: scale(1.05);
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+  }
+</style>
+
+<script>
+  function previewPhoto(input) {
+    const preview = document.getElementById('photoPreview');
+
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        if (preview.tagName === 'IMG') {
+          preview.src = e.target.result;
+        } else {
+          // Replace div with img
+          const img = document.createElement('img');
+          img.id = 'photoPreview';
+          img.src = e.target.result;
+          img.alt = 'Foto do estagiário';
+          img.className = 'rounded-circle border';
+          img.style.width = '120px';
+          img.style.height = '120px';
+          img.style.objectFit = 'cover';
+          img.style.transition = 'all 0.3s ease';
+
+          preview.parentNode.replaceChild(img, preview);
+        }
+      };
+
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  // Validação em tempo real
+  document.addEventListener('DOMContentLoaded', function () {
+    // Máscara para telefone
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+      phoneInput.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 10) {
+          value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+        } else if (value.length > 5) {
+          value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+        } else if (value.length > 2) {
+          value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+        } else {
+          value = value.replace(/^(\d*)/, '($1');
+        }
+        e.target.value = value;
+      });
+    }
+
+    // Validação de datas
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+
+    if (startDate && endDate) {
+      function validateDates() {
+        if (startDate.value && endDate.value) {
+          if (new Date(startDate.value) > new Date(endDate.value)) {
+            endDate.setCustomValidity(
+              'A data de término deve ser posterior à data de início'
+            );
+          } else {
+            endDate.setCustomValidity('');
+          }
+        }
+      }
+
+      startDate.addEventListener('change', validateDates);
+      endDate.addEventListener('change', validateDates);
+    }
+  });
+</script>
+{% endblock %}
