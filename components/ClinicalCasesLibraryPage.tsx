@@ -60,7 +60,7 @@ const ClinicalCasesLibraryPage: React.FC = () => {
   }, [caseFavorites, user?.id]);
 
   const filteredAndSortedCases = useMemo(() => {
-    let filtered = clinicalCases.filter((clinicalCase) => {
+    const filtered = clinicalCases.filter((clinicalCase) => {
       const matchesSearch =
         !searchTerm ||
         clinicalCase.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

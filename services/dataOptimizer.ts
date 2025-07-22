@@ -125,7 +125,7 @@ class DataOptimizer {
       const startTime = performance.now();
       
       // Cria índice de busca se especificado
-      let indices: DataIndex = {};
+      const indices: DataIndex = {};
       if (searchFields.length > 0) {
         indices[key] = this.createSearchIndex(data, key, searchFields, tenantField);
         

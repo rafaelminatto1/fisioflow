@@ -70,7 +70,7 @@ const ClinicalProtocolsLibraryPage: React.FC<
   }, [clinicalProtocols, protocolAnalytics]);
 
   const filteredAndSortedProtocols = useMemo(() => {
-    let filtered = protocolsWithAnalytics.filter((protocol) => {
+    const filtered = protocolsWithAnalytics.filter((protocol) => {
       const matchesSearch =
         !searchTerm ||
         protocol.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

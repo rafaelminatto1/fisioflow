@@ -33,7 +33,7 @@ const Slider: React.FC<{
   const getSliderColor = (value: number) => {
     const percentage = value * 10;
     let colorFrom = '#3b82f6';
-    let colorTo = '#ef4444';
+    const colorTo = '#ef4444';
 
     if (label.toLowerCase().includes('dor')) {
       if (percentage <= 50) {

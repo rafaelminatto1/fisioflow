@@ -8,7 +8,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     rollupOptions: {
-      onwarn(warning, warn) {
+      onwarn() {
         // Ignorar todos os warnings para deploy rápido
         return;
       },
