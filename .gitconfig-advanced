@@ -1,0 +1,148 @@
+# Configurações Git Avançadas para FisioFlow
+# Para aplicar: git config --global include.path ~/.gitconfig-advanced
+
+[alias]
+    # Aliases básicos melhorados
+    st = status --short --branch
+    co = checkout
+    br = branch
+    ci = commit
+    df = diff
+    dc = diff --cached
+    
+    # Logs melhorados
+    lg = log --oneline --decorate --graph --all
+    lga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all
+    last = log -1 HEAD
+    
+    # Commits inteligentes
+    amend = commit --amend --no-edit
+    fixup = commit --fixup
+    squash = commit --squash
+    
+    # Branch management
+    brd = branch -d
+    brD = branch -D
+    bra = branch -a
+    brr = branch -r
+    
+    # Stash melhorado
+    sl = stash list
+    sa = stash apply
+    ss = stash save
+    sp = stash pop
+    
+    # Reset seguro
+    unstage = reset HEAD --
+    undo = reset --soft HEAD~1
+    
+    # Push/Pull otimizado
+    pushf = push --force-with-lease
+    pushu = push -u origin HEAD
+    
+    # Workflow específico
+    wip = commit -am "WIP: work in progress"
+    unwip = reset HEAD~1
+    
+    # Análise de código
+    contributors = shortlog -sn
+    filehistory = log --follow -p --
+    
+    # Limpeza
+    cleanup = "!git branch --merged | grep -v '\*\|main\|master\|develop' | xargs -n 1 git branch -d"
+    
+[core]
+    # Editor padrão
+    editor = code --wait
+    
+    # Configurações de linha
+    autocrlf = true
+    safecrlf = warn
+    
+    # Performance
+    preloadindex = true
+    fscache = true
+    
+    # Exclusões globais
+    excludesfile = ~/.gitignore_global
+
+[diff]
+    # Melhor algoritmo de diff
+    algorithm = patience
+    
+    # Detectar renomeações
+    renames = copies
+    
+    # Mostrar prefixos
+    mnemonicPrefix = true
+    
+[merge]
+    # Ferramenta de merge
+    tool = vscode
+    
+    # Estratégia de merge
+    ff = false
+    
+[mergetool "vscode"]
+    cmd = code --wait $MERGED
+    
+[pull]
+    # Rebase por padrão
+    rebase = true
+    
+[push]
+    # Push apenas branch atual
+    default = current
+    
+    # Verificar hooks
+    followTags = true
+    
+[rebase]
+    # Autosquash
+    autoSquash = true
+    
+    # Autostash
+    autoStash = true
+    
+[status]
+    # Mostrar arquivos não rastreados
+    showUntrackedFiles = all
+    
+    # Submodules
+    submoduleSummary = true
+    
+[color]
+    # Cores habilitadas
+    ui = auto
+    
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+    
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+    
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+    
+[fetch]
+    # Prune automático
+    prune = true
+    
+[rerere]
+    # Lembrar resoluções
+    enabled = true
+    
+[help]
+    # Autocorreção
+    autocorrect = 1
+    
+[init]
+    # Branch padrão
+    defaultBranch = main

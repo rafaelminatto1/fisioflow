@@ -97,6 +97,32 @@ const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
       title={
         timeBlock && 'id' in timeBlock ? 'Editar Bloqueio' : 'Novo Bloqueio'
       }
+      footer={
+        <div className="flex space-x-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md bg-slate-600 px-4 py-2 text-slate-100 transition-colors hover:bg-slate-500"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={
+              !title ||
+              !therapistId ||
+              !startDate ||
+              !startTime ||
+              !endDate ||
+              !endTime
+            }
+            className="rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-600"
+          >
+            Salvar
+          </button>
+        </div>
+      }
     >
       <div className="space-y-4">
         <FormField label="Título" required>
@@ -200,30 +226,6 @@ const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
               Excluir
             </button>
           )}
-        </div>
-        <div className="flex space-x-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md bg-slate-600 px-4 py-2 text-slate-100 transition-colors hover:bg-slate-500"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={
-              !title ||
-              !therapistId ||
-              !startDate ||
-              !startTime ||
-              !endDate ||
-              !endTime
-            }
-            className="rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-600"
-          >
-            Salvar
-          </button>
         </div>
       </div>
     </BaseModal>

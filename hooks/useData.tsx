@@ -95,9 +95,44 @@ import {
 } from '../constants';
 import { useNotification } from './useNotification';
 import { useAuth } from './useAuth';
+import { dataOptimizer } from '../services/dataOptimizer';
 
 export const DataContext = createContext<any | undefined>(undefined);
 
+// Hook otimizado com índices e compressão
+const useOptimizedStorage = <T,>(
+  key: string,
+  initialValue: T,
+  searchFields: (keyof T)[] = [],
+  tenantField?: keyof T
+): [T, React.Dispatch<React.SetStateAction<T>>] => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    try {
+      const data = dataOptimizer.loadOptimized<any>(key);
+      return data.length > 0 ? data : initialValue;
+    } catch (error) {
+      console.error(`Error reading optimized storage key "${key}":`, error);
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (Array.isArray(storedValue)) {
+        dataOptimizer.saveOptimized(key, storedValue, searchFields, tenantField);
+      } else {
+        // Fallback para dados não-array
+        window.localStorage.setItem(key, JSON.stringify(storedValue));
+      }
+    } catch (error) {
+      console.error(`Error setting optimized storage key "${key}":`, error);
+    }
+  }, [key, storedValue, searchFields, tenantField]);
+
+  return [storedValue, setStoredValue];
+};
+
+// Hook legado para compatibilidade
 const useLocalStorage = <T,>(
   key: string,
   initialValue: T,
@@ -112,7 +147,7 @@ const useLocalStorage = <T,>(
       }
       return initialValue;
     } catch (error) {
-      console.error(`Error reading localStorage key “${key}”:`, error);
+      console.error(`Error reading localStorage key "${key}":`, error);
       return initialValue;
     }
   });
@@ -121,7 +156,7 @@ const useLocalStorage = <T,>(
     try {
       window.localStorage.setItem(key, JSON.stringify(storedValue));
     } catch (error) {
-      console.error(`Error setting localStorage key “${key}”:`, error);
+      console.error(`Error setting localStorage key "${key}":`, error);
     }
   }, [key, storedValue]);
 
@@ -131,18 +166,24 @@ const useLocalStorage = <T,>(
 export const DataProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  // This provider now manages raw, unfiltered data.
-  const [allUsers, setAllUsers] = useLocalStorage<User[]>(
+  // Gerencia dados otimizados com índices
+  const [allUsers, setAllUsers] = useOptimizedStorage<User[]>(
     'fisioflow-all-users',
-    Object.values(INITIAL_USERS)
+    Object.values(INITIAL_USERS),
+    ['name', 'email', 'role'], // campos de busca
+    'tenantId'
   );
-  const [allTasks, setAllTasks] = useLocalStorage<Task[]>(
+  const [allTasks, setAllTasks] = useOptimizedStorage<Task[]>(
     'fisioflow-all-tasks',
-    INITIAL_TASKS
+    INITIAL_TASKS,
+    ['title', 'description', 'status'],
+    'tenantId'
   );
-  const [allPatients, setAllPatients] = useLocalStorage<Patient[]>(
+  const [allPatients, setAllPatients] = useOptimizedStorage<Patient[]>(
     'fisioflow-all-patients',
-    INITIAL_PATIENTS
+    INITIAL_PATIENTS,
+    ['name', 'email', 'phone', 'medicalHistory'], // busca otimizada
+    'tenantId'
   );
   const [allNotebooks, setAllNotebooks] = useLocalStorage<Notebook[]>(
     'fisioflow-all-notebooks',
@@ -1656,6 +1697,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     updateProtocolOutcome,
     advanceProtocolPhase,
     customizeProtocolExercise,
+    setAllOperationalAlerts,
+    setAllEquipment,
+    setAllExecutiveReports,
   };
 
   return (
@@ -1691,6 +1735,12 @@ export const useData = (): DataContextType => {
     allCourses,
     allStudentProgress,
     allMentorshipSessions,
+    allClinicalCases,
+    allCaseAttachments,
+    allCaseComments,
+    allCaseViews,
+    allCaseRatings,
+    allCaseFavorites,
     allClinicalProtocols,
     allProtocolPhases,
     allProtocolExercises,
@@ -1705,6 +1755,9 @@ export const useData = (): DataContextType => {
     allEquipment,
     allOperationalAlerts,
     allExecutiveReports,
+    setAllOperationalAlerts,
+    setAllEquipment,
+    setAllExecutiveReports,
     ...rest
   } = context;
 
@@ -2298,7 +2351,7 @@ export const useData = (): DataContextType => {
         )
       );
 
-      addAuditLog({
+      saveAuditLog({
         action: LogAction.UPDATE_TASK, // Using existing action, could add new ones
         targetCollection: 'operationalAlerts',
         targetId: alertId,
@@ -2309,7 +2362,7 @@ export const useData = (): DataContextType => {
         tenantId: actingUser.tenantId,
       });
     },
-    [addAuditLog]
+    [saveAuditLog]
   );
 
   const resolveAlert = useCallback(
@@ -2329,7 +2382,7 @@ export const useData = (): DataContextType => {
         )
       );
 
-      addAuditLog({
+      saveAuditLog({
         action: LogAction.UPDATE_TASK,
         targetCollection: 'operationalAlerts',
         targetId: alertId,
@@ -2340,7 +2393,7 @@ export const useData = (): DataContextType => {
         tenantId: actingUser.tenantId,
       });
     },
-    [addAuditLog]
+    [saveAuditLog]
   );
 
   // Equipment Management Functions
@@ -2360,7 +2413,7 @@ export const useData = (): DataContextType => {
             eq.id === equipment.id ? equipmentWithTenant : eq
           )
         );
-        addAuditLog({
+        saveAuditLog({
           action: LogAction.UPDATE_TASK,
           targetCollection: 'equipment',
           targetId: equipment.id,
@@ -2376,7 +2429,7 @@ export const useData = (): DataContextType => {
           id: crypto.randomUUID(),
         };
         setAllEquipment((prev) => [...prev, newEquipment]);
-        addAuditLog({
+        saveAuditLog({
           action: LogAction.CREATE_TASK,
           targetCollection: 'equipment',
           targetId: newEquipment.id,
@@ -2387,7 +2440,7 @@ export const useData = (): DataContextType => {
         });
       }
     },
-    [addAuditLog]
+    [saveAuditLog]
   );
 
   const deleteEquipment = useCallback(
@@ -2399,7 +2452,7 @@ export const useData = (): DataContextType => {
 
       setAllEquipment((prev) => prev.filter((eq) => eq.id !== equipmentId));
       
-      addAuditLog({
+      saveAuditLog({
         action: LogAction.DELETE_TASK,
         targetCollection: 'equipment',
         targetId: equipmentId,
@@ -2409,7 +2462,7 @@ export const useData = (): DataContextType => {
         tenantId: actingUser.tenantId,
       });
     },
-    [allEquipment, addAuditLog]
+    [allEquipment, saveAuditLog]
   );
 
   // Executive Report Generation
@@ -2514,7 +2567,7 @@ export const useData = (): DataContextType => {
 
       setAllExecutiveReports((prev) => [...prev, newReport]);
       
-      addAuditLog({
+      saveAuditLog({
         action: LogAction.CREATE_TASK,
         targetCollection: 'executiveReports',
         targetId: reportId,
@@ -2526,12 +2579,19 @@ export const useData = (): DataContextType => {
 
       return newReport;
     },
-    [appointments, transactions, qualityIndicators, productivityMetrics, equipment, operationalAlerts, users, addAuditLog]
+    [appointments, transactions, qualityIndicators, productivityMetrics, equipment, operationalAlerts, users, saveAuditLog]
   );
 
-  const saveAuditLog = useCallback((log: Omit<AuditLog, 'id' | 'timestamp'>) => {
-    addAuditLog(log);
-  }, [addAuditLog]);
+  const getAllData = useCallback(() => {
+    return {
+      users: rest.allUsers,
+      tasks: rest.allTasks,
+      patients: rest.allPatients,
+      appointments: rest.allAppointments,
+      transactions: rest.allTransactions,
+      // Add other data as needed
+    };
+  }, [rest]);
 
   return {
     ...rest,
@@ -2615,6 +2675,6 @@ export const useData = (): DataContextType => {
     saveEquipment,
     deleteEquipment,
     generateExecutiveReport,
-    saveAuditLog,
+    getAllData,
   } as DataContextType;
 };

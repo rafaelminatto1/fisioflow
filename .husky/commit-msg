@@ -1,0 +1,54 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Commit message hook para FisioFlow
+echo "📝 Validando mensagem de commit..."
+
+# 1. Commitlint (padrão convencional)
+npx --no-install commitlint --edit "$1"
+
+# 2. Verificações adicionais
+commit_regex='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,50}'
+
+commit_message=$(cat "$1")
+
+# Verificar se a mensagem segue o padrão
+if ! echo "$commit_message" | grep -qE "$commit_regex"; then
+  echo "❌ Mensagem de commit inválida!"
+  echo ""
+  echo "📋 Formato esperado:"
+  echo "   <tipo>[escopo opcional]: <descrição>"
+  echo ""
+  echo "🏷️  Tipos válidos:"
+  echo "   feat:     Nova funcionalidade"
+  echo "   fix:      Correção de bug"
+  echo "   docs:     Documentação"
+  echo "   style:    Formatação, ponto e vírgula, etc"
+  echo "   refactor: Refatoração de código"
+  echo "   test:     Adição ou correção de testes"
+  echo "   chore:    Tarefas de manutenção"
+  echo "   perf:     Melhoria de performance"
+  echo "   ci:       Mudanças no CI/CD"
+  echo "   build:    Mudanças no sistema de build"
+  echo "   revert:   Reverter commit anterior"
+  echo ""
+  echo "📝 Exemplos:"
+  echo "   feat: adicionar autenticação de usuário"
+  echo "   fix(auth): corrigir validação de token"
+  echo "   docs: atualizar README com instruções"
+  echo ""
+  exit 1
+fi
+
+# 3. Verificar tamanho da mensagem
+if [ ${#commit_message} -gt 72 ]; then
+  echo "⚠️  Mensagem muito longa (${#commit_message} caracteres)"
+  echo "💡 Mantenha a primeira linha com até 50 caracteres"
+fi
+
+# 4. Verificar se não contém TODO ou FIXME
+if echo "$commit_message" | grep -qi "\(TODO\|FIXME\|XXX\)"; then
+  echo "⚠️  Mensagem contém TODO/FIXME. Considere resolver antes do commit."
+fi
+
+echo "✅ Mensagem de commit válida!"

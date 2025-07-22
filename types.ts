@@ -156,6 +156,7 @@ export interface Appointment {
   end: string; // ISO string format
   date: string; // ISO string date (YYYY-MM-DD)
   notes?: string;
+  status?: 'agendado' | 'confirmado' | 'realizado' | 'cancelado';
   tenantId: string;
 }
 
@@ -211,6 +212,7 @@ export interface Transaction {
   date: string; // ISO string for the transaction date
   dueDate: string; // ISO string for the due date
   paidDate?: string; // ISO string for when it was paid
+  paymentMethod?: string;
   tenantId: string;
 }
 
@@ -911,6 +913,15 @@ export interface DataContextType {
     period: { start: string; end: string },
     actingUser: User
   ) => ExecutiveReport | undefined;
+  saveAuditLog: (log: Omit<AuditLog, 'id' | 'timestamp'>) => void;
+  getTasksForPatient: (patientId: string) => Task[];
+  getAppointmentsForPatient: (patientId: string) => Appointment[];
+  getPrescriptionsForPatient: (patientId: string) => Prescription[];
+  getExerciseLogsForPatient: (patientId: string) => ExerciseLog[];
+  getAssessmentsForPatient: (patientId: string) => Assessment[];
+  getTransactionsForPatient: (patientId: string) => Transaction[];
+  getDocumentsForPatient: (patientId: string) => Document[];
+  getAllData: () => any;
 }
 
 // Gestão Operacional - Modelos de Dados
@@ -966,6 +977,8 @@ export interface Equipment {
   location: string;
   condition: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
   maintenanceSchedule: string; // ISO date for next maintenance
+  lastMaintenance?: string; // ISO date for last maintenance
+  nextMaintenance?: string; // ISO date for next maintenance
   usageHours?: number;
   cost: number;
   depreciationRate?: number;

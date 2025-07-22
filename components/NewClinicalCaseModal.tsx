@@ -342,7 +342,16 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Novo Caso Clínico"
-      size="xl"
+      footer={
+        <div className="flex justify-end space-x-3">
+          <Button variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleSave} disabled={!isFormValid}>
+            Salvar Caso
+          </Button>
+        </div>
+      }
     >
       <div className="max-h-[80vh] space-y-6 overflow-y-auto">
         {/* Basic Information */}
@@ -352,6 +361,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
           </h3>
 
           <FormField
+            name="title"
             label="Título do Caso"
             value={formData.title || ''}
             onChange={(e) => handleInputChange('title', e.target.value)}
@@ -397,6 +407,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
           </div>
 
           <FormField
+            name="pathology"
             label="Patologia"
             value={formData.pathology || ''}
             onChange={(e) => handleInputChange('pathology', e.target.value)}
@@ -420,7 +431,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 placeholder="Adicionar tag..."
                 className="flex-1 rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-slate-50"
               />
-              <Button variant="secondary" onClick={addTag} size="sm">
+              <Button variant="secondary" onClick={addTag} >
                 <IconPlus />
               </Button>
             </div>
@@ -451,6 +462,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <FormField
+              name="age"
               label="Idade"
               type="number"
               value={formData.anonymizedPatientData?.age || ''}
@@ -476,6 +488,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
               </select>
             </div>
             <FormField
+              name="occupation"
               label="Profissão"
               value={formData.anonymizedPatientData?.occupation || ''}
               onChange={(e) =>
@@ -486,13 +499,14 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
           </div>
 
           <FormField
+            name="relevantHistory"
             label="Histórico Relevante"
             value={formData.anonymizedPatientData?.relevantHistory || ''}
             onChange={(e) =>
               handlePatientDataChange('relevantHistory', e.target.value)
             }
             placeholder="Histórico médico relevante para o caso..."
-            multiline
+            as="textarea"
             rows={3}
           />
         </div>
@@ -503,13 +517,14 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
             Histórico Clínico
           </h3>
           <FormField
+            name="clinicalHistory"
             label="Descrição Detalhada"
             value={formData.clinicalHistory || ''}
             onChange={(e) =>
               handleInputChange('clinicalHistory', e.target.value)
             }
             placeholder="Descreva a queixa principal, início dos sintomas, evolução..."
-            multiline
+            as="textarea"
             rows={5}
             required
           />
@@ -521,7 +536,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
             <h3 className="text-lg font-semibold text-slate-50">
               Exames Realizados
             </h3>
-            <Button variant="secondary" onClick={addExamination} size="sm">
+            <Button variant="secondary" onClick={addExamination} >
               <IconPlus />
               <span>Adicionar Exame</span>
             </Button>
@@ -539,7 +554,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 <Button
                   variant="danger"
                   onClick={() => removeExamination(index)}
-                  size="sm"
+                  
                 >
                   <IconTrash />
                 </Button>
@@ -565,6 +580,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   </select>
                 </div>
                 <FormField
+                  name="examName"
                   label="Nome do Exame"
                   value={exam.name}
                   onChange={(e) =>
@@ -575,13 +591,14 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
               </div>
 
               <FormField
+                name="examFindings"
                 label="Achados"
                 value={exam.findings}
                 onChange={(e) =>
                   updateExamination(index, 'findings', e.target.value)
                 }
                 placeholder="Descreva os principais achados do exame..."
-                multiline
+                as="textarea"
                 rows={3}
               />
             </div>
@@ -594,6 +611,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField
+              name="treatmentDuration"
               label="Duração do Tratamento"
               value={formData.treatment?.duration || ''}
               onChange={(e) =>
@@ -602,6 +620,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
               placeholder="Ex: 8 semanas"
             />
             <FormField
+              name="treatmentFrequency"
               label="Frequência"
               value={formData.treatment?.frequency || ''}
               onChange={(e) =>
@@ -627,7 +646,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 placeholder="Adicionar objetivo..."
                 className="flex-1 rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-slate-50"
               />
-              <Button variant="secondary" onClick={addObjective} size="sm">
+              <Button variant="secondary" onClick={addObjective} >
                 <IconPlus />
               </Button>
             </div>
@@ -641,7 +660,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   <Button
                     variant="danger"
                     onClick={() => removeObjective(index)}
-                    size="sm"
+                    
                   >
                     <IconTrash className="h-3 w-3" />
                   </Button>
@@ -656,7 +675,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
               <label className="block text-sm font-medium text-slate-300">
                 Intervenções
               </label>
-              <Button variant="secondary" onClick={addIntervention} size="sm">
+              <Button variant="secondary" onClick={addIntervention} >
                 <IconPlus />
                 <span>Adicionar Intervenção</span>
               </Button>
@@ -674,7 +693,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   <Button
                     variant="danger"
                     onClick={() => removeIntervention(index)}
-                    size="sm"
+                    
                   >
                     <IconTrash />
                   </Button>
@@ -706,7 +725,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                     updateIntervention(index, 'description', e.target.value)
                   }
                   placeholder="Descreva a intervenção..."
-                  multiline
+                  as="textarea"
                   rows={2}
                 />
 
@@ -748,7 +767,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 placeholder="Adicionar precaução..."
                 className="flex-1 rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-slate-50"
               />
-              <Button variant="secondary" onClick={addPrecaution} size="sm">
+              <Button variant="secondary" onClick={addPrecaution} >
                 <IconPlus />
               </Button>
             </div>
@@ -762,7 +781,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   <Button
                     variant="danger"
                     onClick={() => removePrecaution(index)}
-                    size="sm"
+                    
                   >
                     <IconTrash className="h-3 w-3" />
                   </Button>
@@ -778,7 +797,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
             <h3 className="text-lg font-semibold text-slate-50">
               Evolução do Caso
             </h3>
-            <Button variant="secondary" onClick={addEvolution} size="sm">
+            <Button variant="secondary" onClick={addEvolution} >
               <IconPlus />
               <span>Adicionar Sessão</span>
             </Button>
@@ -796,7 +815,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 <Button
                   variant="danger"
                   onClick={() => removeEvolution(index)}
-                  size="sm"
+                  
                 >
                   <IconTrash />
                 </Button>
@@ -832,7 +851,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   updateEvolution(index, 'findings', e.target.value)
                 }
                 placeholder="O que foi observado nesta sessão..."
-                multiline
+                as="textarea"
                 rows={2}
               />
 
@@ -843,7 +862,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   updateEvolution(index, 'progress', e.target.value)
                 }
                 placeholder="Progresso observado..."
-                multiline
+                as="textarea"
                 rows={2}
               />
 
@@ -854,7 +873,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   updateEvolution(index, 'modifications', e.target.value)
                 }
                 placeholder="Modificações feitas no tratamento..."
-                multiline
+                as="textarea"
                 rows={2}
               />
 
@@ -865,7 +884,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   updateEvolution(index, 'nextSteps', e.target.value)
                 }
                 placeholder="Planejamento para as próximas sessões..."
-                multiline
+                as="textarea"
                 rows={2}
               />
             </div>
@@ -888,7 +907,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
               placeholder="Adicionar questão para discussão..."
               className="flex-1 rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-slate-50"
             />
-            <Button variant="secondary" onClick={addQuestion} size="sm">
+            <Button variant="secondary" onClick={addQuestion} >
               <IconPlus />
             </Button>
           </div>
@@ -902,7 +921,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 <Button
                   variant="danger"
                   onClick={() => removeQuestion(index)}
-                  size="sm"
+                  
                 >
                   <IconTrash className="h-3 w-3" />
                 </Button>
@@ -931,7 +950,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
             <Button
               variant="secondary"
               onClick={addLearningObjective}
-              size="sm"
+              
             >
               <IconPlus />
             </Button>
@@ -946,7 +965,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 <Button
                   variant="danger"
                   onClick={() => removeLearningObjective(index)}
-                  size="sm"
+                  
                 >
                   <IconTrash className="h-3 w-3" />
                 </Button>
@@ -976,14 +995,6 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
         </div>
       </div>
 
-      <div className="mt-6 flex justify-end space-x-3 border-t border-slate-700 pt-6">
-        <Button variant="secondary" onClick={onClose}>
-          Cancelar
-        </Button>
-        <Button variant="primary" onClick={handleSave} disabled={!isFormValid}>
-          Salvar Caso
-        </Button>
-      </div>
     </BaseModal>
   );
 };

@@ -10,7 +10,7 @@ import {
 import PageShell from './ui/PageShell';
 import Button from './ui/Button';
 import FormField from './ui/FormField';
-import Modal from './ui/Modal';
+import BaseModal from './ui/BaseModal';
 import {
   IconActivity,
   IconClock,
@@ -365,7 +365,7 @@ const PatientProtocolTrackingPage: React.FC = () => {
                 <div className="flex space-x-2">
                   <Button
                     variant="primary"
-                    size="sm"
+                    
                     onClick={() => {
                       setSelectedProtocol(patientProtocol);
                       setIsProgressModalOpen(true);
@@ -379,7 +379,7 @@ const PatientProtocolTrackingPage: React.FC = () => {
                   {patientProtocol.status === 'Ativo' && (
                     <Button
                       variant="secondary"
-                      size="sm"
+                      
                       onClick={() =>
                         updatePatientProtocolStatus(
                           patientProtocol.id,
@@ -394,7 +394,7 @@ const PatientProtocolTrackingPage: React.FC = () => {
                   {patientProtocol.status === 'Pausado' && (
                     <Button
                       variant="secondary"
-                      size="sm"
+                      
                       onClick={() =>
                         updatePatientProtocolStatus(patientProtocol.id, 'Ativo')
                       }
@@ -423,14 +423,14 @@ const PatientProtocolTrackingPage: React.FC = () => {
         )}
 
         {/* Progress Note Modal */}
-        <Modal
+        <BaseModal
           isOpen={isProgressModalOpen}
           onClose={() => {
             setIsProgressModalOpen(false);
             setSelectedProtocol(null);
           }}
           title="Registrar Progresso"
-          size="lg"
+          
         >
           {selectedProtocol && (
             <div className="space-y-6">
@@ -547,7 +547,7 @@ const PatientProtocolTrackingPage: React.FC = () => {
               </div>
             </div>
           )}
-        </Modal>
+        </BaseModal>
       </div>
     </PageShell>
   );

@@ -138,7 +138,7 @@ const ClinicalProtocolsLibraryPage: React.FC<
     user?.role === UserRole.ADMIN || user?.role === UserRole.FISIOTERAPEUTA;
 
   return (
-    <PageShell>
+    <PageShell title="Protocolos Clínicos">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -245,11 +245,11 @@ const ClinicalProtocolsLibraryPage: React.FC<
           <div className="flex flex-col gap-4 md:flex-row">
             <div className="flex-1">
               <FormField
+                name="searchTerm"
                 label=""
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar protocolos por nome, descrição ou indicação..."
-                icon={<IconSearch />}
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -295,7 +295,7 @@ const ClinicalProtocolsLibraryPage: React.FC<
               <p className="text-sm text-slate-400">
                 {filteredAndSortedProtocols.length} protocolo(s) encontrado(s)
               </p>
-              <Button variant="secondary" onClick={clearFilters} size="sm">
+              <Button variant="secondary" onClick={clearFilters} >
                 Limpar Filtros
               </Button>
             </div>

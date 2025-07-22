@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { aiCache } from './aiCache';
 import type {
   Patient,
   Task,
@@ -15,8 +16,21 @@ const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
  * @param progressNote The progress note written by an intern or physiotherapist.
  * @returns A string containing AI-generated feedback.
  */
-export async function getTaskSummary(progressNote: string): Promise<string> {
-  console.log('Calling Gemini API with note:', progressNote);
+export async function getTaskSummary(progressNote: string, userId = 'anonymous'): Promise<string> {
+  const cacheKey = `task_summary_${progressNote.slice(0, 50)}`;
+  
+  // Verifica cache primeiro
+  try {
+    const cached = aiCache.get(cacheKey, progressNote, userId);
+    if (cached) {
+      console.log('📋 Retornando análise do cache (economia ~$0.01)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log('🤖 Calling Gemini API with note (custo ~$0.01)');
 
   try {
     const systemInstruction =
@@ -35,6 +49,8 @@ export async function getTaskSummary(progressNote: string): Promise<string> {
       return 'A IA retornou uma resposta vazia. Tente reformular sua anotação.';
     }
 
+    // Armazena no cache para economizar nas próximas calls
+    aiCache.set(cacheKey, progressNote, text);
     return text;
   } catch (error) {
     console.error('Error calling Gemini API:', error);
@@ -59,9 +75,23 @@ export async function getTaskSummary(progressNote: string): Promise<string> {
  */
 export async function searchKnowledgeBase(
   query: string,
-  knowledgeBase: string
+  knowledgeBase: string,
+  userId = 'anonymous'
 ): Promise<string> {
-  console.log('Searching knowledge base with query:', query);
+  const cacheKey = `knowledge_${query.slice(0, 50)}`;
+  
+  // Verifica cache primeiro
+  try {
+    const cached = aiCache.get(cacheKey, query, userId);
+    if (cached) {
+      console.log('🔍 Retornando busca do cache (economia ~$0.02)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log('🤖 Searching knowledge base (custo ~$0.02)', query);
   try {
     const systemInstruction = `Você é um assistente especialista em fisioterapia para a clínica FisioFlow. Sua tarefa é responder perguntas baseando-se **estritamente** no conteúdo da base de conhecimento fornecida. Não invente informações. Se a resposta não estiver na base de conhecimento, diga claramente: "A informação não foi encontrada na base de conhecimento." Formate a resposta de forma clara e use markdown se apropriado.`;
 
@@ -82,6 +112,8 @@ export async function searchKnowledgeBase(
       return 'A IA não conseguiu processar a busca. Tente novamente.';
     }
 
+    // Armazena no cache
+    aiCache.set(cacheKey, query, text);
     return text;
   } catch (error) {
     console.error('Error calling Gemini API for knowledge base search:', error);
@@ -106,9 +138,23 @@ export async function searchKnowledgeBase(
  */
 export async function generatePatientReport(
   patient: Patient,
-  tasks: Task[]
+  tasks: Task[],
+  userId = 'anonymous'
 ): Promise<string> {
-  console.log(`Generating report for patient: ${patient.name}`);
+  const cacheKey = `report_${patient.id}_${tasks.length}_${patient.medicalHistory?.slice(0, 30)}`;
+  
+  // Verifica cache primeiro
+  try {
+    const cached = aiCache.get(cacheKey, patient.medicalHistory || '', userId);
+    if (cached) {
+      console.log('📄 Retornando relatório do cache (economia ~$0.03)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Generating report (custo ~$0.03): ${patient.name}`);
   try {
     const systemInstruction = `Você é um fisioterapeuta experiente e está redigindo um relatório de progresso para um paciente. Com base no histórico clínico e na lista de tarefas (plano de tratamento), gere um relatório conciso e profissional. O relatório deve ser estruturado com:
 1.  **Sumário do Paciente:** Breve descrição baseada no histórico clínico.
@@ -139,6 +185,8 @@ A resposta deve ser em formato Markdown, pronta para ser copiada. Use um tom for
       return 'A IA não conseguiu gerar o relatório. Tente novamente.';
     }
 
+    // Armazena no cache
+    aiCache.set(cacheKey, patient.medicalHistory || '', text);
     return text;
   } catch (error) {
     console.error('Error calling Gemini API for patient report:', error);
@@ -161,9 +209,24 @@ A resposta deve ser em formato Markdown, pronta para ser copiada. Use um tom for
  * @returns A string with the AI-generated treatment plan in Markdown format.
  */
 export async function generateTreatmentPlan(
-  assessment: Partial<Assessment>
+  assessment: Partial<Assessment>,
+  userId = 'anonymous'
 ): Promise<string> {
-  console.log(`Generating treatment plan for assessment:`, assessment.id);
+  const cacheKey = `treatment_${assessment.id}_${assessment.mainComplaint?.slice(0, 30)}`;
+  const inputData = `${assessment.mainComplaint} ${assessment.history} ${assessment.diagnosticHypothesis}`;
+  
+  // Verifica cache primeiro
+  try {
+    const cached = aiCache.get(cacheKey, inputData, userId);
+    if (cached) {
+      console.log('🩺 Retornando plano do cache (economia ~$0.02)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Generating treatment plan (custo ~$0.02):`, assessment.id);
   try {
     const systemInstruction = `Você é um fisioterapeuta sênior especialista em reabilitação. Sua tarefa é criar um plano de tratamento estruturado com base nas informações da avaliação do paciente. O plano deve ser conciso e prático. Organize a resposta em:
 1.  **Objetivos de Curto Prazo:** (Ex: Redução da dor, melhora da ADM).
@@ -192,6 +255,8 @@ Com base nesses dados, gere o plano de tratamento.`;
       return 'A IA não conseguiu gerar o plano de tratamento. Tente novamente.';
     }
 
+    // Armazena no cache
+    aiCache.set(cacheKey, inputData, text);
     return text;
   } catch (error) {
     console.error('Error calling Gemini API for treatment plan:', error);

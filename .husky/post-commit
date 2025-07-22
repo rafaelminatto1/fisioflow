@@ -1,0 +1,77 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Post-commit hook para FisioFlow
+echo "🎉 Commit realizado com sucesso!"
+
+# 1. Mostrar estatísticas do commit
+echo "📊 Estatísticas do commit:"
+git show --stat HEAD
+
+# 2. Verificar se é um commit de feature
+commit_message=$(git log -1 --pretty=%B)
+if echo "$commit_message" | grep -q "^feat"; then
+  echo "🚀 Nova feature detectada!"
+  echo "💡 Considere:"
+  echo "   - Atualizar documentação"
+  echo "   - Adicionar testes se necessário"
+  echo "   - Verificar se precisa de migration"
+fi
+
+# 3. Verificar se é um commit de fix
+if echo "$commit_message" | grep -q "^fix"; then
+  echo "🔧 Bug fix detectado!"
+  echo "💡 Considere:"
+  echo "   - Adicionar teste de regressão"
+  echo "   - Atualizar CHANGELOG.md"
+  echo "   - Verificar se afeta outras partes do sistema"
+fi
+
+# 4. Sugerir próximos passos baseado no branch
+current_branch=$(git branch --show-current)
+case $current_branch in
+  "main"|"master")
+    echo "🌟 Commit na branch principal!"
+    echo "💡 Próximos passos sugeridos:"
+    echo "   - Verificar se CI/CD passou"
+    echo "   - Considerar criar tag de release"
+    echo "   - Atualizar documentação de produção"
+    ;;
+  "develop"|"dev")
+    echo "🔄 Commit na branch de desenvolvimento!"
+    echo "💡 Próximos passos sugeridos:"
+    echo "   - Testar integração com outras features"
+    echo "   - Preparar para merge na main"
+    ;;
+  feature/*)
+    echo "✨ Commit em feature branch!"
+    echo "💡 Próximos passos sugeridos:"
+    echo "   - Continuar desenvolvimento"
+    echo "   - Preparar para code review"
+    echo "   - Testar localmente"
+    ;;
+  hotfix/*)
+    echo "🚨 Commit em hotfix branch!"
+    echo "💡 Próximos passos sugeridos:"
+    echo "   - Testar urgentemente"
+    echo "   - Preparar para deploy rápido"
+    echo "   - Documentar o problema resolvido"
+    ;;
+esac
+
+# 5. Verificar se há arquivos não commitados
+untracked=$(git ls-files --others --exclude-standard)
+if [ -n "$untracked" ]; then
+  echo "📁 Arquivos não rastreados encontrados:"
+  echo "$untracked" | head -5
+  if [ $(echo "$untracked" | wc -l) -gt 5 ]; then
+    echo "   ... e mais $(( $(echo "$untracked" | wc -l) - 5 )) arquivos"
+  fi
+  echo "💡 Use 'git add .' para adicionar ou atualize .gitignore"
+fi
+
+# 6. Mostrar próximo commit hash para referência
+echo "🔗 Hash do commit: $(git rev-parse --short HEAD)"
+echo "📋 Para referenciar: git show $(git rev-parse --short HEAD)"
+
+echo "✨ Happy coding! 🚀"

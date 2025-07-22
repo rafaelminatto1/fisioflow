@@ -8,7 +8,7 @@ import {
   ProtocolPhase,
   ProtocolExercise,
 } from '../types';
-import Modal from './ui/Modal';
+import BaseModal from "./ui/BaseModal";
 import Button from './ui/Button';
 import FormField from './ui/FormField';
 import {
@@ -159,11 +159,11 @@ const ProtocolPrescriptionModal: React.FC<ProtocolPrescriptionModalProps> = ({
   if (!protocol) return null;
 
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={onClose}
       title={`Prescrever Protocolo: ${protocol.name}`}
-      size="xl"
+      
     >
       <div className="space-y-6">
         {/* Patient Selection */}
@@ -426,7 +426,7 @@ const ProtocolPrescriptionModal: React.FC<ProtocolPrescriptionModalProps> = ({
           </Button>
         </div>
       </div>
-    </Modal>
+    </BaseModal>
   );
 };
 

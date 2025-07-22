@@ -1,7 +1,13 @@
-import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import LoginPage from './components/LoginPage';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import { 
+  Sidebar, 
+  Header, 
+  LoginPage,
+  LazyWrapper,
+  preloadCriticalRoutes,
+  preloadUserRoutes,
+  usePrefetchRoutes
+} from './components/LazyRoutes';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { DataProvider } from './hooks/useData';
 import { SystemEventsProvider } from './hooks/useSystemEvents';
@@ -10,53 +16,42 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { useData } from './hooks/useData';
 import { NotificationProvider } from './hooks/useNotification';
 import NotificationContainer from './components/NotificationContainer';
-import { IconBot } from './components/icons/IconComponents';
+import { Bot } from 'lucide-react';
 import ClinicOnboardingModal from './components/ClinicOnboardingModal';
 import PageLoader from './components/ui/PageLoader';
 
-// Lazy-loaded components
-const Dashboard = lazy(() => import('./components/Dashboard'));
-const KanbanBoard = lazy(() => import('./components/KanbanBoard'));
-const PatientPage = lazy(() => import('./components/PatientPage'));
-const NotebookPage = lazy(() => import('./components/NotebookPage'));
-const PatientPortal = lazy(() => import('./components/PatientPortal'));
-const CalendarPage = lazy(() => import('./components/CalendarPage'));
-const ExercisePage = lazy(() => import('./components/ExercisePage'));
-const FinancialPage = lazy(() => import('./components/FinancialPage'));
-const ReportsPage = lazy(() => import('./components/ReportsPage'));
-const StaffPage = lazy(() => import('./components/StaffPage'));
-const MentorshipPage = lazy(() => import('./components/MentorshipPage'));
-const ClinicalCasesLibraryPage = lazy(
-  () => import('./components/ClinicalCasesLibraryPage')
-);
-const ClinicalProtocolsLibraryPage = lazy(
-  () => import('./components/ClinicalProtocolsLibraryPage')
-);
-const ClinicalProtocolViewerPage = lazy(
-  () => import('./components/ClinicalProtocolViewerPage')
-);
-const PatientProtocolTrackingPage = lazy(
-  () => import('./components/PatientProtocolTrackingPage')
-);
-const ProtocolAnalyticsPage = lazy(
-  () => import('./components/ProtocolAnalyticsPage')
-);
-const AIAssistant = lazy(() => import('./components/AIAssistant'));
-const HomePage = lazy(() => import('./components/HomePage'));
-const CompliancePage = lazy(() => import('./components/CompliancePage'));
-const BillingPage = lazy(() => import('./components/BillingPage'));
-const SystemStatusPage = lazy(() => import('./components/SystemStatusPage'));
-const ChatPage = lazy(() => import('./components/ChatPage'));
-const MarketingPage = lazy(() => import('./components/MarketingPage'));
-const VendasPage = lazy(() => import('./components/VendasPage'));
-const SuportePage = lazy(() => import('./components/SuportePage'));
-const ParceriasPage = lazy(() => import('./components/ParceriasPage'));
-const OperationalDashboard = lazy(
-  () => import('./components/OperationalDashboard')
-);
-const UnifiedDashboard = lazy(
-  () => import('./components/UnifiedDashboard')
-);
+// Importa componentes lazy do LazyRoutes
+import {
+  Dashboard,
+  KanbanBoard, 
+  PatientPage,
+  NotebookPage,
+  PatientPortal,
+  CalendarPage,
+  ExercisePage,
+  FinancialPage,
+  ReportsPage,
+  StaffPage,
+  MentorshipPage,
+  ClinicalCasesLibraryPage,
+  ClinicalProtocolsLibraryPage,
+  ClinicalProtocolViewerPage,
+  PatientProtocolTrackingPage,
+  ProtocolAnalyticsPage,
+  AIAssistant,
+  HomePage,
+  CompliancePage,
+  BillingPage,
+  SystemStatusPage,
+  ChatPage,
+  SuportePage,
+  ParceriasPage,
+  OperationalDashboard,
+  UnifiedDashboard,
+  AnalyticsDashboard,
+  FinancialSummaryDashboard,
+  IntegrationsPage
+} from './components/LazyRoutes';
 
 const AppContent: React.FC = () => {
   const { user, logout } = useAuth();
@@ -69,6 +64,17 @@ const AppContent: React.FC = () => {
   const { notebooks } = useData();
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+  // Preload otimizado baseado no usuário
+  useEffect(() => {
+    if (user) {
+      preloadUserRoutes(user.role);
+      preloadCriticalRoutes();
+    }
+  }, [user?.role]);
+
+  // Hook de prefetch inteligente
+  usePrefetchRoutes(activeView, user?.role || '');
 
   useEffect(() => {
     if (user && user.role === UserRole.ADMIN && !user.tenantId) {
@@ -235,11 +241,11 @@ const AppContent: React.FC = () => {
       />
       <main className="flex flex-1 flex-col overflow-hidden">
         <Header breadcrumbs={breadcrumbs} />
-        <Suspense fallback={<PageLoader message="Carregando página..." />}>
-          <div
-            key={activeView}
-            className="animate-fade-in-up flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6"
-          >
+        <div
+          key={activeView}
+          className="animate-fade-in-up flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6"
+        >
+          <LazyWrapper>
             {activeView === 'home' && <HomePage />}
             {activeView === 'dashboard' && <Dashboard />}
             {activeView === 'projects' && <KanbanBoard />}
@@ -270,8 +276,7 @@ const AppContent: React.FC = () => {
             {activeView === 'compliance' && <CompliancePage />}
             {activeView === 'billing' && <BillingPage />}
             {activeView === 'status' && <SystemStatusPage />}
-            {activeView === 'marketing' && <MarketingPage />}
-            {activeView === 'vendas' && <VendasPage />}
+            {/* Páginas removidas para otimização - funcionalidade não crítica */}
             {activeView === 'suporte' && <SuportePage />}
             {activeView === 'parcerias' && <ParceriasPage />}
             {activeView === 'operational' && <OperationalDashboard />}
@@ -279,8 +284,8 @@ const AppContent: React.FC = () => {
             {activeView === 'notebook' && activePageId && (
               <NotebookPage pageId={activePageId} />
             )}
-          </div>
-        </Suspense>
+          </LazyWrapper>
+        </div>
       </main>
 
       <button
@@ -288,7 +293,7 @@ const AppContent: React.FC = () => {
         className="animate-fade-in fixed bottom-6 right-6 z-30 rounded-full bg-blue-600 p-4 text-white shadow-lg transition-transform hover:scale-110 hover:bg-blue-700"
         aria-label="Abrir Assistente IA"
       >
-        <IconBot />
+        <Bot size={24} />
       </button>
 
       <Suspense fallback={null}>

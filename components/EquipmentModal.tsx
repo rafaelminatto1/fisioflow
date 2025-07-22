@@ -140,8 +140,30 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
   const isEditing = !!equipment?.id;
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Editar Equipamento' : 'Novo Equipamento'}>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <BaseModal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title={isEditing ? 'Editar Equipamento' : 'Novo Equipamento'}
+      footer={
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 border border-slate-600 text-slate-300 rounded-md hover:bg-slate-700 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="equipment-form"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            {isEditing ? 'Atualizar' : 'Criar'}
+          </button>
+        </div>
+      }
+    >
+      <form id="equipment-form" onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Nome */}
           <div>
@@ -395,21 +417,6 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
                 Excluir
               </button>
             )}
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-slate-600 text-slate-300 rounded-md hover:bg-slate-700 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              {isEditing ? 'Atualizar' : 'Criar'}
-            </button>
           </div>
         </div>
       </form>

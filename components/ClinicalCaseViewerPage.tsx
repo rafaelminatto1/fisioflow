@@ -97,7 +97,7 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
 
   if (!clinicalCase) {
     return (
-      <PageShell>
+      <PageShell title="Caso não encontrado">
         <div className="py-12 text-center">
           <h1 className="mb-4 text-2xl font-bold text-slate-50">
             Caso não encontrado
@@ -192,7 +192,7 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
   ];
 
   return (
-    <PageShell>
+    <PageShell title={clinicalCase.title}>
       <div className="space-y-6">
         {/* Header */}
         <div className="rounded-lg bg-slate-800 p-6">
@@ -664,11 +664,12 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
                     </div>
 
                     <FormField
+                      name="userReview"
                       label="Comentário (opcional)"
                       value={userReview}
                       onChange={(e) => setUserReview(e.target.value)}
                       placeholder="Deixe sua opinião sobre este caso..."
-                      multiline
+                      as="textarea"
                       rows={3}
                     />
 
@@ -676,7 +677,7 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
                       variant="primary"
                       onClick={handleRateCase}
                       disabled={userRating === 0}
-                      size="sm"
+                      
                     >
                       {userRatingData ? 'Atualizar Avaliação' : 'Avaliar'}
                     </Button>
@@ -692,6 +693,7 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
                   </h4>
                   <div className="space-y-3">
                     <FormField
+                      name="newComment"
                       label=""
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
@@ -700,7 +702,7 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
                           ? 'Escreva sua resposta...'
                           : 'Compartilhe suas reflexões sobre este caso...'
                       }
-                      multiline
+                      as="textarea"
                       rows={3}
                     />
                     <div className="flex space-x-3">
@@ -708,7 +710,7 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
                         variant="primary"
                         onClick={handleAddComment}
                         disabled={!newComment.trim()}
-                        size="sm"
+                        
                       >
                         {replyToComment ? 'Responder' : 'Comentar'}
                       </Button>
@@ -719,7 +721,7 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
                             setReplyToComment(null);
                             setNewComment('');
                           }}
-                          size="sm"
+                          
                         >
                           Cancelar
                         </Button>

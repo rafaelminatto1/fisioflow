@@ -524,7 +524,7 @@ export const IntegrationsPage: React.FC = () => {
         });
       } else {
         addNotification({
-          type: 'warning',
+          type: 'info',
           title: 'Sincronização com Erros',
           message: `${totalRecords} registros processados, mas ${errors.length} erros encontrados.`,
         });
@@ -578,9 +578,16 @@ export const IntegrationsPage: React.FC = () => {
           <PaywallModal
             isOpen={showPaywall}
             onClose={() => setShowPaywall(false)}
+            reason={paywallReason}
+            blockedResource="Integrações Externas"
+            currentPlan="free"
+            recommendedPlan="silver"
+            onUpgrade={(plan) => {
+              console.log('Upgrade to:', plan);
+              setShowPaywall(false);
+            }}
             feature="Integrações Externas"
             description={paywallReason}
-            recommendedPlan="silver"
           />
         )}
       </div>
@@ -699,9 +706,16 @@ export const IntegrationsPage: React.FC = () => {
         <PaywallModal
           isOpen={showPaywall}
           onClose={() => setShowPaywall(false)}
+          reason={paywallReason}
+          blockedResource="Integrações Externas"
+          currentPlan="free"
+          recommendedPlan="silver"
+          onUpgrade={(plan) => {
+            console.log('Upgrade to:', plan);
+            setShowPaywall(false);
+          }}
           feature="Integrações Externas"
           description={paywallReason}
-          recommendedPlan="silver"
         />
       )}
     </div>

@@ -25,7 +25,6 @@ import type { AbandonmentRiskPrediction } from '../types';
 import Button from './ui/Button';
 import PageLoader from './ui/PageLoader';
 import OnboardingChecklist from './OnboardingChecklist';
-import OnboardingChecklist from './OnboardingChecklist';
 
 const productivityData = [
   { name: 'Dr. Ana', produtividade: 85 },

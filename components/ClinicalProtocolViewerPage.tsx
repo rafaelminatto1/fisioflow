@@ -86,7 +86,7 @@ const ClinicalProtocolViewerPage: React.FC<ClinicalProtocolViewerPageProps> = ({
 
   if (!protocol) {
     return (
-      <PageShell>
+      <PageShell title="Protocolo não encontrado">
         <div className="py-12 text-center">
           <h1 className="mb-4 text-2xl font-bold text-slate-50">
             Protocolo não encontrado
@@ -160,7 +160,7 @@ const ClinicalProtocolViewerPage: React.FC<ClinicalProtocolViewerPageProps> = ({
   ];
 
   return (
-    <PageShell>
+    <PageShell title={protocol.title}>
       <div className="space-y-6">
         {/* Back Button */}
         {onBack && (

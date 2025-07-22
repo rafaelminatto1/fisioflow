@@ -62,6 +62,7 @@ interface SystemEventsContextType {
   events: SystemEvent[];
   triggerEvent: (type: SystemEventType, data: any, source: string, userId: string, tenantId: string) => void;
   subscribeToEvent: (eventType: SystemEventType, handler: (event: SystemEvent) => void, module: string) => () => void;
+  subscribeToSystemEvents: (eventType: SystemEventType, handler: (event: SystemEvent) => void, module: string) => () => void;
   getModuleIntegrations: () => ModuleIntegration[];
   // Integration functions
   convertPatientToClinicalCase: (patientId: string, userId: string) => Promise<ClinicalCase | null>;
@@ -387,6 +388,7 @@ export const SystemEventsProvider: React.FC<SystemEventsProviderProps> = ({ chil
     events,
     triggerEvent,
     subscribeToEvent,
+    subscribeToSystemEvents: subscribeToEvent, // Alias for compatibility
     getModuleIntegrations,
     convertPatientToClinicalCase,
     suggestProtocolForDiagnosis,

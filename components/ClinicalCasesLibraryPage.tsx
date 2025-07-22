@@ -138,13 +138,10 @@ const ClinicalCasesLibraryPage: React.FC = () => {
     user?.role === UserRole.ADMIN || user?.role === UserRole.FISIOTERAPEUTA;
 
   return (
-    <PageShell>
+    <PageShell title="Biblioteca de Casos Clínicos">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-50">
-              Biblioteca de Casos Clínicos
-            </h1>
             <p className="mt-1 text-slate-400">
               Explore casos clínicos educacionais para aprimorar seu aprendizado
             </p>
@@ -166,11 +163,11 @@ const ClinicalCasesLibraryPage: React.FC = () => {
           <div className="flex flex-col gap-4 md:flex-row">
             <div className="flex-1">
               <FormField
+                name="search"
                 label=""
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por título, patologia ou tags..."
-                icon={<IconSearch />}
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -251,7 +248,7 @@ const ClinicalCasesLibraryPage: React.FC = () => {
               selectedDifficulty ||
               selectedTags.length > 0 ||
               showFavoritesOnly) && (
-              <Button variant="secondary" onClick={clearFilters} size="sm">
+              <Button variant="secondary" onClick={clearFilters}>
                 Limpar Filtros
               </Button>
             )}
