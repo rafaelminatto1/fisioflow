@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -6,18 +6,16 @@ import {
   Calendar,
   DollarSign,
   Activity,
-  Clock,
   Target,
   AlertCircle,
   BarChart3,
-  PieChart,
   LineChart,
-  Filter,
   Download,
   RefreshCw,
 } from 'lucide-react';
 import { useData } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
+import { UserRole } from '../types';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { Patient, Appointment, Transaction, User } from '../types';
 
@@ -98,13 +96,13 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   // Calculate key metrics
   const metrics = useMemo(() => {
     const totalRevenue = filteredData.transactions
-      .filter((t) => t.type === 'income')
+      .filter((t) => t.type === 'receita')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const totalPatients = filteredData.patients.length;
     const totalAppointments = filteredData.appointments.length;
     const activeTherapists = filteredData.users.filter(
-      (u) => u.role === 'physiotherapist'
+      (u) => u.role === UserRole.FISIOTERAPEUTA
     ).length;
 
     // Calculate previous period for comparison
@@ -134,7 +132,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       .filter(
         (t) =>
           t.tenantId === user?.tenantId &&
-          t.type === 'income' &&
+          t.type === 'receita' &&
           new Date(t.date) >= prevPeriodStart &&
           new Date(t.date) <= prevPeriodEnd
       )
@@ -227,7 +225,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       const dayRevenue = filteredData.transactions
         .filter(
           (t) =>
-            t.type === 'income' &&
+            t.type === 'receita' &&
             new Date(t.date).toDateString() === date.toDateString()
         )
         .reduce((sum, t) => sum + t.amount, 0);

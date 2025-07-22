@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useData } from '../hooks/useData';
-import { GoogleGenAI, Chat } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   IconX,
   IconSparkles,
@@ -34,8 +34,8 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [chat, setChat] = useState<Chat | null>(null);
-  const [intentExtractionChat, setIntentExtractionChat] = useState<Chat | null>(
+  const [chat, setChat] = useState<any | null>(null);
+  const [intentExtractionChat, setIntentExtractionChat] = useState<any | null>(
     null
   );
   const [isFirstMessage, setIsFirstMessage] = useState(true);
@@ -149,10 +149,9 @@ Formato da resposta:
 }`;
 
     try {
-      const response = await intentExtractionChat.sendMessage({
-        message: intentPrompt,
-      });
-      return JSON.parse(response.text);
+      const response = await intentExtractionChat.sendMessage(intentPrompt);
+      const result = await response.response;
+      return JSON.parse(result.text());
     } catch (error) {
       console.error('Error extracting intent:', error);
       return null;
@@ -271,17 +270,14 @@ Formato da resposta:
 
   useEffect(() => {
     if (isOpen) {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
       // Create intent extraction chat
-      const intentChat = ai.chats.create({
-        model: 'gemini-2.5-flash',
-        config: {
-          systemInstruction:
-            'Você é um extrator de intenções. Analise mensagens de usuários e extraia intenções e entidades em formato JSON. Seja preciso e conciso.',
-        },
+      const intentModel = ai.getGenerativeModel({ 
+        model: "gemini-pro",
+        systemInstruction: 'Você é um extrator de intenções. Analise mensagens de usuários e extraia intenções e entidades em formato JSON. Seja preciso e conciso.'
       });
-      setIntentExtractionChat(intentChat);
+      setIntentExtractionChat(intentModel.startChat());
 
       const patientInstruction = `Você é um assistente amigável e prestativo para um paciente da clínica FisioFlow. Seu objetivo é responder a perguntas sobre os agendamentos e exercícios prescritos do paciente, baseando-se **apenas** nos dados fornecidos no contexto. **Nunca** forneça conselhos médicos, diagnósticos ou interprete sintomas. Se for solicitado um conselho médico, recuse educadamente e recomende que o paciente fale com seu fisioterapeuta. Seja sempre solidário e encorajador. Responda em português.\n\nIMPORTANTE: Quando apropriado, inclua sugestões de ações no final da sua resposta em formato JSON dentro de um bloco de código com a tag "\`\`\`json-actions". O formato deve ser:\n\`\`\`json-actions\n{\n  "suggestedActions": [\n    {"label": "Texto do Botão", "action": "ACAO_ESPECIFICA", "payload": {...}}\n  ]\n}\n\`\`\`\n\nAções disponíveis para pacientes: VIEW_EXERCISES, CONTACT_THERAPIST, VIEW_NEXT_APPOINTMENT.`;
 
@@ -290,11 +286,11 @@ Formato da resposta:
       const systemInstruction =
         contextType === 'patient' ? patientInstruction : staffInstruction;
 
-      const newChat = ai.chats.create({
-        model: 'gemini-2.5-flash',
-        config: { systemInstruction },
+      const model = ai.getGenerativeModel({ 
+        model: "gemini-pro",
+        systemInstruction 
       });
-      setChat(newChat);
+      setChat(model.startChat());
       setIsFirstMessage(true);
 
       const initialMessage =
@@ -350,8 +346,9 @@ Formato da resposta:
         setIsFirstMessage(false);
       }
 
-      const response = await chat.sendMessage({ message: messageToSend });
-      const responseText = response.text;
+      const response = await chat.sendMessage(messageToSend);
+      const result = await response.response;
+      const responseText = result.text();
 
       const { cleanText, suggestedActions } =
         parseActionSuggestions(responseText);

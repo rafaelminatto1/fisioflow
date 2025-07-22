@@ -129,13 +129,13 @@ const CalendarPage: React.FC = () => {
 
   const handleSaveTimeBlock = (timeBlock: TimeBlock) => {
     if (!user) return;
-    saveTimeBlock(timeBlock);
+    saveTimeBlock(timeBlock, user);
     handleCloseTimeBlockModal();
   };
 
   const handleDeleteTimeBlock = (timeBlockId: string) => {
     if (!user) return;
-    deleteTimeBlock(timeBlockId);
+    deleteTimeBlock(timeBlockId, user);
     handleCloseTimeBlockModal();
   };
 

@@ -106,6 +106,7 @@ export const INITIAL_PATIENTS: Patient[] = [
     medicalHistory:
       'Histórico de hérnia de disco L4-L5. Apresenta dor irradiada para membro inferior esquerdo.',
     consent: { given: true, timestamp: new Date().toISOString() },
+    createdAt: new Date().toISOString(),
     tenantId: 't1',
   },
   {
@@ -117,6 +118,7 @@ export const INITIAL_PATIENTS: Patient[] = [
     medicalHistory:
       'Pós-operatório de reconstrução de LCA no joelho direito, 4ª semana. Foco em ganho de ADM e ativação do quadríceps.',
     consent: { given: true, timestamp: new Date().toISOString() },
+    createdAt: new Date().toISOString(),
     tenantId: 't1',
   },
   {
@@ -128,6 +130,7 @@ export const INITIAL_PATIENTS: Patient[] = [
     medicalHistory:
       'Diagnóstico de tendinite crônica no ombro esquerdo (supraespinhal). Limitação para atividades acima da cabeça.',
     consent: { given: true, timestamp: new Date().toISOString() },
+    createdAt: new Date().toISOString(),
     tenantId: 't1',
   },
 ];
@@ -231,6 +234,10 @@ const getFutureDate = (dayOffset: number, hour: number, minute: number) => {
   date.setHours(hour, minute, 0, 0);
   return date.toISOString();
 };
+
+const getDateFromISO = (isoString: string) => {
+  return isoString.split('T')[0];
+};
 const getPastDate = (
   dayOffset: number,
   hour: number = 12,
@@ -250,6 +257,7 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     therapistId: '2',
     start: getFutureDate(1, 9, 0),
     end: getFutureDate(1, 9, 50),
+    date: getDateFromISO(getFutureDate(1, 9, 0)),
     notes: 'Foco em exercícios para fortalecimento do core.',
     tenantId: 't1',
   },
@@ -260,6 +268,7 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     therapistId: '2',
     start: getFutureDate(1, 10, 0),
     end: getFutureDate(1, 10, 50),
+    date: getDateFromISO(getFutureDate(1, 10, 0)),
     tenantId: 't1',
   },
   {
@@ -269,6 +278,7 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     therapistId: '1',
     start: getFutureDate(3, 14, 0),
     end: getFutureDate(3, 14, 50),
+    date: getDateFromISO(getFutureDate(3, 14, 0)),
     notes: 'Avaliação do ombro esquerdo.',
     tenantId: 't1',
   },
@@ -279,6 +289,7 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     therapistId: '2',
     start: getFutureDate(8, 9, 0),
     end: getFutureDate(8, 9, 50),
+    date: getDateFromISO(getFutureDate(8, 9, 0)),
     tenantId: 't1',
   },
 ];
@@ -454,6 +465,8 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     description: 'Pacote 10 Sessões Fisioterapia',
     amount: 1200,
     status: 'pago',
+    type: 'receita',
+    date: getPastDate(18),
     dueDate: getPastDate(20),
     paidDate: getPastDate(18),
     tenantId: 't1',
@@ -464,6 +477,8 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     description: 'Avaliação Inicial',
     amount: 150,
     status: 'pago',
+    type: 'receita',
+    date: getPastDate(30),
     dueDate: getPastDate(30),
     paidDate: getPastDate(30),
     tenantId: 't1',
@@ -474,6 +489,8 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     description: 'Sessão Avulsa',
     amount: 130,
     status: 'pendente',
+    type: 'receita',
+    date: getFutureDate(10, 0, 0),
     dueDate: getFutureDate(10, 0, 0),
     tenantId: 't1',
   },

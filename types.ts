@@ -34,6 +34,7 @@ export interface User {
   avatarUrl: string;
   patientProfileId?: string;
   email?: string;
+  phone?: string;
   tenantId?: string;
 }
 
@@ -114,6 +115,7 @@ export interface Patient {
     given: boolean;
     timestamp?: string; // ISO string
   };
+  createdAt: string; // ISO string
   tenantId: string;
 }
 
@@ -152,6 +154,7 @@ export interface Appointment {
   therapistId: string;
   start: string; // ISO string format
   end: string; // ISO string format
+  date: string; // ISO string date (YYYY-MM-DD)
   notes?: string;
   tenantId: string;
 }
@@ -204,6 +207,8 @@ export interface Transaction {
   description: string;
   amount: number;
   status: 'pago' | 'pendente';
+  type: 'receita' | 'despesa';
+  date: string; // ISO string for the transaction date
   dueDate: string; // ISO string for the due date
   paidDate?: string; // ISO string for when it was paid
   tenantId: string;
@@ -821,6 +826,8 @@ export interface DataContextType {
   addTaskFeedback: (taskId: string, feedback: string) => void;
   saveAppointment: (appointment: Appointment, actingUser: User) => void;
   deleteAppointment: (appointmentId: string, actingUser: User) => void;
+  saveTimeBlock: (timeBlock: TimeBlock, actingUser: User) => void;
+  deleteTimeBlock: (timeBlockId: string, actingUser: User) => void;
   saveExercise: (exercise: Exercise, actingUser: User) => void;
   deleteExercise: (exerciseId: string, actingUser: User) => void;
   savePrescription: (prescription: Prescription, actingUser: User) => void;

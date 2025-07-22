@@ -2529,6 +2529,10 @@ export const useData = (): DataContextType => {
     [appointments, transactions, qualityIndicators, productivityMetrics, equipment, operationalAlerts, users, addAuditLog]
   );
 
+  const saveAuditLog = useCallback((log: Omit<AuditLog, 'id' | 'timestamp'>) => {
+    addAuditLog(log);
+  }, [addAuditLog]);
+
   return {
     ...rest,
     users,
@@ -2611,5 +2615,6 @@ export const useData = (): DataContextType => {
     saveEquipment,
     deleteEquipment,
     generateExecutiveReport,
+    saveAuditLog,
   } as DataContextType;
 };

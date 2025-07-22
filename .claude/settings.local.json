@@ -7,7 +7,12 @@
       "Bash(mkdir:*)",
       "Bash(npm install:*)",
       "Bash(rm:*)",
-      "Bash(timeout 5 npm run dev)"
+      "Bash(timeout 5 npm run dev)",
+      "Bash(npm run type-check:*)",
+      "Bash(tail:*)",
+      "Bash(del package-lock.json)",
+      "Bash(npm cache clean:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

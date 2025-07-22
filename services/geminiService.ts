@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import type {
   Patient,
   Task,
@@ -8,7 +8,7 @@ import type {
 
 // This implementation now uses the real Gemini API.
 // The API key is expected to be available in the environment variables.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 /**
  * Generates a summary and feedback for a physiotherapist's progress note.
@@ -22,16 +22,14 @@ export async function getTaskSummary(progressNote: string): Promise<string> {
     const systemInstruction =
       'Você é um fisioterapeuta sênior e mentor. Sua tarefa é analisar a anotação de progresso de um estagiário de fisioterapia. Forneça um feedback construtivo, em português, destacando pontos positivos, áreas para melhoria e sugestões práticas para aprimorar o tratamento e o registro clínico. A resposta deve ser em formato de bullet points concisos e claros.';
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Analisar a seguinte anotação de progresso: "${progressNote}"`,
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.7,
-      },
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
     });
 
-    const text = response.text;
+    const response = await model.generateContent(`Analisar a seguinte anotação de progresso: "${progressNote}"`);
+    const result = await response.response;
+    const text = result.text();
     if (!text) {
       console.warn('Gemini API returned an empty response.');
       return 'A IA retornou uma resposta vazia. Tente reformular sua anotação.';
@@ -69,16 +67,14 @@ export async function searchKnowledgeBase(
 
     const content = `Base de Conhecimento:\n---\n${knowledgeBase}\n---\n\nPergunta do Usuário: "${query}"`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: content,
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.2,
-      },
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
     });
 
-    const text = response.text;
+    const response = await model.generateContent(content);
+    const result = await response.response;
+    const text = result.text();
     if (!text) {
       console.warn(
         'Gemini API returned an empty response for knowledge base search.'
@@ -130,16 +126,14 @@ A resposta deve ser em formato Markdown, pronta para ser copiada. Use um tom for
       .join('\n');
     const content = `**Histórico Clínico do Paciente:**\n${patient.medicalHistory}\n\n**Tarefas e Evolução:**\n${taskHistory || 'Nenhuma tarefa registrada.'}`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: content,
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.5,
-      },
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
     });
 
-    const text = response.text;
+    const response = await model.generateContent(content);
+    const result = await response.response;
+    const text = result.text();
     if (!text) {
       console.warn('Gemini API returned an empty response for patient report.');
       return 'A IA não conseguiu gerar o relatório. Tente novamente.';
@@ -185,16 +179,14 @@ A resposta deve ser em formato Markdown e em português.`;
 
 Com base nesses dados, gere o plano de tratamento.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: content,
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.6,
-      },
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
     });
 
-    const text = response.text;
+    const response = await model.generateContent(content);
+    const result = await response.response;
+    const text = result.text();
     if (!text) {
       console.warn('Gemini API returned an empty response for treatment plan.');
       return 'A IA não conseguiu gerar o plano de tratamento. Tente novamente.';
@@ -226,30 +218,16 @@ export async function predictAbandonmentRisk(
   try {
     const systemInstruction =
       "Você é um analista de dados para uma clínica de fisioterapia. Analise a lista de métricas de pacientes anonimizados para identificar indivíduos com alto risco de abandonar o tratamento. Retorne um array JSON de objetos, cada um com 'patientId', 'riskLevel' ('Alto', 'Médio', 'Baixo') e um 'reason' conciso. Foque em padrões como longos intervalos entre consultas, baixa adesão a exercícios e pagamentos pendentes.";
-    const schema = {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          patientId: { type: Type.STRING },
-          riskLevel: { type: Type.STRING, enum: ['Alto', 'Médio', 'Baixo'] },
-          reason: { type: Type.STRING },
-        },
-        required: ['patientId', 'riskLevel', 'reason'],
-      },
-    };
+    // Schema removed due to API compatibility issues
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Analise os seguintes dados de pacientes:\n${JSON.stringify(anonymizedPatientData, null, 2)}`,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: schema,
-      },
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
     });
 
-    const jsonText = response.text.trim();
+    const response = await model.generateContent(`Analise os seguintes dados de pacientes:\n${JSON.stringify(anonymizedPatientData, null, 2)}`);
+    const result = await response.response;
+    const jsonText = result.text().trim();
     return JSON.parse(jsonText);
   } catch (error) {
     console.error('Error in predictAbandonmentRisk:', error);
@@ -271,40 +249,16 @@ export async function generateSOAPNote(notes: string): Promise<{
   try {
     const systemInstruction =
       'Você é um escriba médico especializado em fisioterapia. Converta as seguintes anotações de consulta não estruturadas em uma nota SOAP estruturada (Subjetivo, Objetivo, Avaliação, Plano). Garanta que a saída seja um objeto JSON. Seja conciso e use linguagem clínica.';
-    const schema = {
-      type: Type.OBJECT,
-      properties: {
-        subjective: {
-          type: Type.STRING,
-          description: 'O que o paciente relata.',
-        },
-        objective: {
-          type: Type.STRING,
-          description: 'O que o terapeuta observa e mede.',
-        },
-        assessment: {
-          type: Type.STRING,
-          description: 'A análise do terapeuta sobre o progresso.',
-        },
-        plan: {
-          type: Type.STRING,
-          description: 'Os próximos passos do tratamento.',
-        },
-      },
-      required: ['subjective', 'objective', 'assessment', 'plan'],
-    };
+    // Schema removed due to API compatibility issues
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Converta estas anotações: "${notes}"`,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: schema,
-      },
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
     });
 
-    const jsonText = response.text.trim();
+    const response = await model.generateContent(`Converta estas anotações: "${notes}"`);
+    const result = await response.response;
+    const jsonText = result.text().trim();
     return JSON.parse(jsonText);
   } catch (error) {
     console.error('Error in generateSOAPNote:', error);

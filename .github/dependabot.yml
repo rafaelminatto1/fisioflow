@@ -40,10 +40,9 @@ updates:
           - "@testing-library/*"
           - "@jest/*"
     # Ignorar atualizações específicas se necessário
-    ignore:
-      # Exemplo: ignorar major updates do React por enquanto
-      # - dependency-name: "react"
-      #   update-types: ["version-update:semver-major"]
+    # ignore:
+    #   - dependency-name: "react"
+    #     update-types: ["version-update:semver-major"]
       
   # Atualizações do GitHub Actions
   - package-ecosystem: "github-actions"

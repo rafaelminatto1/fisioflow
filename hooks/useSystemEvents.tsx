@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { User, Patient, Appointment, Assessment, ClinicalCase, ClinicalProtocol, Task } from '../types';
+import CrossModuleNotificationService from '../services/crossModuleNotificationService';
 
 // System Event Types
 export enum SystemEventType {
@@ -45,6 +46,10 @@ export interface SystemEvent {
   tenantId: string;
   userId: string;
   processed: boolean;
+  // Additional fields for cross-module notifications
+  module: string;
+  action: string;
+  metadata?: any;
 }
 
 export interface EventHandler {
@@ -145,6 +150,9 @@ export const SystemEventsProvider: React.FC<SystemEventsProviderProps> = ({ chil
       tenantId,
       userId,
       processed: false,
+      module: source,
+      action: type,
+      metadata: data,
     };
 
     setEvents(prev => [...prev, event]);
@@ -158,6 +166,13 @@ export const SystemEventsProvider: React.FC<SystemEventsProviderProps> = ({ chil
         console.error(`Error processing event ${type} in module ${handler.module}:`, error);
       }
     });
+
+    // Process cross-module notifications
+    try {
+      CrossModuleNotificationService.processSystemEvent(event);
+    } catch (error) {
+      console.error('Error processing cross-module notifications for event:', error);
+    }
 
     // Mark event as processed
     setTimeout(() => {

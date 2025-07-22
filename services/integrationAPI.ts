@@ -281,9 +281,8 @@ export class IntegrationAPI {
     }
 
     // Calculate total results
-    results.total = Object.values(results)
-      .filter((value): value is any[] => Array.isArray(value))
-      .reduce((sum, arr) => sum + arr.length, 0);
+    const resultArrays = Object.values(results).filter(Array.isArray) as any[][];
+    results.total = resultArrays.reduce((sum, arr) => sum + arr.length, 0);
 
     return results;
   }

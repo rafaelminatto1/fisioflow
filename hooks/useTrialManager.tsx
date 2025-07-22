@@ -521,7 +521,7 @@ export const TrialManagerProvider: React.FC<TrialManagerProviderProps> = ({
       }
 
       addNotification({
-        type: 'warning',
+        type: 'info',
         title: 'Trial Expirado',
         message:
           'Seu trial expirou. Você foi movido para o plano gratuito. Faça upgrade para continuar usando os recursos premium.',

@@ -21,6 +21,9 @@ interface PaywallModalProps {
   currentPlan: SubscriptionPlan;
   recommendedPlan: SubscriptionPlan | null;
   onUpgrade: (plan: SubscriptionPlan) => void;
+  feature?: string;
+  title?: string;
+  description?: string;
 }
 
 const PLAN_DETAILS: Record<

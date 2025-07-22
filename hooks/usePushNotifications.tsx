@@ -537,7 +537,20 @@ export const PushNotificationsProvider: React.FC<
     notification: Omit<PushNotification, 'id' | 'timestamp' | 'isRead'>
   ): boolean => {
     if (!settings.enabled || !isPermissionGranted) return false;
-    if (!settings.types[notification.type]) return false;
+    
+    // Map notification types to settings types
+    const typeMapping: Record<PushNotification['type'], keyof NotificationSettings['types']> = {
+      appointment: 'appointments',
+      reminder: 'reminders',
+      exercise: 'exercises',
+      message: 'messages',
+      system: 'system',
+      marketing: 'marketing',
+      emergency: 'system', // Map emergency to system type
+    };
+    
+    const settingsType = typeMapping[notification.type];
+    if (!settingsType || !settings.types[settingsType]) return false;
     if (notification.priority !== 'critical' && isInQuietHours()) return false;
 
     return true;

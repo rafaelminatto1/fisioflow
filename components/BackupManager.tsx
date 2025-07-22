@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useBackupSync } from '../hooks/useBackupSync';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
-import { PaywallModal } from './PaywallModal';
+import PaywallModal from './PaywallModal';
 import type {
   BackupConfig,
   BackupDestination,
@@ -90,6 +90,14 @@ const BackupManager: React.FC<BackupManagerProps> = ({ className = '' }) => {
           <PaywallModal
             isOpen={showPaywall}
             onClose={() => setShowPaywall(false)}
+            reason="Backup e sincronização automática estão disponíveis apenas nos planos pagos."
+            blockedResource="backup_sync"
+            currentPlan="free"
+            recommendedPlan="gold"
+            onUpgrade={(plan) => {
+              console.log('Upgrade to:', plan);
+              setShowPaywall(false);
+            }}
             feature="backup_sync"
             title="Backup e Sincronização"
             description="Mantenha seus dados seguros com backup automático e sincronização em tempo real."
