@@ -1,0 +1,34 @@
+name: "CodeQL Config"
+
+# Configuração para análise CodeQL
+queries:
+  - uses: security-and-quality
+
+# Caminhos para incluir na análise
+paths:
+  - "src"
+  - "components"
+  - "hooks"
+  - "services"
+  - "types.ts"
+  - "constants.tsx"
+
+# Caminhos para ignorar
+paths-ignore:
+  - "node_modules"
+  - "dist"
+  - "build"
+  - "coverage"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/*.spec.tsx"
+  - "src/test"
+  - "docs"
+  - "templates"
+  - "app"
+  - "routes"
+
+# Configurações específicas para JavaScript/TypeScript
+languages:
+  - javascript

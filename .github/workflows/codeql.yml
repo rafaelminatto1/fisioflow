@@ -28,9 +28,10 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 🔍 Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
+        config-file: ./.github/codeql/codeql-config.yml
         # Se você quiser especificar queries customizadas, descomente a linha abaixo
         # queries: security-extended,security-and-quality
 
@@ -44,7 +45,7 @@ jobs:
     #     echo "Run, Build Application using script"
     #     ./location_of_script_within_repo/buildscript.sh
 
-    - name: 📊 Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+    - name: 🔍 Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
