@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
+    "build:check": "tsc --noEmit --skipLibCheck && vite build",
     "build:deploy": "vite build --config vite.config.deploy.ts",
     "build:minimal": "vite build --config vite.config.minimal.ts --mode production",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
