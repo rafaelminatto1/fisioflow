@@ -5,6 +5,65 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
+
+// StoreKit 2 interfaces
+interface StoreKit2Transaction {
+  id: string;
+  productID: string;
+  purchaseDate: Date;
+  originalPurchaseDate: Date;
+  expirationDate?: Date;
+  revocationDate?: Date;
+  isUpgraded: boolean;
+  offerID?: string;
+  offerType?: number;
+  environment: 'Sandbox' | 'Production';
+  ownershipType: 'PURCHASED' | 'FAMILY_SHARED';
+  signedDate: Date;
+  appAccountToken?: string;
+  subscriptionGroupID?: string;
+  webOrderLineItemID?: string;
+}
+
+interface StoreKit2Product {
+  id: string;
+  displayName: string;
+  description: string;
+  price: number;
+  displayPrice: string;
+  type: 'consumable' | 'nonConsumable' | 'autoRenewable' | 'nonRenewable';
+  subscription?: {
+    subscriptionGroupID: string;
+    subscriptionPeriod: {
+      unit: 'day' | 'week' | 'month' | 'year';
+      value: number;
+    };
+    introductoryOffer?: {
+      displayPrice: string;
+      period: {
+        unit: 'day' | 'week' | 'month' | 'year';
+        value: number;
+      };
+      periodCount: number;
+      type: 'introductory' | 'promotional';
+    };
+    promotionalOffers?: Array<{
+      id: string;
+      displayPrice: string;
+      period: {
+        unit: 'day' | 'week' | 'month' | 'year';
+        value: number;
+      };
+      periodCount: number;
+    }>;
+  };
+}
+
+interface StoreKit2VerificationResult<T> {
+  isVerified: boolean;
+  transaction: T;
+  jwsRepresentation: string;
+}
 import { SubscriptionPlan } from '../types';
 import { useAuth } from './useAuth';
 import { useData } from './useData.minimal';
@@ -31,6 +90,9 @@ interface AppleProduct {
     };
     numberOfPeriods: number;
   };
+  // StoreKit 2 specific fields
+  sk2Product?: StoreKit2Product;
+  verificationResult?: StoreKit2VerificationResult<StoreKit2Product>;
 }
 
 interface AppleTransaction {
@@ -45,6 +107,12 @@ interface AppleTransaction {
   isUpgraded: boolean;
   webOrderLineItemId: string;
   subscriptionGroupIdentifier?: string;
+  // StoreKit 2 specific fields
+  sk2Transaction?: StoreKit2Transaction;
+  verificationResult?: StoreKit2VerificationResult<StoreKit2Transaction>;
+  jwsRepresentation?: string;
+  environment?: 'Sandbox' | 'Production';
+  ownershipType?: 'PURCHASED' | 'FAMILY_SHARED';
 }
 
 interface AppleReceipt {
@@ -68,6 +136,12 @@ interface AppleIAPContextType {
   cancelSubscription: (productId: string) => Promise<boolean>;
   checkSubscriptionStatus: () => Promise<void>;
   getSubscriptionInfo: (productId: string) => AppleTransaction | null;
+  // StoreKit 2 specific methods
+  validateTransaction: (jwsRepresentation: string) => Promise<StoreKit2VerificationResult<StoreKit2Transaction> | null>;
+  listenForTransactions: () => void;
+  finishTransaction: (transactionId: string) => Promise<boolean>;
+  getTransactionHistory: () => Promise<AppleTransaction[]>;
+  checkEligibilityForIntroductoryOffer: (productId: string) => Promise<boolean>;
 }
 
 const AppleIAPContext = createContext<AppleIAPContextType | undefined>(
@@ -233,6 +307,12 @@ export const AppleIAPProvider: React.FC<AppleIAPProviderProps> = ({
 
       // Check if running on iOS
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+      // Check if StoreKit 2 is available
+      const isStoreKit2Available = typeof window !== 'undefined' && 
+        'webkit' in window && 
+        'messageHandlers' in (window as any).webkit &&
+        'storeKit2' in (window as any).webkit.messageHandlers;
 
       if (!isIOS) {
         // For development/web, use mock data
@@ -241,15 +321,22 @@ export const AppleIAPProvider: React.FC<AppleIAPProviderProps> = ({
         return;
       }
 
-      // In a real iOS app, this would initialize the StoreKit
-      // For now, we'll simulate the initialization
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setProducts(MOCK_APPLE_PRODUCTS);
-      setIsAvailable(true);
+      if (isStoreKit2Available) {
+        // Initialize StoreKit 2
+        await initializeStoreKit2();
+      } else {
+        // Fallback to StoreKit 1 simulation
+        console.warn('StoreKit 2 not available, falling back to simulation');
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setProducts(MOCK_APPLE_PRODUCTS);
+        setIsAvailable(true);
+      }
 
       // Load any existing transactions
       await loadStoredTransactions();
+      
+      // Start listening for new transactions
+      listenForTransactions();
     } catch (error) {
       console.error('Failed to initialize Apple IAP:', error);
       addNotification({
@@ -259,6 +346,31 @@ export const AppleIAPProvider: React.FC<AppleIAPProviderProps> = ({
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const initializeStoreKit2 = async () => {
+    try {
+      // Request products from StoreKit 2
+      const productIds = Object.values(APPLE_PRODUCT_IDS).flat();
+      
+      const message = {
+        action: 'requestProducts',
+        productIds: productIds
+      };
+      
+      // Send message to native StoreKit 2 handler
+      if (typeof window !== 'undefined' && 
+          'webkit' in window && 
+          'messageHandlers' in (window as any).webkit &&
+          'storeKit2' in (window as any).webkit.messageHandlers) {
+        (window as any).webkit.messageHandlers.storeKit2.postMessage(message);
+      }
+      
+      setIsAvailable(true);
+    } catch (error) {
+      console.error('StoreKit 2 initialization failed:', error);
+      throw error;
     }
   };
 
@@ -316,78 +428,29 @@ export const AppleIAPProvider: React.FC<AppleIAPProviderProps> = ({
         throw new Error('Product not found');
       }
 
-      // In a real iOS app, this would initiate the purchase flow
-      // For now, we'll simulate the purchase
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Check if StoreKit 2 is available
+      const isStoreKit2Available = typeof window !== 'undefined' && 
+        'webkit' in window && 
+        'messageHandlers' in (window as any).webkit &&
+        'storeKit2' in (window as any).webkit.messageHandlers;
 
-      // Simulate successful purchase
-      const transaction: AppleTransaction = {
-        transactionId: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        productId,
-        purchaseDate: new Date().toISOString(),
-        isTrialPeriod: false,
-        isIntroductoryPricePeriod: !!product.introductoryPrice,
-        isUpgraded: false,
-        webOrderLineItemId: `woli_${Date.now()}`,
-        subscriptionGroupIdentifier: 'com.fisioflow.subscriptions',
-      };
-
-      // Set expiration date for subscriptions
-      if (product.type === 'subscription' && product.subscriptionPeriod) {
-        const expirationDate = new Date();
-        if (product.subscriptionPeriod.unit === 'month') {
-          expirationDate.setMonth(
-            expirationDate.getMonth() + product.subscriptionPeriod.numberOfUnits
-          );
-        } else if (product.subscriptionPeriod.unit === 'year') {
-          expirationDate.setFullYear(
-            expirationDate.getFullYear() +
-              product.subscriptionPeriod.numberOfUnits
-          );
+      if (isStoreKit2Available) {
+        // Use StoreKit 2 purchase flow
+        const purchaseResult = await purchaseWithStoreKit2(productId);
+        if (!purchaseResult) return false;
+        
+        // Validate the transaction
+        const verificationResult = await validateTransaction(purchaseResult.jwsRepresentation);
+        if (!verificationResult || !verificationResult.isVerified) {
+          throw new Error('Transaction verification failed');
         }
-        transaction.expirationDate = expirationDate.toISOString();
+        
+        // Process the verified transaction
+        return await processVerifiedTransaction(verificationResult.transaction, product);
+      } else {
+        // Fallback to simulation for development
+        return await simulatePurchase(productId, product);
       }
-
-      // Update active transactions
-      const updatedTransactions = [...activeTransactions, transaction];
-      saveTransactions(updatedTransactions);
-
-      // Update tenant subscription
-      const plan = getSubscriptionPlanFromProductId(productId);
-      if (plan) {
-        const updatedTenant = {
-          ...currentTenant,
-          plan,
-          appleSubscriptionId: transaction.transactionId,
-          subscriptionExpiresAt: transaction.expirationDate,
-        };
-        saveTenant(updatedTenant, user);
-      }
-
-      // Log the purchase
-      saveAuditLog(
-        {
-          action: 'apple_iap_purchase',
-          userId: user.id,
-          tenantId: user.tenantId,
-          details: {
-            productId,
-            transactionId: transaction.transactionId,
-            plan,
-            price: product.price,
-          },
-          timestamp: new Date().toISOString(),
-        },
-        user
-      );
-
-      addNotification({
-        type: 'success',
-        title: 'Compra Realizada!',
-        message: `Sua assinatura ${product.title} foi ativada com sucesso.`,
-      });
-
-      return true;
     } catch (error) {
       console.error('Purchase failed:', error);
       addNotification({
@@ -399,6 +462,144 @@ export const AppleIAPProvider: React.FC<AppleIAPProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const purchaseWithStoreKit2 = async (productId: string): Promise<{jwsRepresentation: string} | null> => {
+    return new Promise((resolve, reject) => {
+      // Set up response handler
+      const handlePurchaseResponse = (event: any) => {
+        if (event.data.action === 'purchaseResult') {
+          window.removeEventListener('message', handlePurchaseResponse);
+          if (event.data.success) {
+            resolve(event.data.transaction);
+          } else {
+            reject(new Error(event.data.error || 'Purchase failed'));
+          }
+        }
+      };
+      
+      window.addEventListener('message', handlePurchaseResponse);
+      
+      // Request purchase
+      const message = {
+        action: 'purchase',
+        productId: productId
+      };
+      
+      (window as any).webkit.messageHandlers.storeKit2.postMessage(message);
+      
+      // Timeout after 2 minutes
+      setTimeout(() => {
+        window.removeEventListener('message', handlePurchaseResponse);
+        reject(new Error('Purchase timeout'));
+      }, 120000);
+    });
+  };
+
+  const simulatePurchase = async (productId: string, product: AppleProduct): Promise<boolean> => {
+    // Simulate purchase delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Create simulated transaction
+    const transaction: AppleTransaction = {
+      transactionId: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      productId,
+      purchaseDate: new Date().toISOString(),
+      isTrialPeriod: false,
+      isIntroductoryPricePeriod: !!product.introductoryPrice,
+      isUpgraded: false,
+      webOrderLineItemId: `woli_${Date.now()}`,
+      subscriptionGroupIdentifier: 'com.fisioflow.subscriptions',
+      environment: 'Sandbox',
+      ownershipType: 'PURCHASED'
+    };
+
+    // Set expiration date for subscriptions
+    if (product.type === 'subscription' && product.subscriptionPeriod) {
+      const expirationDate = new Date();
+      if (product.subscriptionPeriod.unit === 'month') {
+        expirationDate.setMonth(
+          expirationDate.getMonth() + product.subscriptionPeriod.numberOfUnits
+        );
+      } else if (product.subscriptionPeriod.unit === 'year') {
+        expirationDate.setFullYear(
+          expirationDate.getFullYear() +
+            product.subscriptionPeriod.numberOfUnits
+        );
+      }
+      transaction.expirationDate = expirationDate.toISOString();
+    }
+
+    return await processTransaction(transaction, product);
+  };
+
+  const processVerifiedTransaction = async (sk2Transaction: StoreKit2Transaction, product: AppleProduct): Promise<boolean> => {
+    const transaction: AppleTransaction = {
+      transactionId: sk2Transaction.id,
+      productId: sk2Transaction.productID,
+      purchaseDate: sk2Transaction.purchaseDate.toISOString(),
+      expirationDate: sk2Transaction.expirationDate?.toISOString(),
+      isTrialPeriod: false, // StoreKit 2 handles this differently
+      isIntroductoryPricePeriod: !!sk2Transaction.offerID,
+      isUpgraded: sk2Transaction.isUpgraded,
+      webOrderLineItemId: sk2Transaction.webOrderLineItemID || '',
+      subscriptionGroupIdentifier: sk2Transaction.subscriptionGroupID,
+      sk2Transaction: sk2Transaction,
+      environment: sk2Transaction.environment,
+      ownershipType: sk2Transaction.ownershipType
+    };
+
+    return await processTransaction(transaction, product);
+  };
+
+  const processTransaction = async (transaction: AppleTransaction, product: AppleProduct): Promise<boolean> => {
+    // Update active transactions
+    const updatedTransactions = [...activeTransactions, transaction];
+    saveTransactions(updatedTransactions);
+
+    // Update tenant subscription
+    const plan = getSubscriptionPlanFromProductId(transaction.productId);
+    if (plan && currentTenant && user) {
+      const updatedTenant = {
+        ...currentTenant,
+        plan,
+        appleSubscriptionId: transaction.transactionId,
+        subscriptionExpiresAt: transaction.expirationDate,
+      };
+      saveTenant(updatedTenant, user);
+    }
+
+    // Log the purchase
+    if (user) {
+      saveAuditLog(
+        {
+          action: 'apple_iap_purchase',
+          userId: user.id,
+          tenantId: user.tenantId,
+          details: {
+            productId: transaction.productId,
+            transactionId: transaction.transactionId,
+            plan,
+            price: product.price,
+            environment: transaction.environment,
+            ownershipType: transaction.ownershipType
+          },
+          timestamp: new Date().toISOString(),
+        },
+        user
+      );
+    }
+
+    // Finish the transaction (important for StoreKit 2)
+    await finishTransaction(transaction.transactionId);
+
+    addNotification({
+      type: 'success',
+      title: 'Compra Realizada!',
+      message: `Sua assinatura ${product.title} foi ativada com sucesso.`,
+    });
+
+    return true;
   };
 
   const restorePurchases = async (): Promise<boolean> => {
@@ -563,6 +764,200 @@ export const AppleIAPProvider: React.FC<AppleIAPProviderProps> = ({
     return null;
   };
 
+  // StoreKit 2 specific methods
+  const validateTransaction = async (jwsRepresentation: string): Promise<StoreKit2VerificationResult<StoreKit2Transaction> | null> => {
+    try {
+      // In production, this would validate against Apple's servers
+      // For development, we'll simulate validation
+      if (!jwsRepresentation) return null;
+      
+      // Mock validation - in production, decode and verify JWS
+      const mockTransaction: StoreKit2Transaction = {
+        id: `verified_${Date.now()}`,
+        productID: 'com.fisioflow.silver.monthly',
+        purchaseDate: new Date(),
+        originalPurchaseDate: new Date(),
+        isUpgraded: false,
+        environment: 'Sandbox',
+        ownershipType: 'PURCHASED',
+        signedDate: new Date()
+      };
+      
+      return {
+        isVerified: true,
+        transaction: mockTransaction,
+        jwsRepresentation
+      };
+    } catch (error) {
+      console.error('Transaction validation failed:', error);
+      return null;
+    }
+  };
+
+  const listenForTransactions = () => {
+    // Set up listener for transaction updates from StoreKit 2
+    const handleTransactionUpdate = (event: any) => {
+      if (event.data.action === 'transactionUpdate') {
+        const { transaction, isVerified } = event.data;
+        if (isVerified) {
+          // Process the new transaction
+          console.log('New verified transaction received:', transaction);
+          // Add to active transactions and update UI
+          const updatedTransactions = [...activeTransactions];
+          const existingIndex = updatedTransactions.findIndex(t => t.transactionId === transaction.id);
+          
+          const appleTransaction: AppleTransaction = {
+            transactionId: transaction.id,
+            productId: transaction.productID,
+            purchaseDate: transaction.purchaseDate,
+            expirationDate: transaction.expirationDate,
+            isTrialPeriod: false,
+            isIntroductoryPricePeriod: !!transaction.offerID,
+            isUpgraded: transaction.isUpgraded,
+            webOrderLineItemId: transaction.webOrderLineItemID || '',
+            subscriptionGroupIdentifier: transaction.subscriptionGroupID,
+            sk2Transaction: transaction,
+            environment: transaction.environment,
+            ownershipType: transaction.ownershipType
+          };
+          
+          if (existingIndex >= 0) {
+            updatedTransactions[existingIndex] = appleTransaction;
+          } else {
+            updatedTransactions.push(appleTransaction);
+          }
+          
+          saveTransactions(updatedTransactions);
+        }
+      }
+    };
+    
+    window.addEventListener('message', handleTransactionUpdate);
+    
+    // Request to start listening for transactions
+    if (typeof window !== 'undefined' && 
+        'webkit' in window && 
+        'messageHandlers' in (window as any).webkit &&
+        'storeKit2' in (window as any).webkit.messageHandlers) {
+      (window as any).webkit.messageHandlers.storeKit2.postMessage({
+        action: 'startTransactionListener'
+      });
+    }
+  };
+
+  const finishTransaction = async (transactionId: string): Promise<boolean> => {
+    try {
+      const isStoreKit2Available = typeof window !== 'undefined' && 
+        'webkit' in window && 
+        'messageHandlers' in (window as any).webkit &&
+        'storeKit2' in (window as any).webkit.messageHandlers;
+      
+      if (isStoreKit2Available) {
+        (window as any).webkit.messageHandlers.storeKit2.postMessage({
+          action: 'finishTransaction',
+          transactionId: transactionId
+        });
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to finish transaction:', error);
+      return false;
+    }
+  };
+
+  const getTransactionHistory = async (): Promise<AppleTransaction[]> => {
+    try {
+      const isStoreKit2Available = typeof window !== 'undefined' && 
+        'webkit' in window && 
+        'messageHandlers' in (window as any).webkit &&
+        'storeKit2' in (window as any).webkit.messageHandlers;
+      
+      if (isStoreKit2Available) {
+        return new Promise((resolve, reject) => {
+          const handleHistoryResponse = (event: any) => {
+            if (event.data.action === 'transactionHistory') {
+              window.removeEventListener('message', handleHistoryResponse);
+              const transactions = event.data.transactions.map((t: StoreKit2Transaction) => ({
+                transactionId: t.id,
+                productId: t.productID,
+                purchaseDate: t.purchaseDate,
+                expirationDate: t.expirationDate,
+                isTrialPeriod: false,
+                isIntroductoryPricePeriod: !!t.offerID,
+                isUpgraded: t.isUpgraded,
+                webOrderLineItemId: t.webOrderLineItemID || '',
+                subscriptionGroupIdentifier: t.subscriptionGroupID,
+                sk2Transaction: t,
+                environment: t.environment,
+                ownershipType: t.ownershipType
+              }));
+              resolve(transactions);
+            }
+          };
+          
+          window.addEventListener('message', handleHistoryResponse);
+          
+          (window as any).webkit.messageHandlers.storeKit2.postMessage({
+            action: 'getTransactionHistory'
+          });
+          
+          setTimeout(() => {
+            window.removeEventListener('message', handleHistoryResponse);
+            reject(new Error('Transaction history timeout'));
+          }, 10000);
+        });
+      }
+      
+      // Fallback to stored transactions
+      return activeTransactions;
+    } catch (error) {
+      console.error('Failed to get transaction history:', error);
+      return activeTransactions;
+    }
+  };
+
+  const checkEligibilityForIntroductoryOffer = async (productId: string): Promise<boolean> => {
+    try {
+      const isStoreKit2Available = typeof window !== 'undefined' && 
+        'webkit' in window && 
+        'messageHandlers' in (window as any).webkit &&
+        'storeKit2' in (window as any).webkit.messageHandlers;
+      
+      if (isStoreKit2Available) {
+        return new Promise((resolve, reject) => {
+          const handleEligibilityResponse = (event: any) => {
+            if (event.data.action === 'eligibilityResult') {
+              window.removeEventListener('message', handleEligibilityResponse);
+              resolve(event.data.isEligible);
+            }
+          };
+          
+          window.addEventListener('message', handleEligibilityResponse);
+          
+          (window as any).webkit.messageHandlers.storeKit2.postMessage({
+            action: 'checkEligibility',
+            productId: productId
+          });
+          
+          setTimeout(() => {
+            window.removeEventListener('message', handleEligibilityResponse);
+            resolve(false); // Default to false on timeout
+          }, 5000);
+        });
+      }
+      
+      // For development, check if user has never purchased this product
+      const hasExistingPurchase = activeTransactions.some(t => 
+        t.productId === productId && !t.cancellationDate
+      );
+      return !hasExistingPurchase;
+    } catch (error) {
+      console.error('Failed to check eligibility:', error);
+      return false;
+    }
+  };
+
   const value: AppleIAPContextType = {
     products,
     isLoading,
@@ -575,6 +970,12 @@ export const AppleIAPProvider: React.FC<AppleIAPProviderProps> = ({
     cancelSubscription,
     checkSubscriptionStatus,
     getSubscriptionInfo,
+    // StoreKit 2 methods
+    validateTransaction,
+    listenForTransactions,
+    finishTransaction,
+    getTransactionHistory,
+    checkEligibilityForIntroductoryOffer,
   };
 
   return (
