@@ -262,7 +262,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-slate-700 bg-slate-800/50 p-4 md:flex">
         <div className="mb-6 flex items-center">
           <div className="mr-3 rounded-lg bg-blue-500 p-2">
-            <IconStethoscope className="text-white" />
+            <Stethoscope className="text-white" />
           </div>
           <h1 className="text-xl font-bold text-white">FisioFlow</h1>
         </div>

@@ -1,11 +1,11 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import {
-  IconStethoscope,
   IconClipboardList,
   IconUsers,
   IconChartPie,
 } from '../components/icons/IconComponents';
+import { Stethoscope } from 'lucide-react';
 
 const FeatureCard: React.FC<{
   icon: React.ReactNode;
@@ -47,7 +47,7 @@ const HomePage: React.FC = () => {
           description="Ofereça aos seus pacientes um portal exclusivo para acompanhar seus exercícios, registrar progresso e comunicar-se com a clínica."
         />
         <FeatureCard
-          icon={<IconStethoscope size={32} />}
+          icon={<Stethoscope size={32} />}
           title="Mentoria com IA"
           description="Utilize o poder da IA para analisar anotações de progresso, receber feedback e aprimorar a qualidade do atendimento e dos registros clínicos."
         />

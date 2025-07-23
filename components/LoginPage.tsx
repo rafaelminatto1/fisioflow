@@ -2,12 +2,12 @@ import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { UserRole } from '../types';
 import {
-  IconStethoscope,
   IconUsers,
   IconUserShield,
   IconUser,
   IconBuilding,
 } from './icons/IconComponents';
+import { Stethoscope } from 'lucide-react';
 
 const RoleButton: React.FC<{
   role?: UserRole;
@@ -57,7 +57,7 @@ const LoginPage: React.FC = () => {
         <RoleButton
           role={UserRole.FISIOTERAPEUTA}
           label="Fisioterapeuta"
-          icon={<IconStethoscope size={48} />}
+          icon={<Stethoscope size={48} />}
           onClick={() => login(UserRole.FISIOTERAPEUTA)}
           sublabel={UserRole.FISIOTERAPEUTA}
         />

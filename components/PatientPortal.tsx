@@ -16,7 +16,6 @@ import ExerciseModal from './ExerciseModal';
 import ExerciseFeedbackModal from './ExerciseFeedbackModal';
 import {
   IconLogout,
-  IconStethoscope,
   IconClipboardList,
   IconActivity,
   IconVideo,
@@ -27,6 +26,7 @@ import {
   IconWallet,
   IconSparkles,
 } from './icons/IconComponents';
+import { Stethoscope } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -416,7 +416,7 @@ const PatientPortal: React.FC = () => {
       <header className="flex items-center justify-between border-b border-slate-700 bg-slate-800/50 p-4">
         <div className="flex items-center">
           <div className="mr-3 rounded-lg bg-blue-500 p-2">
-            <IconStethoscope className="text-white" />
+            <Stethoscope className="text-white" />
           </div>
           <h1 className="text-xl font-bold text-white">Portal do Paciente</h1>
         </div>
