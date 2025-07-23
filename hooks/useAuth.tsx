@@ -7,7 +7,7 @@ import React, {
   useMemo,
 } from 'react';
 import { User, UserRole, Tenant } from '../types';
-// import { DataContext } from './useData.minimal';
+import { INITIAL_USERS, INITIAL_TENANTS } from '../constants';
 
 interface AuthContextType {
   user: User | null;
@@ -21,24 +21,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  // Versão simplificada sem dependência do DataContext
+  // Usar dados do constants.tsx e adicionar usuários para todos os perfis
   const allUsers = [
+    ...Object.values(INITIAL_USERS),
     {
-      id: '1',
-      name: 'Dr. Admin',
-      email: 'admin@demo.com',
-      role: 'ADMIN' as UserRole,
-      tenantId: 't1'
+      id: '4',
+      name: 'João Silva',
+      email: 'joao.silva@demo.com',
+      role: UserRole.PACIENTE,
+      avatarUrl: 'https://picsum.photos/seed/joao/100/100',
+      tenantId: 't1',
+    },
+    {
+      id: '5',
+      name: 'Nova Clínica',
+      email: 'admin@novaClinica.com',
+      role: UserRole.ADMIN,
+      avatarUrl: 'https://picsum.photos/seed/nova/100/100',
+      tenantId: null, // Para trigger do onboarding
     }
   ];
   
-  const tenants = [
-    {
-      id: 't1',
-      name: 'Clínica Demo',
-      plan: 'free'
-    }
-  ];
+  const tenants = INITIAL_TENANTS;
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
