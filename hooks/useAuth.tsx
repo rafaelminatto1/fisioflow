@@ -7,7 +7,7 @@ import React, {
   useMemo,
 } from 'react';
 import { User, UserRole, Tenant } from '../types';
-import { DataContext } from './useData';
+// import { DataContext } from './useData';
 
 interface AuthContextType {
   user: User | null;
@@ -21,13 +21,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const rawDataContext = useContext(DataContext);
-  if (!rawDataContext) {
-    throw new Error(
-      'AuthProvider must be used within a DataProvider. Check the component tree in App.tsx.'
-    );
-  }
-  const { allUsers, tenants } = rawDataContext;
+  // Versão simplificada sem dependência do DataContext
+  const allUsers = [
+    {
+      id: '1',
+      name: 'Dr. Admin',
+      email: 'admin@demo.com',
+      role: 'ADMIN' as UserRole,
+      tenantId: 't1'
+    }
+  ];
+  
+  const tenants = [
+    {
+      id: 't1',
+      name: 'Clínica Demo',
+      plan: 'free'
+    }
+  ];
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
