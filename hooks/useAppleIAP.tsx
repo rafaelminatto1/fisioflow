@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { SubscriptionPlan } from '../types';
 import { useAuth } from './useAuth';
-import { useData } from './useData';
+import { useData } from './useData.minimal';
 import { useNotification } from './useNotification';
 
 interface AppleProduct {

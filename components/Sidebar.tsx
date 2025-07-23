@@ -216,7 +216,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'parcerias',
       label: 'Parcerias',
-      icon: <IconUsersGroup />,
+      icon: <Users />,
       roles: [UserRole.ADMIN],
     },
     {

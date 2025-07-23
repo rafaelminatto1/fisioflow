@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { Page } from '../types';
 import { searchKnowledgeBase } from '../services/geminiService';

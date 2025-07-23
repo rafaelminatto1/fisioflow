@@ -7,7 +7,7 @@ import React, {
   useMemo,
 } from 'react';
 import { User, UserRole, Tenant } from '../types';
-// import { DataContext } from './useData';
+// import { DataContext } from './useData.minimal';
 
 interface AuthContextType {
   user: User | null;

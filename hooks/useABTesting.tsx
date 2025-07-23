@@ -6,7 +6,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { useAuth } from './useAuth';
-import { useData } from './useData';
+import { useData } from './useData.minimal';
 import { SubscriptionPlan } from '../types';
 
 interface ABTest {

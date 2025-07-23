@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import {
   Task,
   Patient,

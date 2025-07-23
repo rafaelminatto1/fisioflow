@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import {
   QualityIndicator,

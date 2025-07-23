@@ -3,7 +3,7 @@ import { Task } from '../types';
 import KanbanColumn from './KanbanColumn';
 import TaskModal from './TaskModal';
 import { IconPlus } from './icons/IconComponents';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import PageShell from './ui/PageShell';
 import PageLoader from './ui/PageLoader';

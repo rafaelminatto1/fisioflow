@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { ClinicalProtocol } from '../types';
 import BaseModal from "./ui/BaseModal";

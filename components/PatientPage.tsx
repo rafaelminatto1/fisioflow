@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { Patient } from '../types';
 import PatientModal from './PatientModal';

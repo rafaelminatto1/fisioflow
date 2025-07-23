@@ -14,7 +14,7 @@ import {
   Document,
 } from '../types';
 import { useAuth } from '../hooks/useAuth';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { TASK_STATUS_COLORS, TASK_STATUSES } from '../constants';
 import {
   IconX,

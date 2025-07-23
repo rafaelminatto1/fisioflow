@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { SubscriptionPlan } from '../types';
 import { useAuth } from '../hooks/useAuth';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { useNotification } from '../hooks/useNotification';
 import useSubscriptionLimits from '../hooks/useSubscriptionLimits';
 

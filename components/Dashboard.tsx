@@ -18,7 +18,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { predictAbandonmentRisk } from '../services/geminiService';
 import type { AbandonmentRiskPrediction } from '../types';

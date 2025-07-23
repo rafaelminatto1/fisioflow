@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { UserRole } from '../types';
 import {
   IconBell,

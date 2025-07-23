@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { Chat, ChatMessage, User, UserRole } from '../types';
 import { IconSend, IconPlus, IconMessageCircle } from './icons/IconComponents';
 import PageLoader from './ui/PageLoader';

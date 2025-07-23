@@ -1,7 +1,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { SubscriptionPlan } from '../types';
 import { useAuth } from './useAuth';
-import { useData } from './useData';
+import { useData } from './useData.minimal';
 import useSubscriptionLimits from './useSubscriptionLimits';
 
 interface FeatureFlag {

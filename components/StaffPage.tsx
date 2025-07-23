@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { User, UserRole } from '../types';
 import { IconPlus, IconPencil, IconSearch } from './icons/IconComponents';

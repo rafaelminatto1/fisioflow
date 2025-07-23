@@ -13,7 +13,7 @@ import {
   Download,
   RefreshCw,
 } from 'lucide-react';
-import { useData } from '../hooks/useData';
+import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { UserRole } from '../types';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
