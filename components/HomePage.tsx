@@ -5,7 +5,7 @@ import {
   IconClipboardList,
   IconUsers,
   IconChartPie,
-} from './icons/IconComponents';
+} from '../components/icons/IconComponents';
 
 const FeatureCard: React.FC<{
   icon: React.ReactNode;

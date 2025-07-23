@@ -49,3 +49,5 @@ Thumbs.db
 # Package manager lock files (opcional - descomente se necessário)
 # package-lock.json
 # yarn.lock
+
+.vercel

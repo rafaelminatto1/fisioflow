@@ -36,45 +36,43 @@ node --version
 
 ## 🚀 Instalação e Configuração
 
-### Opção 1: Instalação via NPM (Recomendada)
+### Opção 1: Instalação via GitHub (Recomendada)
 
 ```bash
-# Instalar o MCP server da Vercel globalmente
-npm install -g @nganiet/mcp-vercel
-
-# Ou instalar localmente no projeto
-npm install @nganiet/mcp-vercel
-```
-
-### Opção 2: Clonagem do Repositório
-
-```bash
-# Clonar repositório
 git clone https://github.com/nganiet/mcp-vercel.git
 cd mcp-vercel
-
-# Instalar dependências
 npm install
-
-# Build do projeto
 npm run build
 ```
+
+### Opção 2: Usando MCP Proxy
+
+```bash
+npm install -g @modelcontextprotocol/proxy
+```
+
+### Opção 3: Configuração Manual
+
+Baixe o repositório e configure manualmente conforme documentação.
 
 ## ⚙️ Configuração do Claude Desktop
 
 ### 1. Localizar arquivo de configuração
 
 **Windows:**
+
 ```
 %APPDATA%\Claude\claude_desktop_config.json
 ```
 
 **macOS:**
+
 ```
 ~/Library/Application Support/Claude/claude_desktop_config.json
 ```
 
 **Linux:**
+
 ```
 ~/.config/Claude/claude_desktop_config.json
 ```
@@ -88,9 +86,7 @@ Adicione ao arquivo `claude_desktop_config.json`:
   "mcpServers": {
     "vercel": {
       "command": "node",
-      "args": [
-        "C:\\path\\to\\mcp-vercel\\dist\\index.js"
-      ],
+      "args": ["C:\\path\\to\\mcp-vercel\\dist\\index.js"],
       "env": {
         "VERCEL_API_TOKEN": "seu_token_vercel_aqui"
       }
@@ -100,20 +96,25 @@ Adicione ao arquivo `claude_desktop_config.json`:
 ```
 
 **⚠️ Importante**: Substitua:
+
 - `C:\\path\\to\\mcp-vercel\\dist\\index.js` pelo caminho real
 - `seu_token_vercel_aqui` pelo token da API Vercel
 
-### 3. Configuração para Instalação Global
-
-Se instalou via NPM global:
+### 3. Configuração Alternativa com Proxy
 
 ```json
 {
   "mcpServers": {
-    "vercel": {
+    "vercel-proxy": {
       "command": "npx",
       "args": [
-        "@nganiet/mcp-vercel"
+        "-y",
+        "@modelcontextprotocol/proxy",
+        "--stdio",
+        "--cmd",
+        "node dist/index.js",
+        "--port",
+        "3399"
       ],
       "env": {
         "VERCEL_API_TOKEN": "seu_token_vercel_aqui"
@@ -136,14 +137,13 @@ mcp-proxy --stdio --cmd "npm start" --port 3399
 ```
 
 Configuração no Claude:
+
 ```json
 {
   "mcpServers": {
     "vercel": {
       "command": "mcp-proxy",
-      "args": [
-        "--url", "http://localhost:3399"
-      ]
+      "args": ["--url", "http://localhost:3399"]
     }
   }
 }
@@ -175,12 +175,30 @@ docker run -d \
 
 Após reiniciar, você deve ver as seguintes ferramentas:
 
-- `vercel-list-all-deployments` - Listar todos os deployments
-- `vercel-get-deployment-logs` - Obter logs de deployment
-- `vercel-get-deployment-status` - Verificar status de deployment
-- `vercel-list-projects` - Listar projetos
-- `vercel-get-project-details` - Detalhes do projeto
-- `vercel-list-environment-variables` - Listar variáveis de ambiente
+**Gerenciamento de Deployments:**
+
+- `vercel-list-all-deployments` - Listar deployments com filtros
+- `vercel-get-deployment` - Obter detalhes de deployment específico
+- `vercel-list-deployment-files` - Listar arquivos em deployment
+- `vercel-create-deployment` - Criar novos deployments
+
+**Gerenciamento de Projetos:**
+
+- `vercel-create-project` - Criar novos projetos Vercel
+- `vercel-list-projects` - Listar todos os projetos com paginação
+- `vercel-find-project` - Encontrar projeto específico por ID ou nome
+- `vercel-get-project-domain` - Obter informações de domínio do projeto
+
+**Gerenciamento de Ambiente:**
+
+- `vercel-get-environments` - Acessar variáveis de ambiente do projeto
+- `vercel-create-environment-variables` - Criar múltiplas variáveis de ambiente
+- `vercel-create-custom-environment` - Criar ambientes customizados
+
+**Gerenciamento de Times:**
+
+- `vercel-list-all-teams` - Listar todos os times acessíveis
+- `vercel-create-team` - Criar novo time com slug e nome customizados
 
 ### 3. Teste Básico
 
@@ -221,6 +239,7 @@ Liste as variáveis de ambiente do projeto fisioflow em produção
 ### Problema: MCP Server não aparece
 
 **Solução:**
+
 1. Verificar se o arquivo `claude_desktop_config.json` está no local correto
 2. Validar JSON (usar jsonlint.com)
 3. Verificar se o caminho para o executável está correto
@@ -229,6 +248,7 @@ Liste as variáveis de ambiente do projeto fisioflow em produção
 ### Problema: Erro de autenticação
 
 **Solução:**
+
 1. Verificar se o token Vercel está correto
 2. Confirmar que o token tem permissões adequadas
 3. Testar token via curl:
@@ -240,6 +260,7 @@ curl -H "Authorization: Bearer seu_token" https://api.vercel.com/v2/user
 ### Problema: Comando não encontrado
 
 **Solução:**
+
 1. Verificar se Node.js está instalado
 2. Confirmar versão do Node.js (18+)
 3. Reinstalar dependências:
