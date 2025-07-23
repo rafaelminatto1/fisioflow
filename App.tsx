@@ -9,11 +9,11 @@ import {
   usePrefetchRoutes
 } from './components/LazyRoutes';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import { DataProvider } from './hooks/useData';
+import { DataProvider } from './hooks/useData.minimal';
 import { SystemEventsProvider } from './hooks/useSystemEvents';
 import { UserRole, Page, Notebook, SubscriptionPlan, Tenant } from './types';
 import ErrorBoundary from './components/ErrorBoundary';
-import { useData } from './hooks/useData';
+import { useData } from './hooks/useData.minimal';
 import { NotificationProvider } from './hooks/useNotification';
 import NotificationContainer from './components/NotificationContainer';
 import { Bot } from 'lucide-react';
