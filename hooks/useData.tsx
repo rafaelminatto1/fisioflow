@@ -344,6 +344,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     setAllAuditLogs((prev) => [newLog, ...prev]);
   };
 
+  // Função saveAuditLog para compatibilidade com outros hooks
+  const saveAuditLog = (logEntry: Partial<AuditLog>) => {
+    const newLog: AuditLog = {
+      id: `log-${crypto.randomUUID()}`,
+      timestamp: new Date().toISOString(),
+      userId: logEntry.userId || 'system',
+      userName: logEntry.userName || 'Sistema',
+      action: logEntry.action || LogAction.OTHER,
+      targetCollection: logEntry.targetCollection || 'system',
+      targetId: logEntry.targetId || '',
+      targetName: logEntry.targetName,
+      details: logEntry.details,
+      tenantId: logEntry.tenantId || 't1',
+    };
+    setAllAuditLogs((prev) => [newLog, ...prev]);
+  };
+
   const saveTenant = (tenantToSave: Partial<Tenant>, actingUser: User) => {
     let finalTenant = { ...tenantToSave };
     const isNew =
@@ -2676,5 +2693,6 @@ export const useData = (): DataContextType => {
     deleteEquipment,
     generateExecutiveReport,
     getAllData,
+    saveAuditLog,
   } as DataContextType;
 };
