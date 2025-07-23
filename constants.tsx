@@ -44,19 +44,43 @@ import {
 } from './types';
 
 // === CONSTANTES DE TASKS ===
-export const TASK_STATUSES = ['todo', 'doing', 'done'] as const;
+export const TASK_STATUSES = ['todo', 'in_progress', 'review', 'done'] as const;
+
+export const TASK_STATUS_LABELS = {
+  todo: 'A Fazer',
+  in_progress: 'Em Progresso',
+  review: 'Revisão',
+  done: 'Concluído',
+} as const;
 
 export const TASK_STATUS_COLORS = {
   todo: '#f1f5f9',
-  doing: '#dbeafe', 
+  in_progress: '#dbeafe',
+  review: '#fef3c7',
   done: '#dcfce7',
 };
 
 export const TASK_PRIORITY_STYLES = {
-  low: 'bg-gray-100 text-gray-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-red-100 text-red-800',
-  urgent: 'bg-red-200 text-red-900',
+  low: {
+    color: 'text-slate-600',
+    bg: 'bg-slate-100',
+    icon: '⬇️'
+  },
+  medium: {
+    color: 'text-yellow-700',
+    bg: 'bg-yellow-100',
+    icon: '➡️'
+  },
+  high: {
+    color: 'text-red-700',
+    bg: 'bg-red-100',
+    icon: '⬆️'
+  },
+  urgent: {
+    color: 'text-red-800',
+    bg: 'bg-red-200',
+    icon: '🔥'
+  },
 };
 
 // === DADOS ESSENCIAIS (otimizados) ===
@@ -105,7 +129,62 @@ export const NOTEBOOKS: Notebook[] = [
 ];
 
 // === DADOS LAZY (arrays vazios para carregamento otimizado) ===
-export const INITIAL_TASKS: Task[] = [];
+export const INITIAL_TASKS: Task[] = [
+  {
+    id: 'task-1',
+    projectId: 'proj-1',
+    title: 'Avaliação inicial - João Silva',
+    description: 'Realizar avaliação postural completa e análise de movimento para paciente com dor lombar crônica.',
+    status: 'todo',
+    priority: 'high',
+    assigneeId: '2',
+    patientId: 'pat-1',
+    tenantId: 't1',
+  },
+  {
+    id: 'task-2',
+    projectId: 'proj-1',
+    title: 'Protocolo de fortalecimento - Maria Santos',
+    description: 'Implementar exercícios de fortalecimento para quadríceps após cirurgia de joelho.',
+    status: 'in_progress',
+    priority: 'medium',
+    assigneeId: '2',
+    patientId: 'pat-2',
+    tenantId: 't1',
+  },
+  {
+    id: 'task-3',
+    projectId: 'proj-1',
+    title: 'Reavaliação - Carlos Oliveira',
+    description: 'Verificar progresso do tratamento de ombro congelado após 4 semanas de fisioterapia.',
+    status: 'review',
+    priority: 'medium',
+    assigneeId: '3',
+    patientId: 'pat-3',
+    tenantId: 't1',
+  },
+  {
+    id: 'task-4',
+    projectId: 'proj-1',
+    title: 'Alta fisioterapêutica - Ana Costa',
+    description: 'Paciente completou tratamento para tendinite de Aquiles com sucesso. Preparar relatório de alta.',
+    status: 'done',
+    priority: 'low',
+    assigneeId: '2',
+    patientId: 'pat-4',
+    tenantId: 't1',
+  },
+  {
+    id: 'task-5',
+    projectId: 'proj-1',
+    title: 'Plano de exercícios domiciliares',
+    description: 'Elaborar programa de exercícios para paciente realizar em casa durante o período de férias.',
+    status: 'todo',
+    priority: 'medium',
+    assigneeId: '2',
+    tenantId: 't1',
+  },
+];
 export const INITIAL_PATIENTS: Patient[] = [];
 export const INITIAL_EXERCISES: Exercise[] = [];
 export const INITIAL_APPOINTMENTS: Appointment[] = [];

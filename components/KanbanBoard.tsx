@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import PageShell from './ui/PageShell';
 import PageLoader from './ui/PageLoader';
 import Button from './ui/Button';
+import { TASK_STATUSES } from '../constants';
 
 const KanbanBoard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -78,12 +79,7 @@ const KanbanBoard: React.FC = () => {
     handleCloseModal();
   };
 
-  const TASK_STATUSES = {
-    todo: 'A Fazer',
-    in_progress: 'Em Progresso',
-    review: 'Revisão',
-    done: 'Concluído',
-  };
+
 
   if (isLoading) {
     return <PageLoader message="Carregando quadro de projetos..." />;
@@ -99,8 +95,7 @@ const KanbanBoard: React.FC = () => {
       }
     >
       <div className="flex space-x-4 overflow-x-auto pb-4">
-        {(Object.keys(TASK_STATUSES) as Array<keyof typeof TASK_STATUSES>).map(
-          (status) => (
+        {TASK_STATUSES.map((status) => (
             <KanbanColumn
               key={status}
               status={status}

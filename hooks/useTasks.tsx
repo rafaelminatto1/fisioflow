@@ -256,19 +256,4 @@ export const useTasksStats = () => {
   }, [tasks]);
 };
 
-// Constantes para status de tarefas
-export const TASK_STATUSES = {
-  todo: 'A Fazer',
-  in_progress: 'Em Progresso',
-  review: 'Revisão',
-  done: 'Concluído',
-} as const;
-
-export const TASK_STATUS_COLORS = {
-  todo: 'bg-gray-500',
-  in_progress: 'bg-blue-500',
-  review: 'bg-yellow-500',
-  done: 'bg-green-500',
-} as const;
-
 export default useTasks;

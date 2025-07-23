@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Task, TaskModalProps, UserRole } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { getTaskSummary } from '../services/geminiService';
-import { TASK_STATUSES, TASK_PRIORITY_STYLES } from '../constants';
+import { TASK_STATUS_LABELS, TASK_PRIORITY_STYLES } from '../constants';
 import { IconSparkles, IconTrash } from './icons/IconComponents';
 import BaseModal from './ui/BaseModal';
 import Button from './ui/Button';
@@ -185,7 +185,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           value={editedTask.status}
           onChange={handleChange}
         >
-          {Object.entries(TASK_STATUSES).map(([key, value]) => (
+          {Object.entries(TASK_STATUS_LABELS).map(([key, value]) => (
             <option key={key} value={key}>
               {value}
             </option>

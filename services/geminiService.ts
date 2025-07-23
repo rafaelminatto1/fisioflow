@@ -6,6 +6,7 @@ import type {
   Assessment,
   AbandonmentRiskPrediction,
 } from '../types';
+import { TASK_STATUS_LABELS } from '../constants';
 
 // This implementation now uses the real Gemini API.
 // The API key is expected to be available in the environment variables.
@@ -167,7 +168,7 @@ A resposta deve ser em formato Markdown, pronta para ser copiada. Use um tom for
     const taskHistory = tasks
       .map(
         (t) =>
-          `- Título: ${t.title}\n  Status: ${TASK_STATUSES[t.status]}\n  Descrição/Nota: ${t.description || 'N/A'}`
+          `- Título: ${t.title}\n  Status: ${TASK_STATUS_LABELS[t.status]}\n  Descrição/Nota: ${t.description || 'N/A'}`
       )
       .join('\n');
     const content = `**Histórico Clínico do Paciente:**\n${patient.medicalHistory}\n\n**Tarefas e Evolução:**\n${taskHistory || 'Nenhuma tarefa registrada.'}`;
@@ -330,10 +331,3 @@ export async function generateSOAPNote(notes: string): Promise<{
     throw new Error('Falha ao gerar nota SOAP.');
   }
 }
-
-const TASK_STATUSES = {
-  todo: 'A Fazer',
-  in_progress: 'Em Progresso',
-  review: 'Revisão',
-  done: 'Concluído',
-};

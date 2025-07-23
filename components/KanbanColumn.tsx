@@ -1,7 +1,7 @@
 import React from 'react';
 import { Task, User } from '../types';
 import TaskCard from './TaskCard';
-import { TASK_STATUSES, TASK_STATUS_COLORS } from '../constants';
+import { TASK_STATUS_LABELS, TASK_STATUS_COLORS } from '../constants';
 
 interface KanbanColumnProps {
   status: Task['status'];
@@ -22,7 +22,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   onDragLeave,
   onSelectTask,
 }) => {
-  const statusColor = TASK_STATUS_COLORS[status] || 'bg-gray-500';
+  const statusColor = TASK_STATUS_COLORS[status] || '#6b7280';
 
   return (
     <div
@@ -31,12 +31,17 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       onDragLeave={onDragLeave}
       className="flex h-full min-h-[300px] w-[300px] flex-shrink-0 flex-col rounded-lg border border-slate-700 bg-slate-800/80 p-4 transition-colors duration-300"
     >
-      <div className="mb-4 flex items-center">
-        <span className={`h-3 w-3 rounded-full ${statusColor} mr-2`}></span>
-        <h2 className="font-semibold text-slate-100">
-          {TASK_STATUSES[status]}
-        </h2>
-        <span className="ml-2 rounded-full bg-slate-700 px-2 py-0.5 text-sm text-slate-400">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <span 
+            className="h-3 w-3 rounded-full mr-2" 
+            style={{ backgroundColor: statusColor }}
+          ></span>
+          <h2 className="font-semibold text-slate-100">
+            {TASK_STATUS_LABELS[status]}
+          </h2>
+        </div>
+        <span className="bg-slate-700 text-slate-300 text-xs font-medium px-2 py-1 rounded-full">
           {tasks.length}
         </span>
       </div>
