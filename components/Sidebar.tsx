@@ -208,6 +208,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       roles: [UserRole.ADMIN],
     },
     {
+      id: 'subscription-metrics',
+      label: 'Métricas de Assinatura',
+      icon: <TrendingUp size={20} />,
+      roles: [UserRole.ADMIN],
+    },
+    {
       id: 'suporte',
       label: 'Suporte',
       icon: <LifeBuoy size={20} />,

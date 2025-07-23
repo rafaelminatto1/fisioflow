@@ -227,7 +227,7 @@ const SubscriptionMetricsPanel: React.FC = () => {
     return Object.entries(distribution).map(([plan, count]) => ({
       plan: plan as SubscriptionPlan,
       count,
-      percentage: (count / tenants.length) * 100,
+      percentage: tenants.length > 0 ? (count / tenants.length) * 100 : 0,
     }));
   }, [tenants]);
 

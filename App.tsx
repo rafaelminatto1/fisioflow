@@ -52,6 +52,7 @@ import {
   FinancialSummaryDashboard,
   IntegrationsPage
 } from './components/LazyRoutes';
+import SubscriptionMetricsPanel from './components/admin/SubscriptionMetricsPanel';
 
 const AppContent: React.FC = () => {
   const { user, logout } = useAuth();
@@ -170,6 +171,9 @@ const AppContent: React.FC = () => {
       case 'vendas':
         base.push({ name: 'Vendas', href: '#' });
         break;
+      case 'subscription-metrics':
+        base.push({ name: 'Métricas de Assinatura', href: '#' });
+        break;
       case 'suporte':
         base.push({ name: 'Suporte', href: '#' });
         break;
@@ -276,6 +280,7 @@ const AppContent: React.FC = () => {
             {activeView === 'compliance' && <CompliancePage />}
             {activeView === 'billing' && <BillingPage />}
             {activeView === 'status' && <SystemStatusPage />}
+            {activeView === 'subscription-metrics' && <SubscriptionMetricsPanel />}
             {/* Páginas removidas para otimização - funcionalidade não crítica */}
             {activeView === 'suporte' && <SuportePage />}
             {activeView === 'parcerias' && <ParceriasPage />}

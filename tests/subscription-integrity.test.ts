@@ -1,8 +1,9 @@
+import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { AppleIAPProvider, useAppleIAP } from '../hooks/useAppleIAP';
 import { AuthProvider } from '../hooks/useAuth';
-import { DataProvider } from '../hooks/useData';
+import { DataProvider } from '../hooks/useData.minimal';
 import { NotificationProvider } from '../hooks/useNotification';
 import { SubscriptionPlan, User, Tenant } from '../types';
 
@@ -25,17 +26,15 @@ const mockWebKit = {
 };
 
 // Test wrapper component
-const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <NotificationProvider>
-    <AuthProvider>
-      <DataProvider>
-        <AppleIAPProvider>
-          {children}
-        </AppleIAPProvider>
-      </DataProvider>
-    </AuthProvider>
-  </NotificationProvider>
-);
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return React.createElement(NotificationProvider, null,
+    React.createElement(AuthProvider, null,
+      React.createElement(DataProvider, null,
+        React.createElement(AppleIAPProvider, null, children)
+      )
+    )
+  );
+};
 
 describe('Subscription Data Integrity Tests', () => {
   beforeEach(() => {
