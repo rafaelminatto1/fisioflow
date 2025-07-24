@@ -38,6 +38,7 @@ import {
 } from 'recharts';
 import PaymentModal from './PaymentModal';
 import AIAssistant from './AIAssistant';
+import ChatInterface from './chat/ChatInterface';
 
 // --- Re-usable sub-components for the new dashboard ---
 
@@ -190,6 +191,8 @@ const PatientPortal: React.FC = () => {
     useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatMinimized, setIsChatMinimized] = useState(false);
 
   // Selected Item States
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -425,6 +428,13 @@ const PatientPortal: React.FC = () => {
             <p className="font-semibold">{patientProfile.name}</p>
             <p className="text-sm text-slate-400">Paciente</p>
           </div>
+          <button
+            onClick={() => setIsChatOpen(true)}
+            className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+            aria-label="Abrir Chat"
+          >
+            💬 Chat
+          </button>
           <button
             onClick={logout}
             className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
@@ -667,6 +677,41 @@ const PatientPortal: React.FC = () => {
           contextType="patient"
           patientData={aiAssistantData}
         />
+      )}
+      
+      {/* Chat Interface */}
+      {(isChatOpen || isChatMinimized) && (
+        <div className={`fixed z-50 ${
+          isChatMinimized 
+            ? 'bottom-4 right-4' 
+            : 'bottom-4 right-4 top-20 left-1/3'
+        }`}>
+          <ChatInterface
+            isMinimized={isChatMinimized}
+            onToggleMinimize={() => {
+              if (isChatMinimized) {
+                setIsChatMinimized(false);
+              } else {
+                setIsChatMinimized(true);
+              }
+            }}
+            className="h-full"
+          />
+          
+          {/* Botão de fechar quando não minimizado */}
+          {!isChatMinimized && (
+            <button
+              onClick={() => {
+                setIsChatOpen(false);
+                setIsChatMinimized(false);
+              }}
+              className="absolute -top-2 -left-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-sm transition-colors"
+              title="Fechar chat"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

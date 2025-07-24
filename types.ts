@@ -374,19 +374,129 @@ export interface Document {
   tenantId: string;
 }
 
+export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'exercise' | 'appointment' | 'file';
+
 export interface ChatMessage {
   id: string;
   chatId: string;
   senderId: string;
-  text: string;
+  receiverId: string;
+  text?: string;
+  type: MessageType;
   timestamp: string; // ISO string
+  readAt?: string; // ISO string - quando a mensagem foi lida
+  editedAt?: string; // ISO string - quando foi editada
+  replyToId?: string; // ID da mensagem sendo respondida
+  attachments?: ChatAttachment[];
+  metadata?: ChatMessageMetadata;
   tenantId: string;
 }
 
+export interface ChatAttachment {
+  id: string;
+  type: 'image' | 'video' | 'audio' | 'file';
+  url: string;
+  name: string;
+  size: number; // bytes
+  mimeType: string;
+  thumbnailUrl?: string; // para vídeos e imagens
+}
+
+export interface ChatMessageMetadata {
+  exerciseId?: string; // para mensagens de exercício
+  appointmentId?: string; // para agendamentos
+  prescriptionId?: string; // para prescrições
+  templateId?: string; // para templates usados
+  translatedText?: string; // texto traduzido
+  originalLanguage?: string;
+  isFromTemplate?: boolean;
+}
+
 export interface Chat {
-  id: string; // e.g., 'user1-user2'
+  id: string; // e.g., 'patient-therapist-123'
   participants: string[]; // array of user IDs
+  participantRoles: Record<string, UserRole>; // role de cada participante
+  lastMessage?: ChatMessage;
   lastMessageTimestamp: string;
+  unreadCount: Record<string, number>; // contador de não lidas por usuário
+  isActive: boolean;
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
+  settings?: ChatSettings;
+  tenantId: string;
+}
+
+export interface ChatSettings {
+  allowFileSharing: boolean;
+  allowVoiceMessages: boolean;
+  allowVideoCall: boolean;
+  enableTranslation: boolean;
+  enableNotifications: boolean;
+  notificationSound: string;
+  autoDeleteAfterDays?: number;
+}
+
+export interface ChatNotification {
+  id: string;
+  userId: string;
+  chatId: string;
+  messageId: string;
+  type: 'new_message' | 'message_read' | 'typing' | 'online_status';
+  title: string;
+  body: string;
+  data?: any;
+  readAt?: string;
+  createdAt: string;
+  tenantId: string;
+}
+
+export interface MessageTemplate {
+  id: string;
+  title: string;
+  content: string;
+  category: 'greeting' | 'appointment' | 'exercise' | 'followup' | 'reminder' | 'general';
+  userRole: UserRole; // para qual tipo de usuário é o template
+  isActive: boolean;
+  usageCount: number;
+  createdById: string;
+  createdAt: string;
+  tenantId: string;
+}
+
+export interface UserStatus {
+  userId: string;
+  isOnline: boolean;
+  lastSeen: string; // ISO string
+  isTyping: boolean;
+  typingInChat?: string; // ID do chat onde está digitando
+  status: 'available' | 'busy' | 'away' | 'offline';
+  customMessage?: string;
+}
+
+export interface VoiceCall {
+  id: string;
+  chatId: string;
+  initiatorId: string;
+  receiverId: string;
+  status: 'initiated' | 'ringing' | 'accepted' | 'ended' | 'missed';
+  startedAt?: string; // ISO string
+  endedAt?: string; // ISO string
+  duration?: number; // segundos
+  recordingUrl?: string;
+  tenantId: string;
+}
+
+export interface VideoCall {
+  id: string;
+  chatId: string;
+  initiatorId: string;
+  receiverId: string;
+  status: 'initiated' | 'ringing' | 'accepted' | 'ended' | 'missed';
+  startedAt?: string; // ISO string
+  endedAt?: string; // ISO string
+  duration?: number; // segundos
+  recordingUrl?: string;
+  screenShareEnabled: boolean;
   tenantId: string;
 }
 

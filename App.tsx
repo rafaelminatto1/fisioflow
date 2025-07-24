@@ -11,6 +11,7 @@ import {
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { DataProvider } from './hooks/useData.minimal';
 import { SystemEventsProvider } from './hooks/useSystemEvents';
+import { ChatProvider } from './hooks/useChat';
 import { UserRole, Page, Notebook, SubscriptionPlan, Tenant } from './types';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useData } from './hooks/useData.minimal';
@@ -317,9 +318,11 @@ const App: React.FC = () => {
       <SystemEventsProvider>
         <DataProvider>
           <AuthProvider>
-            <ErrorBoundary>
-              <AppContent />
-            </ErrorBoundary>
+            <ChatProvider>
+              <ErrorBoundary>
+                <AppContent />
+              </ErrorBoundary>
+            </ChatProvider>
           </AuthProvider>
         </DataProvider>
       </SystemEventsProvider>

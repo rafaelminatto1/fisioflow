@@ -239,6 +239,107 @@ async function staleWhileRevalidate(request) {
   return fetchPromise;
 }
 
+// Manipulador de notificações push
+self.addEventListener('push', (event) => {
+  console.log('🔔 Notificação push recebida');
+  
+  let notificationData = {};
+  
+  if (event.data) {
+    try {
+      notificationData = event.data.json();
+    } catch (error) {
+      notificationData = {
+        title: 'FisioFlow',
+        body: event.data.text() || 'Nova notificação',
+        icon: '/favicon.ico'
+      };
+    }
+  }
+
+  const options = {
+    body: notificationData.body || 'Nova notificação',
+    icon: notificationData.icon || '/favicon.ico',
+    badge: notificationData.badge || '/favicon.ico',
+    tag: notificationData.tag || 'default',
+    data: notificationData.data || {},
+    requireInteraction: notificationData.requireInteraction || false,
+    vibrate: notificationData.vibrate || [200, 100, 200],
+    actions: [
+      {
+        action: 'view',
+        title: 'Ver',
+        icon: '/icons/view-icon.png'
+      },
+      {
+        action: 'dismiss',
+        title: 'Dispensar',
+        icon: '/icons/dismiss-icon.png'
+      }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(
+      notificationData.title || 'FisioFlow',
+      options
+    )
+  );
+});
+
+// Manipulador de cliques em notificações
+self.addEventListener('notificationclick', (event) => {
+  console.log('👆 Clique na notificação');
+  
+  event.notification.close();
+  
+  const notificationData = event.notification.data || {};
+  
+  // Determina a URL para abrir baseada no tipo de notificação
+  let urlToOpen = '/';
+  
+  switch (notificationData.type) {
+    case 'chat':
+      urlToOpen = `/?chat=${notificationData.chatId}`;
+      break;
+    case 'appointment':
+      urlToOpen = `/?view=calendar&appointment=${notificationData.appointmentId}`;
+      break;
+    case 'exercise':
+      urlToOpen = `/?view=exercises&exercise=${notificationData.exerciseId}`;
+      break;
+    case 'payment':
+      urlToOpen = `/?view=financeiro&transaction=${notificationData.transactionId}`;
+      break;
+    default:
+      urlToOpen = '/';
+  }
+
+  // Abre a aplicação na URL apropriada
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Procura por uma janela já aberta
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            // Se encontrou uma janela, navega para a URL e foca
+            client.postMessage({
+              type: 'NOTIFICATION_CLICK',
+              data: notificationData,
+              url: urlToOpen
+            });
+            return client.focus();
+          }
+        }
+        
+        // Se não encontrou janela aberta, abre uma nova
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+  );
+});
+
 // Manipula mensagens do main thread
 self.addEventListener('message', (event) => {
   const { type, payload } = event.data;
@@ -269,6 +370,35 @@ self.addEventListener('message', (event) => {
           payload: { cached },
         });
       });
+      break;
+      
+    case 'CLEAR_NOTIFICATIONS':
+      // Limpa notificações específicas ou todas
+      const tag = payload?.tag;
+      self.registration.getNotifications({ tag })
+        .then((notifications) => {
+          notifications.forEach(notification => notification.close());
+          event.source.postMessage({
+            type: 'NOTIFICATIONS_CLEARED',
+            payload: { count: notifications.length, tag }
+          });
+        });
+      break;
+      
+    case 'GET_NOTIFICATIONS':
+      // Retorna notificações ativas
+      self.registration.getNotifications()
+        .then((notifications) => {
+          event.source.postMessage({
+            type: 'NOTIFICATIONS_LIST',
+            payload: notifications.map(n => ({
+              title: n.title,
+              body: n.body,
+              tag: n.tag,
+              data: n.data
+            }))
+          });
+        });
       break;
   }
 });
