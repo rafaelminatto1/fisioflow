@@ -175,9 +175,119 @@ export interface Exercise {
   id: string;
   name: string;
   description: string;
-  category: 'Fortalecimento' | 'Mobilidade' | 'Cardio' | 'Equilíbrio';
-  bodyPart: 'Ombro' | 'Joelho' | 'Coluna' | 'Quadril' | 'Tornozelo' | 'Geral';
+  category: 'Fortalecimento' | 'Mobilidade' | 'Cardio' | 'Equilíbrio' | 'Mobilização Neural' | 'Alongamento' | 'Propriocepção' | 'Relaxamento';
+  bodyPart: 'Ombro' | 'Joelho' | 'Coluna' | 'Quadril' | 'Tornozelo' | 'Geral' | 'Cervical' | 'Membros Superiores' | 'Tronco' | 'Membros Inferiores';
+  subcategory?: string;
   videoUrl: string; // YouTube embed URL
+  indications: string[]; // Indicações clínicas específicas
+  contraindications: string[]; // Contraindicações claras
+  difficultyLevel: 1 | 2 | 3 | 4 | 5; // Nível de dificuldade
+  equipment?: string[]; // Equipamentos necessários
+  targetMuscles?: string[]; // Músculos alvo
+  duration?: string; // Duração sugerida
+  frequency?: string; // Frequência recomendada
+}
+
+// === SISTEMA DE VÍDEOS ===
+
+export type VideoQuality = 'low' | 'medium' | 'high' | 'auto';
+export type VideoType = 'demonstration' | 'progression' | 'variation' | 'alternative';
+
+export interface ExerciseVideo {
+  id: string;
+  exerciseId: string;
+  title: string;
+  description?: string;
+  videoUrl: string; // URL do arquivo de vídeo ou YouTube
+  thumbnailUrl?: string; // URL da thumbnail
+  duration: number; // Duração em segundos
+  type: VideoType;
+  quality: VideoQuality;
+  fileSize?: number; // Tamanho em bytes (se arquivo local)
+  format?: string; // mp4, avi, mov, etc.
+  uploadedById: string;
+  uploadedAt: string; // ISO string
+  order: number; // Ordem de exibição
+  tags: string[]; // Tags para organização
+  isActive: boolean;
+  youtubeId?: string; // ID do YouTube se for vídeo do YouTube
+  viewCount: number;
+  lastViewed?: string; // ISO string
+  tenantId: string;
+}
+
+// === SISTEMA DE IMAGENS ===
+
+export type ImageCategory = 'initial_position' | 'execution' | 'final_position' | 'anatomy' | 'equipment' | 'variation';
+
+export interface ExerciseImage {
+  id: string;
+  exerciseId: string;
+  title: string;
+  caption?: string;
+  imageUrl: string;
+  thumbnailUrl?: string;
+  category: ImageCategory;
+  order: number;
+  width?: number;
+  height?: number;
+  fileSize?: number; // Tamanho em bytes
+  format?: string; // jpg, png, webp, etc.
+  uploadedById: string;
+  uploadedAt: string; // ISO string
+  tags: string[];
+  isActive: boolean;
+  annotationPoints?: ImageAnnotation[]; // Pontos de anotação na imagem
+  tenantId: string;
+}
+
+export interface ImageAnnotation {
+  id: string;
+  x: number; // Posição X em %
+  y: number; // Posição Y em %
+  title: string;
+  description?: string;
+  color?: string; // Cor do ponto de anotação
+}
+
+// === SISTEMA DE FAVORITOS E AVALIAÇÕES ===
+
+export interface ExerciseFavorite {
+  id: string;
+  userId: string;
+  exerciseId: string;
+  createdAt: string; // ISO string
+  tenantId: string;
+}
+
+export type ExerciseRatingEmoji = '😊' | '😐' | '😰';
+
+export interface ExerciseRating {
+  id: string;
+  patientId: string;
+  exerciseId: string;
+  prescriptionId?: string; // Vinculado a uma prescrição específica
+  rating: ExerciseRatingEmoji;
+  painLevel: number; // 0-10 escala de dor
+  comments?: string;
+  date: string; // ISO string
+  sessionNumber?: number; // Número da sessão
+  tenantId: string;
+}
+
+export interface ExerciseStatistics {
+  exerciseId: string;
+  exerciseName: string;
+  totalRatings: number;
+  averagePainLevel: number;
+  ratingDistribution: {
+    easy: number; // 😊
+    medium: number; // 😐
+    difficult: number; // 😰
+  };
+  favoriteCount: number;
+  usageCount: number;
+  lastUsed: string; // ISO string
 }
 
 export interface Prescription {
@@ -817,6 +927,12 @@ export interface DataContextType {
   equipment: Equipment[];
   operationalAlerts: OperationalAlert[];
   executiveReports: ExecutiveReport[];
+  // Sistema de Favoritos e Avaliações
+  exerciseFavorites: ExerciseFavorite[];
+  exerciseRatings: ExerciseRating[];
+  // Sistema de Vídeos e Imagens
+  exerciseVideos: ExerciseVideo[];
+  exerciseImages: ExerciseImage[];
   saveTenant: (tenant: Partial<Tenant>, actingUser: User) => void;
   saveUser: (user: User, actingUser: User) => void;
   deleteUser: (userId: string, actingUser: User) => void;
@@ -922,6 +1038,22 @@ export interface DataContextType {
   getTransactionsForPatient: (patientId: string) => Transaction[];
   getDocumentsForPatient: (patientId: string) => Document[];
   getAllData: () => any;
+  // Sistema de Favoritos e Avaliações - Funções
+  toggleExerciseFavorite: (exerciseId: string, actingUser: User) => void;
+  saveExerciseRating: (rating: Omit<ExerciseRating, 'id'>, actingUser: User) => void;
+  getExerciseFavorites: (userId: string) => ExerciseFavorite[];
+  getExerciseRatings: (exerciseId: string) => ExerciseRating[];
+  getExerciseStatistics: (exerciseId: string) => ExerciseStatistics | null;
+  getMostUsedExercises: (userId?: string) => ExerciseStatistics[];
+  // Sistema de Vídeos e Imagens - Funções
+  saveExerciseVideo: (video: Omit<ExerciseVideo, 'id'>, actingUser: User) => void;
+  deleteExerciseVideo: (videoId: string, actingUser: User) => void;
+  getExerciseVideos: (exerciseId: string) => ExerciseVideo[];
+  incrementVideoView: (videoId: string, actingUser: User) => void;
+  saveExerciseImage: (image: Omit<ExerciseImage, 'id'>, actingUser: User) => void;
+  deleteExerciseImage: (imageId: string, actingUser: User) => void;
+  getExerciseImages: (exerciseId: string) => ExerciseImage[];
+  getExerciseImagesByCategory: (exerciseId: string, category: ImageCategory) => ExerciseImage[];
 }
 
 // Gestão Operacional - Modelos de Dados

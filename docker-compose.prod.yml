@@ -1,0 +1,414 @@
+# Docker Compose para Produção - FisioFlow
+# Sistema Freemium Escalável com Otimizações iOS
+
+version: '3.8'
+
+services:
+  # Frontend React (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        - REACT_APP_API_URL=${REACT_APP_API_URL}
+        - REACT_APP_GEMINI_API_KEY=${REACT_APP_GEMINI_API_KEY}
+        - REACT_APP_ENVIRONMENT=production
+    container_name: fisioflow-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/cache:/var/cache/nginx
+    environment:
+      - NGINX_WORKER_PROCESSES=auto
+      - NGINX_WORKER_CONNECTIONS=1024
+    depends_on:
+      - backend
+    networks:
+      - fisioflow-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`app.fisioflow.com`)"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+
+  # Backend Flask
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: fisioflow-backend-prod
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      # Configurações Gerais
+      - FLASK_ENV=production
+      - FLASK_DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      
+      # Banco de Dados
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - SQLALCHEMY_DATABASE_URI=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      
+      # Redis
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      
+      # Sistema Freemium
+      - FREEMIUM_ENABLED=true
+      - TIER_FREE_LIMIT_INTERNS=5
+      - TIER_FREE_LIMIT_CASES=10
+      - TIER_FREE_LIMIT_STORAGE=1073741824
+      - TIER_PREMIUM_LIMIT_INTERNS=50
+      - TIER_PREMIUM_LIMIT_CASES=100
+      - TIER_PREMIUM_LIMIT_STORAGE=10737418240
+      - TIER_ENTERPRISE_LIMIT_INTERNS=-1
+      - TIER_ENTERPRISE_LIMIT_CASES=-1
+      - TIER_ENTERPRISE_LIMIT_STORAGE=107374182400
+      
+      # iOS Otimizações
+      - IOS_SYNC_ENABLED=true
+      - IOS_OFFLINE_CACHE_SIZE_FREE=52428800
+      - IOS_OFFLINE_CACHE_SIZE_PREMIUM=209715200
+      - IOS_OFFLINE_CACHE_SIZE_ENTERPRISE=524288000
+      - IOS_SYNC_INTERVAL_FREE=60000
+      - IOS_SYNC_INTERVAL_PREMIUM=15000
+      - IOS_SYNC_INTERVAL_ENTERPRISE=10000
+      
+      # IA e APIs Externas
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AI_RATE_LIMIT_FREE=50
+      - AI_RATE_LIMIT_PREMIUM=500
+      - AI_RATE_LIMIT_ENTERPRISE=-1
+      
+      # Monitoramento
+      - PROMETHEUS_ENABLED=true
+      - GRAFANA_ENABLED=true
+      - SENTRY_DSN=${SENTRY_DSN}
+      - LOG_LEVEL=INFO
+      
+      # Segurança
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_FREE=30
+      - RATE_LIMIT_PREMIUM=100
+      - RATE_LIMIT_ENTERPRISE=1000
+      
+      # Notificações Push
+      - APNS_KEY_ID=${APNS_KEY_ID}
+      - APNS_TEAM_ID=${APNS_TEAM_ID}
+      - APNS_BUNDLE_ID=${APNS_BUNDLE_ID}
+      - FCM_SERVER_KEY=${FCM_SERVER_KEY}
+      
+      # Armazenamento
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_REGION=${AWS_REGION}
+      
+      # Backup
+      - BACKUP_ENABLED=true
+      - BACKUP_SCHEDULE="0 2 * * *"
+      - BACKUP_RETENTION_DAYS=30
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fisioflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Banco de Dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: fisioflow-postgres-prod
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=pt_BR.UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+      - ./database/backups:/backups
+    ports:
+      - "5432:5432"
+    networks:
+      - fisioflow-network
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+      -c max_worker_processes=8
+      -c max_parallel_workers_per_gather=4
+      -c max_parallel_workers=8
+      -c max_parallel_maintenance_workers=4
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis para Cache e Sessões
+  redis:
+    image: redis:7-alpine
+    container_name: fisioflow-redis-prod
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - fisioflow-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Celery Worker para Tarefas Assíncronas
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: fisioflow-celery-worker-prod
+    restart: unless-stopped
+    command: celery -A app.celery worker --loglevel=info --concurrency=4
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SENTRY_DSN=${SENTRY_DSN}
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fisioflow-network
+    healthcheck:
+      test: ["CMD", "celery", "-A", "app.celery", "inspect", "ping"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # Celery Beat para Tarefas Agendadas
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: fisioflow-celery-beat-prod
+    restart: unless-stopped
+    command: celery -A app.celery beat --loglevel=info
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fisioflow-network
+
+  # Prometheus para Métricas
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fisioflow-prometheus-prod
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - fisioflow-network
+
+  # Grafana para Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fisioflow-grafana-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - fisioflow-network
+
+  # Nginx Proxy Reverso
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: fisioflow-nginx-proxy-prod
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/proxy.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - fisioflow-network
+
+  # Backup Service
+  backup:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.backup
+    container_name: fisioflow-backup-prod
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_BUCKET=${AWS_S3_BACKUP_BUCKET}
+      - BACKUP_SCHEDULE="0 2 * * *"
+      - BACKUP_RETENTION_DAYS=30
+    volumes:
+      - ./database/backups:/backups
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - postgres
+    networks:
+      - fisioflow-network
+
+  # Log Aggregator
+  fluentd:
+    build:
+      context: ./logging
+      dockerfile: Dockerfile.fluentd
+    container_name: fisioflow-fluentd-prod
+    restart: unless-stopped
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./logging/fluent.conf:/fluentd/etc/fluent.conf
+      - ./logs:/var/log/fisioflow
+    networks:
+      - fisioflow-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  fisioflow-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Configurações de Deploy
+x-deploy: &default-deploy
+  replicas: 1
+  restart_policy:
+    condition: on-failure
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+  update_config:
+    parallelism: 1
+    delay: 10s
+    failure_action: rollback
+    monitor: 60s
+    max_failure_ratio: 0.3
+  rollback_config:
+    parallelism: 1
+    delay: 5s
+    failure_action: pause
+    monitor: 60s
+    max_failure_ratio: 0.3
+
+# Configurações de Recursos
+x-resources: &default-resources
+  limits:
+    cpus: '1.0'
+    memory: 1G
+  reservations:
+    cpus: '0.5'
+    memory: 512M
+
+# Configurações de Logging
+x-logging: &default-logging
+  driver: "fluentd"
+  options:
+    fluentd-address: localhost:24224
+    tag: fisioflow.{{.Name}}
+    fluentd-async-connect: "true"
+    fluentd-retry-wait: "1s"
+    fluentd-max-retries: "30"
+
+# Healthchecks Padrão
+x-healthcheck: &default-healthcheck
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+# Labels Padrão
+x-labels: &default-labels
+  - "com.fisioflow.environment=production"
+  - "com.fisioflow.version=1.0.0"
+  - "com.fisioflow.tier=freemium"
+  - "com.fisioflow.ios-optimized=true"

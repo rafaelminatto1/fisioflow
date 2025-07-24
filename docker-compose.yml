@@ -1,0 +1,230 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: fisioflow_db
+    environment:
+      POSTGRES_DB: fisioflow_db
+      POSTGRES_USER: fisioflow_user
+      POSTGRES_PASSWORD: fisioflow_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - fisioflow_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fisioflow_user -d fisioflow_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: fisioflow_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fisioflow_network
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass fisioflow_redis_password
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Flask Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fisioflow_backend
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://fisioflow_user:fisioflow_password@db:5432/fisioflow_db
+      - REDIS_URL=redis://:fisioflow_redis_password@redis:6379/0
+      - SECRET_KEY=your-secret-key-change-in-production
+      - JWT_SECRET_KEY=your-jwt-secret-change-in-production
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+      - UPLOAD_FOLDER=/app/uploads
+      - PYTHONPATH=/app
+    volumes:
+      - ./backend:/app
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    ports:
+      - "5000:5000"
+    networks:
+      - fisioflow_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >
+      sh -c "flask db upgrade &&
+             python -c 'from app import create_app_with_config; app = create_app_with_config(); app.app_context().push(); from app.mentorship.models import *; from app import db; db.create_all()' &&
+             gunicorn --bind 0.0.0.0:5000 --workers 2 --reload --timeout 120 'app:create_app_with_config()'"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # React Frontend (opcional)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fisioflow_frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+      - REACT_APP_ENV=development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - fisioflow_network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    command: npm start
+    profiles:
+      - frontend
+
+  # Celery Worker (para tarefas assíncronas)
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fisioflow_celery_worker
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://fisioflow_user:fisioflow_password@db:5432/fisioflow_db
+      - REDIS_URL=redis://:fisioflow_redis_password@redis:6379/0
+      - SECRET_KEY=your-secret-key-change-in-production
+      - CELERY_BROKER_URL=redis://:fisioflow_redis_password@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:fisioflow_redis_password@redis:6379/0
+    volumes:
+      - ./backend:/app
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    networks:
+      - fisioflow_network
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    command: celery -A app.celery worker --loglevel=info
+    profiles:
+      - celery
+
+  # Celery Beat (para tarefas agendadas)
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fisioflow_celery_beat
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://fisioflow_user:fisioflow_password@db:5432/fisioflow_db
+      - REDIS_URL=redis://:fisioflow_redis_password@redis:6379/0
+      - SECRET_KEY=your-secret-key-change-in-production
+      - CELERY_BROKER_URL=redis://:fisioflow_redis_password@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:fisioflow_redis_password@redis:6379/0
+    volumes:
+      - ./backend:/app
+      - backend_logs:/app/logs
+    networks:
+      - fisioflow_network
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    command: celery -A app.celery beat --loglevel=info
+    profiles:
+      - celery
+
+  # Nginx (Reverse Proxy)
+  nginx:
+    image: nginx:alpine
+    container_name: fisioflow_nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - backend_uploads:/var/www/uploads
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - fisioflow_network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    profiles:
+      - nginx
+
+  # Monitoring with Prometheus (opcional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fisioflow_prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - fisioflow_network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Grafana for dashboards (opcional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fisioflow_grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    networks:
+      - fisioflow_network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  fisioflow_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

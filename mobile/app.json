@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "FisioFlow",
+    "slug": "fisioflow-mobile",
+    "version": "1.0.0",
+    "platforms": [
+      "ios"
+    ],
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e293b"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.fisioflow.mobile.9567",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "requireFullScreen": false,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "background-fetch",
+          "background-fetch"
+        ],
+        "NSCameraUsageDescription": "FisioFlow precisa acessar a câmera para capturar fotos de exercícios e avaliações.",
+        "NSPhotoLibraryUsageDescription": "FisioFlow precisa acessar a galeria para anexar imagens aos prontuários.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "f565af4b-3201-4a5c-9929-4f3bd653da7d"
+      }
+    },
+    "owner": "rafaelminatto"
+  }
+}

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FisioFlow - Gestão Clínica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <style>
+      :root {
+          --slate-950: 2 6 23;
+          --slate-900: 15 23 42;
+          --slate-800: 30 41 59;
+          --slate-700: 51 65 85;
+          --slate-600: 71 85 105;
+          --slate-400: 148 163 184;
+          --slate-300: 203 213 225;
+          --slate-100: 241 245 249;
+          --slate-50: 248 250 252;
+          --blue-500: 59 130 246;
+          --blue-600: 37 99 235;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: rgb(var(--slate-950));
+        background-image: 
+            radial-gradient(ellipse 80% 80% at 50% -20%, rgba(var(--blue-600), 0.25), transparent),
+            radial-gradient(circle at bottom left, rgba(var(--blue-500), 0.15), transparent 40%),
+            radial-gradient(circle at top right, rgba(var(--slate-700), 0.1), transparent 50%);
+        background-attachment: fixed;
+        position: relative;
+      }
+
+      body::after {
+          content: '';
+          position: fixed;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
+          background-image: radial-gradient(rgba(var(--slate-600), 0.15) 1px, transparent 1px);
+          background-size: 1.5rem 1.5rem;
+          z-index: -1;
+          pointer-events: none;
+      }
+      
+      .bento-box {
+        background: radial-gradient(circle at 50% 0, rgba(var(--slate-600), 0.08), transparent 70%), rgba(var(--slate-900), 0.7);
+        border: 1px solid rgba(var(--slate-700), 0.5);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all 0.3s ease;
+      }
+      .bento-box:hover {
+        transform: translateY(-4px);
+        border-color: rgba(var(--blue-500), 0.4);
+        box-shadow: 0 0 20px rgba(var(--blue-500), 0.1);
+      }
+      
+      .interactive-card {
+          background: rgba(var(--slate-800), 0.5);
+          border: 1px solid rgba(var(--slate-700), 0.7);
+          border-radius: 1rem;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+      }
+
+      .interactive-card::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: radial-gradient(circle at var(--x) var(--y), rgba(var(--blue-500), 0.2) 0%, transparent 40%);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+          pointer-events: none;
+      }
+
+      .interactive-card:hover::after {
+          opacity: 1;
+      }
+
+      .interactive-card:hover {
+          border-color: rgba(var(--blue-500), 0.3);
+          transform: translateY(-2px);
+          box-shadow: 0 0 15px rgba(var(--blue-500), 0.1);
+      }
+
+
+      @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+      .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+      }
+
+      @keyframes slide-in-from-bottom {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+      }
+      .animate-slide-in-from-bottom {
+        opacity: 0;
+        animation: slide-in-from-bottom 0.5s ease-out forwards;
+      }
+
+      @keyframes modal-in {
+          from {
+              opacity: 0;
+              transform: scale(0.95) translateY(10px);
+          }
+          to {
+              opacity: 1;
+              transform: scale(1) translateY(0);
+          }
+      }
+      .animate-modal-in {
+          animation: modal-in 0.3s ease-out forwards;
+      }
+      
+      .prose {
+        color: rgb(var(--slate-300));
+      }
+      .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+        color: rgb(var(--slate-100));
+      }
+      .prose strong {
+        color: rgb(var(--slate-50));
+      }
+      .prose a {
+        color: rgb(var(--blue-500));
+      }
+      .prose ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+      }
+      .prose ol {
+        list-style-type: decimal;
+        padding-left: 1.5rem;
+      }
+      .prose blockquote {
+        border-left-color: rgb(var(--slate-600));
+        color: rgb(var(--slate-400));
+        padding-left: 1rem;
+        font-style: italic;
+      }
+       .prose code {
+        color: #f472b6; /* text-pink-400 */
+        background-color: rgb(var(--slate-800));
+        padding: 0.2em 0.4em;
+        border-radius: 0.25rem;
+        font-size: 0.875em;
+      }
+       .prose pre {
+        background-color: rgb(var(--slate-900));
+        padding: 1rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+       }
+       .prose pre code {
+        background-color: transparent;
+        padding: 0;
+       }
+
+      .calendar-drag-over {
+        background-color: rgba(var(--blue-500), 0.1) !important;
+        border-style: dashed !important;
+        border-color: rgba(var(--blue-500), 0.5) !important;
+      }
+
+      .appointment-block {
+          background-image: repeating-linear-gradient(
+            -45deg,
+            rgba(var(--slate-700), 0.5),
+            rgba(var(--slate-700), 0.5) 10px,
+            rgba(var(--slate-600), 0.5) 10px,
+            rgba(var(--slate-600), 0.5) 20px
+          );
+          border-color: rgba(var(--slate-600), 0.8);
+      }
+
+      .recurring-indicator, .payment-indicator {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        width: 1rem;
+        height: 1rem;
+      }
+      .payment-indicator.pending {
+        color: rgb(239 68 68); /* text-red-500 */
+      }
+      
+      .dragging {
+        opacity: 0.6;
+        transform: scale(0.95);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        z-index: 20 !important;
+      }
+
+      .calendar-reminder-month {
+        background-color: rgba(250, 204, 21, 0.7); /* amber-400 */
+        color: rgb(var(--slate-950));
+        padding: 0.125rem 0.5rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .calendar-reminder-month:hover {
+        background-color: rgba(250, 204, 21, 1);
+      }
+       .calendar-reminder {
+        background-color: rgba(250, 204, 21, 0.3);
+        border-color: rgb(250, 204, 21);
+        color: #fde047;
+       }
+
+       @media print {
+            body {
+              background: white !important;
+            }
+            .printable-modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: visible;
+            }
+            .printable-area {
+                visibility: visible !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background-color: white !important;
+                color: black !important;
+            }
+            .printable-modal-content h1, .printable-modal-content h2, .printable-modal-content h3, .printable-modal-content p, .printable-modal-content span {
+                color: black !important;
+            }
+             .printable-modal-content > div {
+                 background-color: #f3f4f6 !important; /* bg-slate-100 */
+             }
+            .printable-ai-tips {
+                background-color: #ecfdf5 !important; /* emerald-50 */
+                border-color: #a7f3d0 !important; /* emerald-200 */
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+             .printable-notes {
+                background-color: #eff6ff !important; /* blue-50 */
+                border-color: #bfdbfe !important; /* blue-200 */
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            .printable-ai-tips h3, .printable-notes h3, .printable-ai-tips p, .printable-notes p, .printable-ai-tips ul, .printable-ai-tips li, .prose {
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^6.24.1",
+    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@^5.83.0",
+    "@tanstack/query-core": "https://esm.sh/@tanstack/query-core@^5.83.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.9.0",
+    "recharts": "https://esm.sh/recharts@^3.1.0",
+    "zod": "https://esm.sh/zod@^4.0.5",
+    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
+    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
+    "plyr-react": "https://esm.sh/plyr-react@^5.3.0",
+    "qrcode": "https://esm.sh/qrcode@^1.5.4"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-slate-950 text-slate-50">
+    <div id="root"></div>
+    <script type="module" src="./index.js"></script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

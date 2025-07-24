@@ -23,7 +23,11 @@
       "WebFetch(domain:fisioflow.vercel.app)",
       "Bash(tsc:*)",
       "Bash(npm run test:run:*)",
-      "Bash(npx vite build:*)"
+      "Bash(npx vite build:*)",
+      "Bash(.scriptssetup-fase1-interno.bat)",
+      "Bash(npx expo install:*)",
+      "Bash(npm run ios:*)",
+      "Bash(npx eas build:*)"
     ],
     "deny": []
   }

@@ -1,0 +1,370 @@
+# Configuração Prometheus - FisioFlow
+# Monitoramento Sistema Freemium e Otimizações iOS
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'fisioflow-production'
+    environment: 'production'
+
+# Configuração de alertas
+rule_files:
+  - "alert_rules.yml"
+  - "freemium_rules.yml"
+  - "ios_rules.yml"
+
+# Configuração do Alertmanager
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Configuração de scraping
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Backend Flask Application
+  - job_name: 'fisioflow-backend'
+    static_configs:
+      - targets: ['backend:5000']
+    scrape_interval: 15s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-backend'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'backend'
+
+  # PostgreSQL Database
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-postgres'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'postgres'
+
+  # Redis Cache
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-redis'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'redis'
+
+  # Nginx Web Server
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-nginx'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'nginx'
+
+  # Node Exporter (System Metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-host'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'system'
+
+  # Celery Workers
+  - job_name: 'celery'
+    static_configs:
+      - targets: ['celery-exporter:9540']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-celery'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'celery'
+
+  # Métricas específicas do Sistema Freemium
+  - job_name: 'freemium-metrics'
+    static_configs:
+      - targets: ['backend:5000']
+    scrape_interval: 60s
+    metrics_path: /metrics/freemium
+    scrape_timeout: 15s
+    params:
+      module: ['freemium']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-freemium'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'freemium'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'tier-management'
+
+  # Métricas específicas do iOS
+  - job_name: 'ios-metrics'
+    static_configs:
+      - targets: ['backend:5000']
+    scrape_interval: 30s
+    metrics_path: /metrics/ios
+    scrape_timeout: 10s
+    params:
+      module: ['ios']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-ios'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'ios-optimization'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'sync-service'
+
+  # Métricas de Sincronização Offline
+  - job_name: 'offline-sync'
+    static_configs:
+      - targets: ['backend:5000']
+    scrape_interval: 45s
+    metrics_path: /metrics/sync
+    scrape_timeout: 15s
+    params:
+      module: ['sync']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-sync'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'offline-sync'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'data-integrity'
+
+  # Métricas de Inteligência Artificial
+  - job_name: 'ai-metrics'
+    static_configs:
+      - targets: ['backend:5000']
+    scrape_interval: 60s
+    metrics_path: /metrics/ai
+    scrape_timeout: 20s
+    params:
+      module: ['ai']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-ai'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'ai-service'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'gemini-integration'
+
+  # Métricas de Notificações Push
+  - job_name: 'push-notifications'
+    static_configs:
+      - targets: ['backend:5000']
+    scrape_interval: 60s
+    metrics_path: /metrics/notifications
+    scrape_timeout: 10s
+    params:
+      module: ['notifications']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-notifications'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'push-notifications'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'apns-fcm'
+
+  # Métricas de Performance por Tier
+  - job_name: 'tier-performance'
+    static_configs:
+      - targets: ['backend:5000']
+    scrape_interval: 30s
+    metrics_path: /metrics/performance
+    scrape_timeout: 15s
+    params:
+      module: ['performance']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-performance'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'tier-performance'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'resource-monitoring'
+
+  # Métricas de Segurança e Compliance
+  - job_name: 'security-metrics'
+    static_configs:
+      - targets: ['backend:5000']
+    scrape_interval: 120s
+    metrics_path: /metrics/security
+    scrape_timeout: 20s
+    params:
+      module: ['security']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-security'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'security-monitoring'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'lgpd-compliance'
+
+  # Métricas de Business Intelligence
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: ['backend:5000']
+    scrape_interval: 300s  # 5 minutos
+    metrics_path: /metrics/business
+    scrape_timeout: 30s
+    params:
+      module: ['business']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'fisioflow-business'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'business-intelligence'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'analytics'
+
+  # Blackbox Exporter para Health Checks
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - https://app.fisioflow.com
+        - https://app.fisioflow.com/api/health
+        - https://app.fisioflow.com/api/freemium/health
+        - https://app.fisioflow.com/api/ios/health
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+# Configurações de armazenamento
+storage:
+  tsdb:
+    path: /prometheus/data
+    retention.time: 30d
+    retention.size: 10GB
+    wal-compression: true
+
+# Configurações de remote write (opcional para backup)
+remote_write:
+  - url: "https://prometheus-remote-write.example.com/api/v1/write"
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'fisioflow_.*'
+        action: keep
+
+# Configurações de remote read (opcional)
+remote_read:
+  - url: "https://prometheus-remote-read.example.com/api/v1/read"
+    read_recent: true
+
+# Configurações de descoberta de serviços (Docker)
+scrape_configs_docker:
+  - job_name: 'docker-containers'
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 30s
+        filters:
+          - name: label
+            values: ["com.fisioflow.monitoring=true"]
+    relabel_configs:
+      - source_labels: [__meta_docker_container_name]
+        target_label: container_name
+      - source_labels: [__meta_docker_container_label_com_fisioflow_service]
+        target_label: service
+      - source_labels: [__meta_docker_container_label_com_fisioflow_tier]
+        target_label: tier
+      - source_labels: [__meta_docker_container_label_com_fisioflow_component]
+        target_label: component
+
+# Configurações de logging
+log_level: info
+log_format: json
+
+# Configurações de web
+web:
+  listen-address: 0.0.0.0:9090
+  max-connections: 512
+  read-timeout: 30s
+  route-prefix: /
+  external-url: http://prometheus.fisioflow.com
+  enable-lifecycle: true
+  enable-admin-api: true
+
+# Configurações de query
+query:
+  max-concurrency: 20
+  max-samples: 50000000
+  timeout: 2m
+  lookback-delta: 5m
+
+# Configurações de feature flags
+feature_flags:
+  - promql-at-modifier
+  - promql-negative-offset
+  - remote-write-receiver
+  - exemplar-storage

@@ -51,6 +51,12 @@ import {
   Equipment,
   OperationalAlert,
   ExecutiveReport,
+  ExerciseFavorite,
+  ExerciseRating,
+  ExerciseStatistics,
+  ExerciseVideo,
+  ExerciseImage,
+  ImageCategory,
 } from '../types';
 import {
   INITIAL_TASKS,
@@ -92,6 +98,10 @@ import {
   INITIAL_EQUIPMENT,
   INITIAL_OPERATIONAL_ALERTS,
   INITIAL_EXECUTIVE_REPORTS,
+  INITIAL_EXERCISE_FAVORITES,
+  INITIAL_EXERCISE_RATINGS,
+  INITIAL_EXERCISE_VIDEOS,
+  INITIAL_EXERCISE_IMAGES,
 } from '../constants';
 import { useNotification } from './useNotification';
 import { useAuth } from './useAuth';
@@ -316,6 +326,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const [allExecutiveReports, setAllExecutiveReports] = useLocalStorage<
     ExecutiveReport[]
   >('fisioflow-all-executive-reports', INITIAL_EXECUTIVE_REPORTS);
+
+  // === SISTEMA DE FAVORITOS E AVALIAÇÕES ===
+  const [allExerciseFavorites, setAllExerciseFavorites] = useLocalStorage<
+    ExerciseFavorite[]
+  >('fisioflow-all-exercise-favorites', INITIAL_EXERCISE_FAVORITES);
+  const [allExerciseRatings, setAllExerciseRatings] = useLocalStorage<
+    ExerciseRating[]
+  >('fisioflow-all-exercise-ratings', INITIAL_EXERCISE_RATINGS);
+
+  // === SISTEMA DE VÍDEOS E IMAGENS ===
+  const [allExerciseVideos, setAllExerciseVideos] = useLocalStorage<
+    ExerciseVideo[]
+  >('fisioflow-all-exercise-videos', INITIAL_EXERCISE_VIDEOS);
+  const [allExerciseImages, setAllExerciseImages] = useLocalStorage<
+    ExerciseImage[]
+  >('fisioflow-all-exercise-images', INITIAL_EXERCISE_IMAGES);
 
   const { addNotification } = useNotification();
 
@@ -1666,6 +1692,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     allEquipment,
     allOperationalAlerts,
     allExecutiveReports,
+    allExerciseFavorites,
+    allExerciseRatings,
     saveTenant,
     saveUser,
     deleteUser,
@@ -1717,6 +1745,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     setAllOperationalAlerts,
     setAllEquipment,
     setAllExecutiveReports,
+    setAllExerciseFavorites,
+    setAllExerciseRatings,
   };
 
   return (
@@ -1772,9 +1802,13 @@ export const useData = (): DataContextType => {
     allEquipment,
     allOperationalAlerts,
     allExecutiveReports,
+    allExerciseFavorites,
+    allExerciseRatings,
     setAllOperationalAlerts,
     setAllEquipment,
     setAllExecutiveReports,
+    setAllExerciseFavorites,
+    setAllExerciseRatings,
     ...rest
   } = context;
 
@@ -2072,6 +2106,310 @@ export const useData = (): DataContextType => {
           )
         : [],
     [allExecutiveReports, tenantId]
+  );
+
+  // === SISTEMA DE FAVORITOS E AVALIAÇÕES - FILTERED ARRAYS ===
+  const exerciseFavorites = useMemo(
+    () =>
+      tenantId
+        ? allExerciseFavorites.filter(
+            (ef: ExerciseFavorite) => ef.tenantId === tenantId
+          )
+        : [],
+    [allExerciseFavorites, tenantId]
+  );
+
+  const exerciseRatings = useMemo(
+    () =>
+      tenantId
+        ? allExerciseRatings.filter(
+            (er: ExerciseRating) => er.tenantId === tenantId
+          )
+        : [],
+    [allExerciseRatings, tenantId]
+  );
+
+  // === SISTEMA DE VÍDEOS E IMAGENS - FILTERED ARRAYS ===
+  const exerciseVideos = useMemo(
+    () =>
+      tenantId
+        ? allExerciseVideos.filter(
+            (ev: ExerciseVideo) => ev.tenantId === tenantId
+          )
+        : [],
+    [allExerciseVideos, tenantId]
+  );
+  const exerciseImages = useMemo(
+    () =>
+      tenantId
+        ? allExerciseImages.filter(
+            (ei: ExerciseImage) => ei.tenantId === tenantId
+          )
+        : [],
+    [allExerciseImages, tenantId]
+  );
+
+  // === SISTEMA DE FAVORITOS E AVALIAÇÕES - FUNCTIONS ===
+  const toggleExerciseFavorite = useCallback(
+    (exerciseId: string, actingUser: User) => {
+      if (!tenantId) return;
+      
+      const existingFavorite = allExerciseFavorites.find(
+        (f) => f.userId === actingUser.id && f.exerciseId === exerciseId
+      );
+
+      if (existingFavorite) {
+        // Remove favorite
+        setAllExerciseFavorites(
+          allExerciseFavorites.filter(f => f.id !== existingFavorite.id)
+        );
+        addNotification({
+          type: 'info',
+          title: 'Favorito removido',
+          message: 'Exercício removido dos favoritos'
+        });
+      } else {
+        // Add favorite
+        const newFavorite: ExerciseFavorite = {
+          id: `fav-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          userId: actingUser.id,
+          exerciseId,
+          createdAt: new Date().toISOString(),
+          tenantId
+        };
+        setAllExerciseFavorites([...allExerciseFavorites, newFavorite]);
+        addNotification({
+          type: 'success',
+          title: 'Favorito adicionado',
+          message: 'Exercício adicionado aos favoritos'
+        });
+      }
+    },
+    [allExerciseFavorites, setAllExerciseFavorites, tenantId, addNotification]
+  );
+
+  const saveExerciseRating = useCallback(
+    (rating: Omit<ExerciseRating, 'id'>, actingUser: User) => {
+      if (!rating.tenantId) {
+        rating.tenantId = tenantId || '';
+      }
+      
+      const newRating: ExerciseRating = {
+        ...rating,
+        id: `rating-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      };
+      
+      setAllExerciseRatings([...allExerciseRatings, newRating]);
+      addNotification({
+        type: 'success',
+        title: 'Avaliação salva',
+        message: 'Sua avaliação do exercício foi registrada'
+      });
+    },
+    [allExerciseRatings, setAllExerciseRatings, tenantId, addNotification]
+  );
+
+  const getExerciseFavorites = useCallback(
+    (userId: string) => {
+      return exerciseFavorites.filter(f => f.userId === userId);
+    },
+    [exerciseFavorites]
+  );
+
+  const getExerciseRatings = useCallback(
+    (exerciseId: string) => {
+      return exerciseRatings.filter(r => r.exerciseId === exerciseId);
+    },
+    [exerciseRatings]
+  );
+
+  const getExerciseStatistics = useCallback(
+    (exerciseId: string): ExerciseStatistics | null => {
+      const exercise = exercises.find(e => e.id === exerciseId);
+      if (!exercise) return null;
+
+      const ratings = getExerciseRatings(exerciseId);
+      const favorites = exerciseFavorites.filter(f => f.exerciseId === exerciseId);
+      
+      const ratingDistribution = {
+        easy: ratings.filter(r => r.rating === '😊').length,
+        medium: ratings.filter(r => r.rating === '😐').length,
+        difficult: ratings.filter(r => r.rating === '😰').length,
+      };
+
+      const averagePainLevel = ratings.length > 0 
+        ? ratings.reduce((sum, r) => sum + r.painLevel, 0) / ratings.length 
+        : 0;
+
+      return {
+        exerciseId,
+        exerciseName: exercise.name,
+        totalRatings: ratings.length,
+        averagePainLevel,
+        ratingDistribution,
+        favoriteCount: favorites.length,
+        usageCount: ratings.length, // Using ratings as usage proxy
+        lastUsed: ratings.length > 0 
+          ? ratings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].date 
+          : new Date().toISOString()
+      };
+    },
+    [exercises, exerciseRatings, exerciseFavorites, getExerciseRatings]
+  );
+
+  const getMostUsedExercises = useCallback(
+    (userId?: string): ExerciseStatistics[] => {
+      const stats: ExerciseStatistics[] = [];
+      
+      exercises.forEach(exercise => {
+        const exerciseStats = getExerciseStatistics(exercise.id);
+        if (exerciseStats && exerciseStats.totalRatings > 0) {
+          stats.push(exerciseStats);
+        }
+      });
+
+      return stats.sort((a, b) => b.usageCount - a.usageCount).slice(0, 10);
+    },
+    [exercises, getExerciseStatistics]
+  );
+
+  // === SISTEMA DE VÍDEOS ===
+  
+  const saveExerciseVideo = useCallback(
+    (video: Omit<ExerciseVideo, 'id'>, actingUser: User) => {
+      const newVideo: ExerciseVideo = {
+        ...video,
+        id: `video-${crypto.randomUUID()}`,
+        uploadedAt: new Date().toISOString(),
+        viewCount: 0,
+        isActive: true,
+      };
+
+      setAllExerciseVideos([...allExerciseVideos, newVideo]);
+      
+      addNotification({
+        type: 'success',
+        title: 'Vídeo adicionado',
+        message: `O vídeo "${video.title}" foi adicionado ao exercício.`,
+      });
+    },
+    [allExerciseVideos, setAllExerciseVideos, addNotification]
+  );
+
+  const deleteExerciseVideo = useCallback(
+    (videoId: string, actingUser: User) => {
+      const videoToDelete = allExerciseVideos.find(v => v.id === videoId);
+      if (!videoToDelete) return;
+
+      setAllExerciseVideos(allExerciseVideos.filter(v => v.id !== videoId));
+      
+      addNotification({
+        type: 'info',
+        title: 'Vídeo removido',
+        message: `O vídeo "${videoToDelete.title}" foi removido.`,
+      });
+    },
+    [allExerciseVideos, setAllExerciseVideos, addNotification]
+  );
+
+  const getExerciseVideos = useCallback(
+    (exerciseId: string): ExerciseVideo[] => {
+      return allExerciseVideos
+        .filter(v => v.exerciseId === exerciseId && v.isActive && v.tenantId === tenantId)
+        .sort((a, b) => a.order - b.order);
+    },
+    [allExerciseVideos, tenantId]
+  );
+
+  const incrementVideoView = useCallback(
+    (videoId: string, actingUser: User) => {
+      setAllExerciseVideos(videos => 
+        videos.map(v => 
+          v.id === videoId 
+            ? { ...v, viewCount: v.viewCount + 1, lastViewed: new Date().toISOString() }
+            : v
+        )
+      );
+    },
+    [setAllExerciseVideos]
+  );
+
+  // === SISTEMA DE IMAGENS ===
+
+  const saveExerciseImage = useCallback(
+    (image: Omit<ExerciseImage, 'id'>, actingUser: User) => {
+      const newImage: ExerciseImage = {
+        ...image,
+        id: `image-${crypto.randomUUID()}`,
+        uploadedAt: new Date().toISOString(),
+        isActive: true,
+      };
+
+      setAllExerciseImages([...allExerciseImages, newImage]);
+      
+      addNotification({
+        type: 'success',
+        title: 'Imagem adicionada',
+        message: `A imagem "${image.title}" foi adicionada ao exercício.`,
+      });
+    },
+    [allExerciseImages, setAllExerciseImages, addNotification]
+  );
+
+  const updateExerciseImage = useCallback(
+    (imageId: string, updates: Partial<ExerciseImage>, actingUser: User) => {
+      const updatedImages = allExerciseImages.map(img => 
+        img.id === imageId ? { ...img, ...updates } : img
+      );
+      
+      setAllExerciseImages(updatedImages);
+      
+      addNotification({
+        type: 'success',
+        title: 'Imagem atualizada',
+        message: 'As anotações da imagem foram atualizadas com sucesso.',
+      });
+    },
+    [allExerciseImages, setAllExerciseImages, addNotification]
+  );
+
+  const deleteExerciseImage = useCallback(
+    (imageId: string, actingUser: User) => {
+      const imageToDelete = allExerciseImages.find(img => img.id === imageId);
+      if (!imageToDelete) return;
+
+      setAllExerciseImages(allExerciseImages.filter(img => img.id !== imageId));
+      
+      addNotification({
+        type: 'info',
+        title: 'Imagem removida',
+        message: `A imagem "${imageToDelete.title}" foi removida.`,
+      });
+    },
+    [allExerciseImages, setAllExerciseImages, addNotification]
+  );
+
+  const getExerciseImages = useCallback(
+    (exerciseId: string): ExerciseImage[] => {
+      return allExerciseImages
+        .filter(img => img.exerciseId === exerciseId && img.isActive && img.tenantId === tenantId)
+        .sort((a, b) => a.order - b.order);
+    },
+    [allExerciseImages, tenantId]
+  );
+
+  const getExerciseImagesByCategory = useCallback(
+    (exerciseId: string, category: ImageCategory): ExerciseImage[] => {
+      return allExerciseImages
+        .filter(img => 
+          img.exerciseId === exerciseId && 
+          img.category === category && 
+          img.isActive && 
+          img.tenantId === tenantId
+        )
+        .sort((a, b) => a.order - b.order);
+    },
+    [allExerciseImages, tenantId]
   );
 
   const saveExerciseLog = useCallback(
@@ -2651,6 +2989,10 @@ export const useData = (): DataContextType => {
     equipment,
     operationalAlerts,
     executiveReports,
+    exerciseFavorites,
+    exerciseRatings,
+    exerciseVideos,
+    exerciseImages,
     saveExerciseLog,
     sendChatMessage,
     saveDocument,
@@ -2694,5 +3036,22 @@ export const useData = (): DataContextType => {
     generateExecutiveReport,
     getAllData,
     saveAuditLog,
+    // Sistema de Favoritos e Avaliações
+    toggleExerciseFavorite,
+    saveExerciseRating,
+    getExerciseFavorites,
+    getExerciseRatings,
+    getExerciseStatistics,
+    getMostUsedExercises,
+    // Sistema de Vídeos e Imagens
+    saveExerciseVideo,
+    deleteExerciseVideo,
+    getExerciseVideos,
+    incrementVideoView,
+    saveExerciseImage,
+    updateExerciseImage,
+    deleteExerciseImage,
+    getExerciseImages,
+    getExerciseImagesByCategory,
   } as DataContextType;
 };
