@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData.minimal';
+import { useData } from '../../hooks/useData';
 import { UserRole } from '../../types';
 
 const ExerciseStatsDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { 
-    getMostUsedExercises, 
-    getExerciseFavorites, 
-    exerciseRatings, 
-    exerciseFavorites 
+  const {
+    getMostUsedExercises,
+    getExerciseFavorites,
+    exerciseRatings,
+    exerciseFavorites,
   } = useData();
 
   const mostUsedExercises = useMemo(() => {
@@ -24,28 +24,38 @@ const ExerciseStatsDashboard: React.FC = () => {
   const totalStats = useMemo(() => {
     const totalRatings = exerciseRatings.length;
     const totalFavorites = exerciseFavorites.length;
-    const averagePainLevel = totalRatings > 0 
-      ? exerciseRatings.reduce((sum, r) => sum + r.painLevel, 0) / totalRatings 
-      : 0;
+    const averagePainLevel =
+      totalRatings > 0
+        ? exerciseRatings.reduce((sum, r) => sum + r.painLevel, 0) /
+          totalRatings
+        : 0;
 
     const ratingDistribution = {
-      easy: exerciseRatings.filter(r => r.rating === '😊').length,
-      medium: exerciseRatings.filter(r => r.rating === '😐').length,
-      difficult: exerciseRatings.filter(r => r.rating === '😰').length,
+      easy: exerciseRatings.filter((r) => r.rating === '😊').length,
+      medium: exerciseRatings.filter((r) => r.rating === '😐').length,
+      difficult: exerciseRatings.filter((r) => r.rating === '😰').length,
     };
 
     return {
       totalRatings,
       totalFavorites,
       averagePainLevel,
-      ratingDistribution
+      ratingDistribution,
     };
   }, [exerciseRatings, exerciseFavorites]);
 
   const ratingIcons = {
     easy: { icon: '😊', label: 'Fácil', color: 'text-green-600 bg-green-50' },
-    medium: { icon: '😐', label: 'Médio', color: 'text-yellow-600 bg-yellow-50' },
-    difficult: { icon: '😰', label: 'Difícil', color: 'text-red-600 bg-red-50' },
+    medium: {
+      icon: '😐',
+      label: 'Médio',
+      color: 'text-yellow-600 bg-yellow-50',
+    },
+    difficult: {
+      icon: '😰',
+      label: 'Difícil',
+      color: 'text-red-600 bg-red-50',
+    },
   };
 
   // Only show to therapists and admins
@@ -95,33 +105,38 @@ const ExerciseStatsDashboard: React.FC = () => {
             Distribuição Geral de Avaliações
           </h4>
           <div className="space-y-3">
-            {Object.entries(totalStats.ratingDistribution).map(([key, count]) => {
-              const rating = ratingIcons[key as keyof typeof ratingIcons];
-              const percentage = totalStats.totalRatings > 0 
-                ? ((count / totalStats.totalRatings) * 100).toFixed(1) 
-                : '0';
-              
-              return (
-                <div key={key} className="flex items-center space-x-3">
-                  <div className={`rounded-full px-3 py-1 text-sm font-medium ${rating.color}`}>
-                    {rating.icon} {rating.label}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <div className="h-3 flex-1 rounded-full bg-slate-200">
-                        <div
-                          className="h-full rounded-full bg-blue-500"
-                          style={{ width: `${percentage}%` }}
-                        />
+            {Object.entries(totalStats.ratingDistribution).map(
+              ([key, count]) => {
+                const rating = ratingIcons[key as keyof typeof ratingIcons];
+                const percentage =
+                  totalStats.totalRatings > 0
+                    ? ((count / totalStats.totalRatings) * 100).toFixed(1)
+                    : '0';
+
+                return (
+                  <div key={key} className="flex items-center space-x-3">
+                    <div
+                      className={`rounded-full px-3 py-1 text-sm font-medium ${rating.color}`}
+                    >
+                      {rating.icon} {rating.label}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <div className="h-3 flex-1 rounded-full bg-slate-200">
+                          <div
+                            className="h-full rounded-full bg-blue-500"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <span className="ml-3 text-sm font-medium text-slate-600">
+                          {count} ({percentage}%)
+                        </span>
                       </div>
-                      <span className="ml-3 text-sm font-medium text-slate-600">
-                        {count} ({percentage}%)
-                      </span>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              }
+            )}
           </div>
         </div>
       )}
@@ -147,7 +162,8 @@ const ExerciseStatsDashboard: React.FC = () => {
                       {exercise.exerciseName}
                     </div>
                     <div className="text-sm text-slate-500">
-                      {exercise.totalRatings} avaliações • Dor média: {exercise.averagePainLevel.toFixed(1)}/10
+                      {exercise.totalRatings} avaliações • Dor média:{' '}
+                      {exercise.averagePainLevel.toFixed(1)}/10
                     </div>
                   </div>
                 </div>
@@ -176,12 +192,13 @@ const ExerciseStatsDashboard: React.FC = () => {
       {/* Empty State */}
       {totalStats.totalRatings === 0 && (
         <div className="rounded-lg bg-slate-50 p-8 text-center">
-          <div className="text-4xl mb-4">📊</div>
+          <div className="mb-4 text-4xl">📊</div>
           <h4 className="mb-2 font-semibold text-slate-900">
             Ainda não há dados suficientes
           </h4>
           <p className="text-slate-600">
-            As estatísticas aparecerão conforme os pacientes avaliarem os exercícios.
+            As estatísticas aparecerão conforme os pacientes avaliarem os
+            exercícios.
           </p>
         </div>
       )}

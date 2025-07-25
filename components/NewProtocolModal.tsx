@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { ClinicalProtocol } from '../types';
-import BaseModal from "./ui/BaseModal";
-import Button from './ui/Button';
+import BaseModal from './ui/BaseModal';
+import { Button } from './ui/Button';
 import FormField from './ui/FormField';
 import { IconSave, IconPlus, IconX } from './icons/IconComponents';
 
@@ -138,7 +138,6 @@ const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
         </label>
         <Button
           variant="secondary"
-          
           onClick={() => addArrayField(field)}
           className="flex items-center space-x-1"
         >
@@ -161,7 +160,6 @@ const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
             {(formData[field] as string[]).length > 1 && (
               <Button
                 variant="secondary"
-                
                 onClick={() => removeArrayField(field, index)}
                 className="flex items-center"
               >
@@ -179,7 +177,6 @@ const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       title="Criar Novo Protocolo Clínico"
-      
     >
       <div className="space-y-6">
         {/* Basic Information */}

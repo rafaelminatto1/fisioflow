@@ -3,7 +3,7 @@ import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { ClinicalCase, CaseComment, UserRole } from '../types';
 import PageShell from './ui/PageShell';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import FormField from './ui/FormField';
 import {
   IconStar,
@@ -677,7 +677,6 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
                       variant="primary"
                       onClick={handleRateCase}
                       disabled={userRating === 0}
-                      
                     >
                       {userRatingData ? 'Atualizar Avaliação' : 'Avaliar'}
                     </Button>
@@ -710,7 +709,6 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
                         variant="primary"
                         onClick={handleAddComment}
                         disabled={!newComment.trim()}
-                        
                       >
                         {replyToComment ? 'Responder' : 'Comentar'}
                       </Button>
@@ -721,7 +719,6 @@ const ClinicalCaseViewerPage: React.FC<ClinicalCaseViewerPageProps> = ({
                             setReplyToComment(null);
                             setNewComment('');
                           }}
-                          
                         >
                           Cancelar
                         </Button>

@@ -8,8 +8,8 @@ import {
   ProtocolPhase,
   ProtocolExercise,
 } from '../types';
-import BaseModal from "./ui/BaseModal";
-import Button from './ui/Button';
+import BaseModal from './ui/BaseModal';
+import { Button } from './ui/Button';
 import FormField from './ui/FormField';
 import {
   IconUser,
@@ -163,7 +163,6 @@ const ProtocolPrescriptionModal: React.FC<ProtocolPrescriptionModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={`Prescrever Protocolo: ${protocol.name}`}
-      
     >
       <div className="space-y-6">
         {/* Patient Selection */}

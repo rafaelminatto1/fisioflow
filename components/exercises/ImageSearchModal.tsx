@@ -2,14 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Exercise, ExerciseImage, ImageCategory, UserRole } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData.minimal';
-import { 
-  imageSearchService, 
-  ImageSearchFilters, 
-  ImageSearchResult, 
-  SearchSuggestion 
+import {
+  imageSearchService,
+  ImageSearchFilters,
+  ImageSearchResult,
+  SearchSuggestion,
 } from '../../services/imageSearchService';
 import BaseModal from '../ui/BaseModal';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 import LazyImage from '../ui/LazyImage';
 
 interface ImageSearchModalProps {
@@ -25,7 +25,7 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
 }) => {
   const { user } = useAuth();
   const { exercises, getExerciseImages } = useData();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<ImageSearchFilters>({
     category: 'all',
@@ -43,9 +43,7 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
   }
 
   const allImages = useMemo(() => {
-    return exercises.flatMap(exercise => 
-      getExerciseImages(exercise.id)
-    );
+    return exercises.flatMap((exercise) => getExerciseImages(exercise.id));
   }, [exercises, getExerciseImages]);
 
   const searchResults = useMemo(() => {
@@ -57,7 +55,14 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
     };
 
     return imageSearchService.searchImages(allImages, exercises, searchFilters);
-  }, [allImages, exercises, searchQuery, filters, selectedTags, selectedExercises]);
+  }, [
+    allImages,
+    exercises,
+    searchQuery,
+    filters,
+    selectedTags,
+    selectedExercises,
+  ]);
 
   const searchStats = useMemo(() => {
     return imageSearchService.getSearchStats(allImages);
@@ -79,9 +84,17 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
 
   const categories = [
     { value: 'all' as const, label: 'Todas as Categorias', icon: '📋' },
-    { value: 'initial_position' as ImageCategory, label: 'Posição Inicial', icon: '🏁' },
+    {
+      value: 'initial_position' as ImageCategory,
+      label: 'Posição Inicial',
+      icon: '🏁',
+    },
     { value: 'execution' as ImageCategory, label: 'Execução', icon: '⚡' },
-    { value: 'final_position' as ImageCategory, label: 'Posição Final', icon: '🏆' },
+    {
+      value: 'final_position' as ImageCategory,
+      label: 'Posição Final',
+      icon: '🏆',
+    },
     { value: 'anatomy' as ImageCategory, label: 'Anatomia', icon: '🫀' },
     { value: 'equipment' as ImageCategory, label: 'Equipamentos', icon: '🏋️' },
     { value: 'variation' as ImageCategory, label: 'Variações', icon: '♻️' },
@@ -93,14 +106,14 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
         setSelectedTags([...selectedTags, suggestion.text]);
       }
     } else if (suggestion.type === 'exercise') {
-      const exercise = exercises.find(ex => ex.name === suggestion.text);
+      const exercise = exercises.find((ex) => ex.name === suggestion.text);
       if (exercise && !selectedExercises.includes(exercise.id)) {
         setSelectedExercises([...selectedExercises, exercise.id]);
       }
     } else if (suggestion.type === 'category') {
-      const category = categories.find(cat => cat.label === suggestion.text);
+      const category = categories.find((cat) => cat.label === suggestion.text);
       if (category) {
-        setFilters(prev => ({ ...prev, category: category.value }));
+        setFilters((prev) => ({ ...prev, category: category.value }));
       }
     } else {
       setSearchQuery(suggestion.text);
@@ -109,11 +122,13 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
+    setSelectedTags(selectedTags.filter((tag) => tag !== tagToRemove));
   };
 
   const handleRemoveExercise = (exerciseToRemove: string) => {
-    setSelectedExercises(selectedExercises.filter(id => id !== exerciseToRemove));
+    setSelectedExercises(
+      selectedExercises.filter((id) => id !== exerciseToRemove)
+    );
   };
 
   const handleClearFilters = () => {
@@ -125,32 +140,42 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
 
   const getSuggestionIcon = (type: string) => {
     switch (type) {
-      case 'tag': return '🏷️';
-      case 'category': return '📂';
-      case 'exercise': return '💪';
-      case 'annotation': return '📍';
-      default: return '🔍';
+      case 'tag':
+        return '🏷️';
+      case 'category':
+        return '📂';
+      case 'exercise':
+        return '💪';
+      case 'annotation':
+        return '📍';
+      default:
+        return '🔍';
     }
   };
 
   const getMatchedFieldsDisplay = (result: ImageSearchResult) => {
     const fieldLabels: Record<string, string> = {
-      'title': 'Título',
-      'caption': 'Legenda',
-      'tags': 'Tags',
-      'exerciseName': 'Exercício',
-      'exerciseDescription': 'Descrição',
-      'annotations': 'Anotações',
-      'category': 'Categoria',
+      title: 'Título',
+      caption: 'Legenda',
+      tags: 'Tags',
+      exerciseName: 'Exercício',
+      exerciseDescription: 'Descrição',
+      annotations: 'Anotações',
+      category: 'Categoria',
     };
 
     return result.matchedFields
-      .map(field => fieldLabels[field] || field)
+      .map((field) => fieldLabels[field] || field)
       .join(', ');
   };
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title="Busca Avançada de Imagens" size="large">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Busca Avançada de Imagens"
+      size="large"
+    >
       <div className="space-y-6">
         {/* Search Header */}
         <div className="space-y-4">
@@ -166,28 +191,29 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder="Buscar por título, descrição, tags, anotações..."
-                className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 pr-12 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 transform text-slate-400">
                 🔍
               </div>
             </div>
 
             {/* Search Suggestions */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+              <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-60 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
                 {suggestions.map((suggestion, index) => (
                   <button
                     key={index}
                     onClick={() => handleApplySuggestion(suggestion)}
-                    className="w-full px-4 py-2 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 flex items-center justify-between"
+                    className="flex w-full items-center justify-between border-b border-slate-100 px-4 py-2 text-left last:border-b-0 hover:bg-slate-50"
                   >
                     <div className="flex items-center space-x-2">
                       <span>{getSuggestionIcon(suggestion.type)}</span>
                       <span className="text-sm">{suggestion.text}</span>
                     </div>
                     <span className="text-xs text-slate-500">
-                      {suggestion.count} imagem{suggestion.count !== 1 ? 's' : ''}
+                      {suggestion.count} imagem
+                      {suggestion.count !== 1 ? 's' : ''}
                     </span>
                   </button>
                 ))}
@@ -199,10 +225,15 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={filters.category || 'all'}
-              onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value as ImageCategory | 'all' }))}
-              className="px-3 py-1 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  category: e.target.value as ImageCategory | 'all',
+                }))
+              }
+              className="rounded-md border border-slate-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {categories.map(cat => (
+              {categories.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.icon} {cat.label}
                 </option>
@@ -210,12 +241,21 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
             </select>
 
             <select
-              value={filters.hasAnnotations === undefined ? 'all' : filters.hasAnnotations ? 'yes' : 'no'}
+              value={
+                filters.hasAnnotations === undefined
+                  ? 'all'
+                  : filters.hasAnnotations
+                    ? 'yes'
+                    : 'no'
+              }
               onChange={(e) => {
-                const value = e.target.value === 'all' ? undefined : e.target.value === 'yes';
-                setFilters(prev => ({ ...prev, hasAnnotations: value }));
+                const value =
+                  e.target.value === 'all'
+                    ? undefined
+                    : e.target.value === 'yes';
+                setFilters((prev) => ({ ...prev, hasAnnotations: value }));
               }}
-              className="px-3 py-1 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-md border border-slate-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">📍 Todas as Imagens</option>
               <option value="yes">📍 Com Anotações</option>
@@ -224,15 +264,19 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
 
             <button
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="px-3 py-1 text-sm border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              className="rounded-md border border-slate-300 px-3 py-1 text-sm transition-colors hover:bg-slate-50"
             >
               ⚙️ {showAdvancedFilters ? 'Ocultar' : 'Filtros Avançados'}
             </button>
 
-            {(searchQuery || filters.category !== 'all' || filters.hasAnnotations !== undefined || selectedTags.length > 0 || selectedExercises.length > 0) && (
+            {(searchQuery ||
+              filters.category !== 'all' ||
+              filters.hasAnnotations !== undefined ||
+              selectedTags.length > 0 ||
+              selectedExercises.length > 0) && (
               <button
                 onClick={handleClearFilters}
-                className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                className="rounded-md bg-red-100 px-3 py-1 text-sm text-red-700 transition-colors hover:bg-red-200"
               >
                 🗑️ Limpar Filtros
               </button>
@@ -245,10 +289,10 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
               {selectedTags.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   <span className="text-sm text-slate-600">Tags:</span>
-                  {selectedTags.map(tag => (
+                  {selectedTags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                      className="inline-flex items-center space-x-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800"
                     >
                       <span>🏷️ {tag}</span>
                       <button
@@ -265,12 +309,14 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
               {selectedExercises.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   <span className="text-sm text-slate-600">Exercícios:</span>
-                  {selectedExercises.map(exerciseId => {
-                    const exercise = exercises.find(ex => ex.id === exerciseId);
+                  {selectedExercises.map((exerciseId) => {
+                    const exercise = exercises.find(
+                      (ex) => ex.id === exerciseId
+                    );
                     return exercise ? (
                       <span
                         key={exerciseId}
-                        className="inline-flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                        className="inline-flex items-center space-x-1 rounded-full bg-green-100 px-2 py-1 text-xs text-green-800"
                       >
                         <span>💪 {exercise.name}</span>
                         <button
@@ -290,42 +336,48 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
 
         {/* Advanced Filters */}
         {showAdvancedFilters && (
-          <div className="bg-slate-50 rounded-lg p-4 space-y-4">
+          <div className="space-y-4 rounded-lg bg-slate-50 p-4">
             <h4 className="font-medium text-slate-900">Filtros Avançados</h4>
-            
+
             {/* Date Range */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-slate-700">
                   Data Inicial
                 </label>
                 <input
                   type="date"
                   onChange={(e) => {
-                    const start = e.target.value ? new Date(e.target.value) : undefined;
-                    setFilters(prev => ({
+                    const start = e.target.value
+                      ? new Date(e.target.value)
+                      : undefined;
+                    setFilters((prev) => ({
                       ...prev,
-                      dateRange: start ? { ...prev.dateRange, start } : undefined
+                      dateRange: start
+                        ? { ...prev.dateRange, start }
+                        : undefined,
                     }));
                   }}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-slate-700">
                   Data Final
                 </label>
                 <input
                   type="date"
                   onChange={(e) => {
-                    const end = e.target.value ? new Date(e.target.value) : undefined;
-                    setFilters(prev => ({
+                    const end = e.target.value
+                      ? new Date(e.target.value)
+                      : undefined;
+                    setFilters((prev) => ({
                       ...prev,
-                      dateRange: end ? { ...prev.dateRange, end } : undefined
+                      dateRange: end ? { ...prev.dateRange, end } : undefined,
                     }));
                   }}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -333,38 +385,42 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
             {/* File Size Range */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-slate-700">
                   Tamanho Mínimo (KB)
                 </label>
                 <input
                   type="number"
                   placeholder="0"
                   onChange={(e) => {
-                    const min = e.target.value ? parseInt(e.target.value) * 1024 : undefined;
-                    setFilters(prev => ({
+                    const min = e.target.value
+                      ? parseInt(e.target.value) * 1024
+                      : undefined;
+                    setFilters((prev) => ({
                       ...prev,
-                      fileSize: { ...prev.fileSize, min }
+                      fileSize: { ...prev.fileSize, min },
                     }));
                   }}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-slate-700">
                   Tamanho Máximo (KB)
                 </label>
                 <input
                   type="number"
                   placeholder="10000"
                   onChange={(e) => {
-                    const max = e.target.value ? parseInt(e.target.value) * 1024 : undefined;
-                    setFilters(prev => ({
+                    const max = e.target.value
+                      ? parseInt(e.target.value) * 1024
+                      : undefined;
+                    setFilters((prev) => ({
                       ...prev,
-                      fileSize: { ...prev.fileSize, max }
+                      fileSize: { ...prev.fileSize, max },
                     }));
                   }}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -372,18 +428,24 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
         )}
 
         {/* Search Stats */}
-        <div className="bg-blue-50 rounded-lg p-4">
+        <div className="rounded-lg bg-blue-50 p-4">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-700">{searchResults.length}</div>
+              <div className="text-2xl font-bold text-blue-700">
+                {searchResults.length}
+              </div>
               <div className="text-xs text-blue-600">Resultados</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-700">{searchStats.totalImages}</div>
+              <div className="text-2xl font-bold text-blue-700">
+                {searchStats.totalImages}
+              </div>
               <div className="text-xs text-blue-600">Total de Imagens</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-700">{searchStats.annotatedImages}</div>
+              <div className="text-2xl font-bold text-blue-700">
+                {searchStats.annotatedImages}
+              </div>
               <div className="text-xs text-blue-600">Com Anotações</div>
             </div>
             <div className="text-center">
@@ -404,34 +466,36 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
           </div>
 
           {searchResults.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              <div className="text-4xl mb-2">🔍</div>
+            <div className="py-8 text-center text-slate-500">
+              <div className="mb-2 text-4xl">🔍</div>
               <p className="font-medium">Nenhuma imagem encontrada</p>
               <p className="text-sm">Tente ajustar os filtros de busca</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 max-h-96 overflow-y-auto">
+            <div className="grid max-h-96 grid-cols-2 gap-4 overflow-y-auto md:grid-cols-3 lg:grid-cols-4">
               {searchResults.map((result, index) => (
                 <div
                   key={result.image.id}
-                  className="group relative bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                  className="group relative cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-white transition-shadow hover:shadow-md"
                   onClick={() => onSelectImage?.(result.image, result.exercise)}
                 >
                   <div className="aspect-video bg-slate-100">
                     <LazyImage
                       src={result.image.thumbnailUrl || result.image.imageUrl}
                       alt={result.image.title}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   </div>
-                  
+
                   <div className="p-3">
-                    <h5 className="font-medium text-sm text-slate-900 truncate">
+                    <h5 className="truncate text-sm font-medium text-slate-900">
                       {result.image.title}
                     </h5>
-                    
+
                     <div className="mt-1 text-xs text-slate-500">
-                      <div>📁 {result.exercise?.name || 'Exercício removido'}</div>
+                      <div>
+                        📁 {result.exercise?.name || 'Exercício removido'}
+                      </div>
                       {result.matchedFields.length > 0 && (
                         <div className="mt-1 text-xs text-blue-600">
                           Matches: {getMatchedFieldsDisplay(result)}
@@ -440,15 +504,16 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
                     </div>
 
                     <div className="mt-2 flex items-center justify-between">
-                      <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                      <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600">
                         Score: {result.relevanceScore}
                       </span>
-                      
-                      {result.image.annotationPoints && result.image.annotationPoints.length > 0 && (
-                        <span className="text-xs text-blue-600">
-                          📍 {result.image.annotationPoints.length}
-                        </span>
-                      )}
+
+                      {result.image.annotationPoints &&
+                        result.image.annotationPoints.length > 0 && (
+                          <span className="text-xs text-blue-600">
+                            📍 {result.image.annotationPoints.length}
+                          </span>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -459,9 +524,7 @@ const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
 
         {/* Action Buttons */}
         <div className="flex justify-end pt-4">
-          <Button onClick={onClose}>
-            Fechar
-          </Button>
+          <Button onClick={onClose}>Fechar</Button>
         </div>
       </div>
     </BaseModal>

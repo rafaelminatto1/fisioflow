@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { Exercise, ExerciseVideo, VideoType, VideoQuality, UserRole } from '../../types';
+import {
+  Exercise,
+  ExerciseVideo,
+  VideoType,
+  VideoQuality,
+  UserRole,
+} from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData.minimal';
 import BaseModal from '../ui/BaseModal';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 
 interface VideoUploadModalProps {
   isOpen: boolean;
@@ -29,31 +35,70 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const videoTypes = [
-    { value: 'demonstration' as VideoType, label: 'Demonstração', description: 'Vídeo principal demonstrando o exercício' },
-    { value: 'progression' as VideoType, label: 'Progressão', description: 'Variação mais avançada do exercício' },
-    { value: 'variation' as VideoType, label: 'Variação', description: 'Forma alternativa de executar o exercício' },
-    { value: 'alternative' as VideoType, label: 'Alternativa', description: 'Exercício alternativo ou adaptação' },
+    {
+      value: 'demonstration' as VideoType,
+      label: 'Demonstração',
+      description: 'Vídeo principal demonstrando o exercício',
+    },
+    {
+      value: 'progression' as VideoType,
+      label: 'Progressão',
+      description: 'Variação mais avançada do exercício',
+    },
+    {
+      value: 'variation' as VideoType,
+      label: 'Variação',
+      description: 'Forma alternativa de executar o exercício',
+    },
+    {
+      value: 'alternative' as VideoType,
+      label: 'Alternativa',
+      description: 'Exercício alternativo ou adaptação',
+    },
   ];
 
   const qualityOptions = [
-    { value: 'auto' as VideoQuality, label: 'Automática', description: 'Qualidade ajustada automaticamente' },
-    { value: 'high' as VideoQuality, label: 'Alta (HD)', description: 'Melhor qualidade, maior consumo de dados' },
-    { value: 'medium' as VideoQuality, label: 'Média', description: 'Equilíbrio entre qualidade e dados' },
-    { value: 'low' as VideoQuality, label: 'Baixa', description: 'Menor qualidade, menor consumo de dados' },
+    {
+      value: 'auto' as VideoQuality,
+      label: 'Automática',
+      description: 'Qualidade ajustada automaticamente',
+    },
+    {
+      value: 'high' as VideoQuality,
+      label: 'Alta (HD)',
+      description: 'Melhor qualidade, maior consumo de dados',
+    },
+    {
+      value: 'medium' as VideoQuality,
+      label: 'Média',
+      description: 'Equilíbrio entre qualidade e dados',
+    },
+    {
+      value: 'low' as VideoQuality,
+      label: 'Baixa',
+      description: 'Menor qualidade, menor consumo de dados',
+    },
   ];
 
   const extractYouTubeId = (url: string): string | null => {
-    const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const regex =
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
     const match = url.match(regex);
     return match ? match[1] : null;
   };
 
   const validateVideoUrl = (url: string): boolean => {
     // Aceita URLs do YouTube ou arquivos de vídeo
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)/;
+    const youtubeRegex =
+      /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)/;
     const videoFileRegex = /\.(mp4|avi|mov|wmv|flv|webm)$/i;
-    
-    return youtubeRegex.test(url) || videoFileRegex.test(url) || url.startsWith('data:') || url.startsWith('blob:');
+
+    return (
+      youtubeRegex.test(url) ||
+      videoFileRegex.test(url) ||
+      url.startsWith('data:') ||
+      url.startsWith('blob:')
+    );
   };
 
   const handleSubmit = async () => {
@@ -65,10 +110,13 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const youtubeId = extractYouTubeId(videoUrl);
-      const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      const tagArray = tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter((tag) => tag);
 
       const videoData: Omit<ExerciseVideo, 'id'> = {
         exerciseId: exercise.id,
@@ -88,7 +136,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       };
 
       saveExerciseVideo(videoData, user);
-      
+
       // Reset form
       setTitle('');
       setDescription('');
@@ -128,12 +176,17 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         {/* Exercise Info */}
         <div className="rounded-lg bg-slate-50 p-4">
           <h3 className="font-semibold text-slate-900">{exercise.name}</h3>
-          <p className="mt-1 text-sm text-slate-600">Adicionando vídeo ao exercício</p>
+          <p className="mt-1 text-sm text-slate-600">
+            Adicionando vídeo ao exercício
+          </p>
         </div>
 
         {/* Video Title */}
         <div>
-          <label htmlFor="title" className="mb-2 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="title"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
             Título do Vídeo *
           </label>
           <input
@@ -149,7 +202,10 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
         {/* Video URL */}
         <div>
-          <label htmlFor="videoUrl" className="mb-2 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="videoUrl"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
             URL do Vídeo *
           </label>
           <input
@@ -183,7 +239,9 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
                 }`}
               >
                 <div className="font-medium">{option.label}</div>
-                <div className="mt-1 text-xs text-slate-500">{option.description}</div>
+                <div className="mt-1 text-xs text-slate-500">
+                  {option.description}
+                </div>
               </button>
             ))}
           </div>
@@ -191,7 +249,10 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
         {/* Quality */}
         <div>
-          <label htmlFor="quality" className="mb-2 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="quality"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
             Qualidade do Vídeo
           </label>
           <select
@@ -210,7 +271,10 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
         {/* Description */}
         <div>
-          <label htmlFor="description" className="mb-2 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="description"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
             Descrição (opcional)
           </label>
           <textarea
@@ -226,7 +290,10 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         {/* Tags and Order */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="tags" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="tags"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Tags (opcional)
             </label>
             <input
@@ -237,11 +304,16 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="iniciante, avançado, casa"
             />
-            <p className="mt-1 text-xs text-slate-500">Separe as tags por vírgula</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Separe as tags por vírgula
+            </p>
           </div>
-          
+
           <div>
-            <label htmlFor="order" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="order"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Ordem de Exibição
             </label>
             <input

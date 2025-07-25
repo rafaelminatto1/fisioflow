@@ -3,7 +3,7 @@ import { Exercise, ExerciseVideo } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData.minimal';
 import BaseModal from '../ui/BaseModal';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 
 interface VideoPlayerModalProps {
   isOpen: boolean;
@@ -20,13 +20,16 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
 }) => {
   const { user } = useAuth();
   const { getExerciseVideos, incrementVideoView } = useData();
-  
-  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(initialVideoId || null);
+
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(
+    initialVideoId || null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const videos = getExerciseVideos(exercise.id);
-  const selectedVideo = videos.find(v => v.id === selectedVideoId) || videos[0];
+  const selectedVideo =
+    videos.find((v) => v.id === selectedVideoId) || videos[0];
 
   useEffect(() => {
     if (videos.length > 0 && !selectedVideoId) {
@@ -70,21 +73,31 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
 
   const getVideoTypeIcon = (type: string): string => {
     switch (type) {
-      case 'demonstration': return '🎯';
-      case 'progression': return '📈';
-      case 'variation': return '♻️';
-      case 'alternative': return '🔀';
-      default: return '🎥';
+      case 'demonstration':
+        return '🎯';
+      case 'progression':
+        return '📈';
+      case 'variation':
+        return '♻️';
+      case 'alternative':
+        return '🔀';
+      default:
+        return '🎥';
     }
   };
 
   const getVideoTypeLabel = (type: string): string => {
     switch (type) {
-      case 'demonstration': return 'Demonstração';
-      case 'progression': return 'Progressão';
-      case 'variation': return 'Variação';
-      case 'alternative': return 'Alternativa';
-      default: return 'Vídeo';
+      case 'demonstration':
+        return 'Demonstração';
+      case 'progression':
+        return 'Progressão';
+      case 'variation':
+        return 'Variação';
+      case 'alternative':
+        return 'Alternativa';
+      default:
+        return 'Vídeo';
     }
   };
 
@@ -92,8 +105,10 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
     return (
       <BaseModal isOpen={isOpen} onClose={onClose} title="Vídeos do Exercício">
         <div className="py-8 text-center">
-          <div className="text-4xl mb-4">🎥</div>
-          <h3 className="mb-2 font-semibold text-slate-900">Nenhum vídeo disponível</h3>
+          <div className="mb-4 text-4xl">🎥</div>
+          <h3 className="mb-2 font-semibold text-slate-900">
+            Nenhum vídeo disponível
+          </h3>
           <p className="text-slate-600">
             Este exercício ainda não possui vídeos demonstrativos.
           </p>
@@ -103,9 +118,9 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   }
 
   return (
-    <BaseModal 
-      isOpen={isOpen} 
-      onClose={onClose} 
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
       title="Vídeos do Exercício"
       size="large"
     >
@@ -119,11 +134,11 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Video Player */}
           <div className="lg:col-span-2">
-            <div className="aspect-video rounded-lg bg-black overflow-hidden">
+            <div className="aspect-video overflow-hidden rounded-lg bg-black">
               {isYouTubeVideo(selectedVideo.videoUrl) ? (
                 <iframe
                   src={getYouTubeEmbedUrl(selectedVideo.videoUrl)}
-                  className="w-full h-full"
+                  className="h-full w-full"
                   allowFullScreen
                   title={selectedVideo.title}
                   onLoad={() => setIsLoading(false)}
@@ -132,7 +147,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                 <video
                   ref={videoRef}
                   controls
-                  className="w-full h-full"
+                  className="h-full w-full"
                   src={selectedVideo.videoUrl}
                   poster={selectedVideo.thumbnailUrl}
                   onLoadStart={() => setIsLoading(true)}
@@ -141,7 +156,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                   Seu navegador não suporta a reprodução de vídeo.
                 </video>
               )}
-              
+
               {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
                   <div className="text-white">Carregando vídeo...</div>
@@ -158,7 +173,8 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                   </h4>
                   <div className="mt-1 flex items-center space-x-4 text-sm text-slate-500">
                     <span className="flex items-center">
-                      {getVideoTypeIcon(selectedVideo.type)} {getVideoTypeLabel(selectedVideo.type)}
+                      {getVideoTypeIcon(selectedVideo.type)}{' '}
+                      {getVideoTypeLabel(selectedVideo.type)}
                     </span>
                     {selectedVideo.duration > 0 && (
                       <span>{formatDuration(selectedVideo.duration)}</span>
@@ -194,7 +210,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             <h5 className="mb-3 font-medium text-slate-900">
               Vídeos Disponíveis ({videos.length})
             </h5>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+            <div className="max-h-96 space-y-2 overflow-y-auto">
               {videos.map((video) => (
                 <button
                   key={video.id}
@@ -210,21 +226,22 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                       <img
                         src={video.thumbnailUrl}
                         alt={video.title}
-                        className="w-16 h-12 rounded object-cover flex-shrink-0"
+                        className="h-12 w-16 flex-shrink-0 rounded object-cover"
                       />
                     ) : (
-                      <div className="w-16 h-12 rounded bg-slate-200 flex items-center justify-center flex-shrink-0">
+                      <div className="flex h-12 w-16 flex-shrink-0 items-center justify-center rounded bg-slate-200">
                         🎥
                       </div>
                     )}
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm text-slate-900 truncate">
+
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-slate-900">
                         {video.title}
                       </div>
                       <div className="mt-1 flex items-center space-x-2 text-xs text-slate-500">
                         <span className="flex items-center">
-                          {getVideoTypeIcon(video.type)} {getVideoTypeLabel(video.type)}
+                          {getVideoTypeIcon(video.type)}{' '}
+                          {getVideoTypeLabel(video.type)}
                         </span>
                         {video.duration > 0 && (
                           <span>{formatDuration(video.duration)}</span>
@@ -243,9 +260,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
 
         {/* Action Buttons */}
         <div className="flex justify-end pt-4">
-          <Button onClick={onClose}>
-            Fechar
-          </Button>
+          <Button onClick={onClose}>Fechar</Button>
         </div>
       </div>
     </BaseModal>

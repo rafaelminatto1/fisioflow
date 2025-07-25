@@ -14,7 +14,10 @@ import {
   Document,
 } from '../types';
 import { useAuth } from '../hooks/useAuth';
-import { useData } from '../hooks/useData.minimal';
+// import { useAssessments } from '../hooks/useAssessments'; // Hook removido
+// import { useDocuments } from '../hooks/useDocuments'; // Hook removido
+// import { usePrescriptions } from '../hooks/usePrescriptions'; // Hook removido
+// import { useUsers } from '../hooks/useUsers'; // Hook removido
 import { TASK_STATUS_COLORS, TASK_STATUSES } from '../constants';
 import {
   IconX,
@@ -38,6 +41,7 @@ import { generatePatientReport } from '../services/geminiService';
 import ExerciseHistoryModal from './ExerciseHistoryModal';
 import PrescriptionModal from './PrescriptionModal';
 import AssessmentModal from './AssessmentModal';
+import { SymptomDiaryIntegration } from './SymptomDiaryIntegration';
 
 // --- SUB-COMPONENTS TO MODULARIZE THE MODAL ---
 
@@ -345,7 +349,7 @@ const PatientAssessmentsTab: React.FC<{
   therapistId: string;
 }> = ({ assessments, canManage, isEditing, patientId, therapistId }) => {
   const { user } = useAuth();
-  const { saveAssessment, deleteAssessment } = useData();
+  // const { createAssessment, deleteAssessment: removeAssessment } = useAssessments(); // Hook removido
   const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<
     Assessment | Partial<Assessment> | null
@@ -377,14 +381,28 @@ const PatientAssessmentsTab: React.FC<{
     setSelectedAssessment(null);
   };
 
-  const handleSaveAssessment = (assessmentToSave: Assessment) => {
-    if (user) saveAssessment(assessmentToSave, user);
-    handleCloseAssessmentModal();
+  const handleSaveAssessment = async (assessmentToSave: Assessment) => {
+    try {
+      if (user) {
+        await createAssessment(assessmentToSave, user);
+        handleCloseAssessmentModal();
+      }
+    } catch (error) {
+      console.error('Erro ao salvar avaliação:', error);
+    }
   };
 
-  const handleDeleteAssessment = (assessmentId: string) => {
-    if (user) deleteAssessment(assessmentId, user);
-    handleCloseAssessmentModal();
+  const handleDeleteAssessment = async (assessmentId: string) => {
+    if (window.confirm('Tem certeza que deseja excluir esta avaliação?')) {
+      try {
+        if (user) {
+          await removeAssessment(assessmentId, user);
+          handleCloseAssessmentModal();
+        }
+      } catch (error) {
+        console.error('Erro ao excluir avaliação:', error);
+      }
+    }
   };
 
   return (
@@ -590,7 +608,7 @@ const PatientExercisesTab: React.FC<{
   patientId,
 }) => {
   const { user } = useAuth();
-  const { savePrescription, deletePrescription } = useData();
+  // const { createPrescription, deletePrescription: removePrescription } = usePrescriptions(); // Hook removido
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
   const [selectedExerciseForHistory, setSelectedExerciseForHistory] =
@@ -632,14 +650,28 @@ const PatientExercisesTab: React.FC<{
     setSelectedPrescription(null);
   };
 
-  const handleSavePrescription = (prescriptionToSave: Prescription) => {
-    if (user) savePrescription(prescriptionToSave, user);
-    handleClosePrescriptionModal();
+  const handleSavePrescription = async (prescriptionToSave: Prescription) => {
+    try {
+      if (user) {
+        await createPrescription(prescriptionToSave, user);
+        handleClosePrescriptionModal();
+      }
+    } catch (error) {
+      console.error('Erro ao salvar prescrição:', error);
+    }
   };
 
-  const handleDeletePrescription = (prescriptionId: string) => {
-    if (user) deletePrescription(prescriptionId, user);
-    handleClosePrescriptionModal();
+  const handleDeletePrescription = async (prescriptionId: string) => {
+    if (window.confirm('Tem certeza que deseja excluir esta prescrição?')) {
+      try {
+        if (user) {
+          await removePrescription(prescriptionId, user);
+          handleClosePrescriptionModal();
+        }
+      } catch (error) {
+        console.error('Erro ao excluir prescrição:', error);
+      }
+    }
   };
 
   return (
@@ -867,34 +899,40 @@ const PatientDocumentsTab: React.FC<{
   canManage: boolean;
 }> = ({ documents, patientId, isEditing, canManage }) => {
   const { user } = useAuth();
-  const { users, saveDocument, deleteDocument } = useData();
+  // const { users } = useUsers(); // Hook removido
+  // const { uploadDocument, removeDocument } = useDocuments(); // Hook removido
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && user && user.tenantId) {
-      const newDoc: Document = {
-        id: `doc-${crypto.randomUUID()}`,
-        patientId: patientId,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        uploadDate: new Date().toISOString(),
-        uploadedById: user.id,
-        tenantId: user.tenantId,
-      };
-      saveDocument(newDoc, user);
+      try {
+        const newDoc = {
+          patientId: patientId,
+          title: file.name,
+          description: `Documento enviado em ${new Date().toLocaleDateString()}`,
+          category: 'general',
+          tenantId: user.tenantId,
+        };
+        await uploadDocument(newDoc, file, user);
+      } catch (error) {
+        console.error('Erro ao fazer upload do documento:', error);
+      }
     }
     // Reset file input
     if (e.target) e.target.value = '';
   };
 
-  const handleDelete = (docId: string) => {
+  const handleDelete = async (docId: string) => {
     if (
       user &&
       window.confirm('Tem certeza que deseja excluir este documento?')
     ) {
-      deleteDocument(docId, user);
+      try {
+        await removeDocument(docId, user);
+      } catch (error) {
+        console.error('Erro ao excluir documento:', error);
+      }
     }
   };
 
@@ -995,6 +1033,7 @@ type ActiveTab =
   | 'documents'
   | 'activities'
   | 'exercises'
+  | 'sintomas'
   | 'financeiro';
 
 const PatientModal: React.FC<PatientModalProps> = ({
@@ -1189,6 +1228,11 @@ const PatientModal: React.FC<PatientModalProps> = ({
               icon={<IconActivity size={16} />}
             />
             <TabButton
+              tabId="sintomas"
+              label="Diário de Sintomas"
+              icon={<IconClipboardCheck size={16} />}
+            />
+            <TabButton
               tabId="financeiro"
               label="Financeiro"
               icon={<IconDollarSign size={16} />}
@@ -1249,6 +1293,20 @@ const PatientModal: React.FC<PatientModalProps> = ({
               isEditing={isEditing}
               patientId={patientId}
             />
+          )}
+          {activeTab === 'sintomas' && editedPatient && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-slate-700 p-4">
+                <h3 className="mb-4 text-lg font-semibold text-white">
+                  📊 Diário de Sintomas e Evolução
+                </h3>
+                <p className="mb-4 text-sm text-slate-300">
+                  Acompanhe a evolução dos sintomas, dor, energia, sono e humor
+                  do paciente com registros detalhados e análises automáticas.
+                </p>
+                <SymptomDiaryIntegration patient={editedPatient as Patient} />
+              </div>
+            </div>
           )}
           {activeTab === 'financeiro' && (
             <PatientFinancialTab transactions={transactions} />

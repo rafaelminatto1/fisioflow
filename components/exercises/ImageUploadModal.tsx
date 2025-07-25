@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { Exercise, ExerciseImage, ImageCategory, UserRole, ImageAnnotation } from '../../types';
+import {
+  Exercise,
+  ExerciseImage,
+  ImageCategory,
+  UserRole,
+  ImageAnnotation,
+} from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData.minimal';
 import BaseModal from '../ui/BaseModal';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 
 interface ImageUploadModalProps {
   isOpen: boolean;
@@ -30,12 +36,36 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
   const imageCategories = [
-    { value: 'initial_position' as ImageCategory, label: 'Posição Inicial', description: 'Como começar o exercício' },
-    { value: 'execution' as ImageCategory, label: 'Execução', description: 'Durante a realização do exercício' },
-    { value: 'final_position' as ImageCategory, label: 'Posição Final', description: 'Como terminar o exercício' },
-    { value: 'anatomy' as ImageCategory, label: 'Anatomia', description: 'Músculos e estruturas envolvidas' },
-    { value: 'equipment' as ImageCategory, label: 'Equipamentos', description: 'Materiais necessários' },
-    { value: 'variation' as ImageCategory, label: 'Variação', description: 'Formas alternativas de execução' },
+    {
+      value: 'initial_position' as ImageCategory,
+      label: 'Posição Inicial',
+      description: 'Como começar o exercício',
+    },
+    {
+      value: 'execution' as ImageCategory,
+      label: 'Execução',
+      description: 'Durante a realização do exercício',
+    },
+    {
+      value: 'final_position' as ImageCategory,
+      label: 'Posição Final',
+      description: 'Como terminar o exercício',
+    },
+    {
+      value: 'anatomy' as ImageCategory,
+      label: 'Anatomia',
+      description: 'Músculos e estruturas envolvidas',
+    },
+    {
+      value: 'equipment' as ImageCategory,
+      label: 'Equipamentos',
+      description: 'Materiais necessários',
+    },
+    {
+      value: 'variation' as ImageCategory,
+      label: 'Variação',
+      description: 'Formas alternativas de execução',
+    },
   ];
 
   const validateImageUrl = (url: string): boolean => {
@@ -43,11 +73,20 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
     const imageUrlRegex = /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i;
     const dataUrlRegex = /^data:image\/(jpg|jpeg|png|gif|webp|svg);base64,/i;
     const blobUrlRegex = /^blob:/i;
-    
-    return imageUrlRegex.test(url) || dataUrlRegex.test(url) || blobUrlRegex.test(url);
+
+    return (
+      imageUrlRegex.test(url) ||
+      dataUrlRegex.test(url) ||
+      blobUrlRegex.test(url)
+    );
   };
 
-  const resizeImage = (file: File, maxWidth: number = 1920, maxHeight: number = 1080, quality: number = 0.8): Promise<string> => {
+  const resizeImage = (
+    file: File,
+    maxWidth: number = 1920,
+    maxHeight: number = 1080,
+    quality: number = 0.8
+  ): Promise<string> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -56,7 +95,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
       img.onload = () => {
         // Calcular novas dimensões mantendo proporção
         let { width, height } = img;
-        
+
         if (width > height) {
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
@@ -74,11 +113,15 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
 
         // Redimensionar e comprimir
         ctx?.drawImage(img, 0, 0, width, height);
-        
+
         // Converter para WebP se suportado, senão JPEG
-        const format = canvas.toDataURL('image/webp').startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg';
+        const format = canvas
+          .toDataURL('image/webp')
+          .startsWith('data:image/webp')
+          ? 'image/webp'
+          : 'image/jpeg';
         const resizedDataUrl = canvas.toDataURL(format, quality);
-        
+
         resolve(resizedDataUrl);
       };
 
@@ -92,7 +135,13 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
 
     for (const file of Array.from(files)) {
       // Validar tipo de arquivo
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      const validTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+      ];
       if (!validTypes.includes(file.type)) {
         alert(`Arquivo ${file.name} não é um formato de imagem válido.`);
         continue;
@@ -106,7 +155,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
       }
 
       validFiles.push(file);
-      
+
       // Redimensionar e criar preview
       try {
         const resizedDataUrl = await resizeImage(file);
@@ -117,16 +166,18 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
       }
     }
 
-    setSelectedFiles(prev => [...prev, ...validFiles]);
-    setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
-    
+    setSelectedFiles((prev) => [...prev, ...validFiles]);
+    setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
+
     // Auto-preencher título se estiver vazio
     if (!title.trim() && validFiles.length > 0) {
-      setTitle(validFiles[0].name.replace(/\.[^/.]+$/, ""));
+      setTitle(validFiles[0].name.replace(/\.[^/.]+$/, ''));
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (files && files.length > 0) {
       await processMultipleFiles(files);
@@ -134,27 +185,38 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   };
 
   const removePreviewImage = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
-    if (!title.trim() || (!imageUrl.trim() && previewUrls.length === 0) || !user) return;
+    if (
+      !title.trim() ||
+      (!imageUrl.trim() && previewUrls.length === 0) ||
+      !user
+    )
+      return;
 
     setIsSubmitting(true);
-    
+
     try {
-      const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      const tagArray = tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter((tag) => tag);
 
       // Se há imagens selecionadas (upload múltiplo), processar todas
       if (previewUrls.length > 0) {
         for (let i = 0; i < previewUrls.length; i++) {
           const imageUrl = previewUrls[i];
           const fileName = selectedFiles[i]?.name || `imagem-${i + 1}`;
-          
+
           const imageData: Omit<ExerciseImage, 'id'> = {
             exerciseId: exercise.id,
-            title: previewUrls.length === 1 ? title.trim() : `${title.trim()} - ${i + 1}`,
+            title:
+              previewUrls.length === 1
+                ? title.trim()
+                : `${title.trim()} - ${i + 1}`,
             caption: caption.trim() || undefined,
             imageUrl,
             category,
@@ -195,7 +257,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
 
         saveExerciseImage(imageData, user);
       }
-      
+
       // Reset form
       setTitle('');
       setCaption('');
@@ -237,7 +299,9 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
         {/* Exercise Info */}
         <div className="rounded-lg bg-slate-50 p-4">
           <h3 className="font-semibold text-slate-900">{exercise.name}</h3>
-          <p className="mt-1 text-sm text-slate-600">Adicionando imagem ao exercício</p>
+          <p className="mt-1 text-sm text-slate-600">
+            Adicionando imagem ao exercício
+          </p>
         </div>
 
         {/* Image Upload */}
@@ -256,7 +320,8 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <p className="mt-1 text-xs text-slate-500">
-                Selecione múltiplos arquivos (JPG, PNG, WebP, GIF) - máximo 10MB cada
+                Selecione múltiplos arquivos (JPG, PNG, WebP, GIF) - máximo 10MB
+                cada
               </p>
             </div>
 
@@ -290,22 +355,22 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
               <p className="mb-2 text-sm font-medium text-slate-700">
                 Imagens selecionadas ({previewUrls.length})
               </p>
-              <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto md:grid-cols-3">
+              <div className="grid max-h-60 grid-cols-2 gap-2 overflow-y-auto md:grid-cols-3">
                 {previewUrls.map((url, index) => (
-                  <div key={index} className="relative group">
+                  <div key={index} className="group relative">
                     <img
                       src={url}
                       alt={`Preview ${index + 1}`}
-                      className="w-full h-24 rounded-md border border-slate-200 object-cover"
+                      className="h-24 w-full rounded-md border border-slate-200 object-cover"
                     />
                     <button
                       type="button"
                       onClick={() => removePreviewImage(index)}
-                      className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
                     >
                       ×
                     </button>
-                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate">
+                    <div className="absolute bottom-0 left-0 right-0 truncate bg-black bg-opacity-50 p-1 text-xs text-white">
                       {selectedFiles[index]?.name || `Imagem ${index + 1}`}
                     </div>
                   </div>
@@ -322,7 +387,9 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
                 alt="Preview"
                 className="max-h-40 w-full rounded-md border border-slate-200 object-contain"
                 onError={() => {
-                  alert('Erro ao carregar a imagem. Verifique a URL ou arquivo.');
+                  alert(
+                    'Erro ao carregar a imagem. Verifique a URL ou arquivo.'
+                  );
                   setImageUrl('');
                 }}
               />
@@ -332,7 +399,10 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
 
         {/* Image Title */}
         <div>
-          <label htmlFor="title" className="mb-2 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="title"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
             Título da Imagem *
           </label>
           <input
@@ -363,7 +433,9 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
                 }`}
               >
                 <div className="font-medium">{option.label}</div>
-                <div className="mt-1 text-xs text-slate-500">{option.description}</div>
+                <div className="mt-1 text-xs text-slate-500">
+                  {option.description}
+                </div>
               </button>
             ))}
           </div>
@@ -371,7 +443,10 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
 
         {/* Caption */}
         <div>
-          <label htmlFor="caption" className="mb-2 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="caption"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
             Legenda (opcional)
           </label>
           <textarea
@@ -387,7 +462,10 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
         {/* Tags and Order */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="tags" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="tags"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Tags (opcional)
             </label>
             <input
@@ -398,11 +476,16 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="iniciante, casa, equipamento"
             />
-            <p className="mt-1 text-xs text-slate-500">Separe as tags por vírgula</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Separe as tags por vírgula
+            </p>
           </div>
-          
+
           <div>
-            <label htmlFor="order" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="order"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Ordem de Exibição
             </label>
             <input
@@ -427,15 +510,18 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!title.trim() || (!imageUrl.trim() && previewUrls.length === 0) || isSubmitting}
+            disabled={
+              !title.trim() ||
+              (!imageUrl.trim() && previewUrls.length === 0) ||
+              isSubmitting
+            }
             className="min-w-[120px]"
           >
-            {isSubmitting 
-              ? 'Salvando...' 
-              : previewUrls.length > 1 
+            {isSubmitting
+              ? 'Salvando...'
+              : previewUrls.length > 1
                 ? `Adicionar ${previewUrls.length} Imagens`
-                : 'Adicionar Imagem'
-            }
+                : 'Adicionar Imagem'}
           </Button>
         </div>
       </div>

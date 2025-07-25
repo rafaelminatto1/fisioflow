@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../hooks/useData.minimal';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import { useData } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { Exercise, UserRole } from '../types';
 import {
@@ -8,22 +8,28 @@ import {
   IconPencil,
   IconTrash,
 } from './icons/IconComponents';
-import ExerciseModal from './ExerciseModal';
-import EditExerciseModal from './EditExerciseModal';
-import ExerciseRatingModal from './exercises/ExerciseRatingModal';
-import ExerciseStatsModal from './exercises/ExerciseStatsModal';
-import VideoUploadModal from './exercises/VideoUploadModal';
-import ImageUploadModal from './exercises/ImageUploadModal';
-import VideoPlayerModal from './exercises/VideoPlayerModal';
-import ImageGalleryModal from './exercises/ImageGalleryModal';
-import QRGeneratorModal from './qr/QRGeneratorModal';
-import QRAnalyticsModal from './qr/QRAnalyticsModal';
-import ExercisePDFModal from './exercises/ExercisePDFModal';
-import CacheManagementModal from './exercises/CacheManagementModal';
-import ImageSearchModal from './exercises/ImageSearchModal';
 import PageShell from './ui/PageShell';
 import PageLoader from './ui/PageLoader';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
+
+// Lazy load modais para reduzir bundle inicial
+const ExerciseModal = lazy(() => import('./ExerciseModal'));
+const EditExerciseModal = lazy(() => import('./EditExerciseModal'));
+const ExerciseRatingModal = lazy(
+  () => import('./exercises/ExerciseRatingModal')
+);
+const ExerciseStatsModal = lazy(() => import('./exercises/ExerciseStatsModal'));
+const VideoUploadModal = lazy(() => import('./exercises/VideoUploadModal'));
+const ImageUploadModal = lazy(() => import('./exercises/ImageUploadModal'));
+const VideoPlayerModal = lazy(() => import('./exercises/VideoPlayerModal'));
+const ImageGalleryModal = lazy(() => import('./exercises/ImageGalleryModal'));
+const QRGeneratorModal = lazy(() => import('./qr/QRGeneratorModal'));
+const QRAnalyticsModal = lazy(() => import('./qr/QRAnalyticsModal'));
+const ExercisePDFModal = lazy(() => import('./exercises/ExercisePDFModal'));
+const CacheManagementModal = lazy(
+  () => import('./exercises/CacheManagementModal')
+);
+const ImageSearchModal = lazy(() => import('./exercises/ImageSearchModal'));
 
 const ExerciseCard: React.FC<{
   exercise: Exercise;
@@ -45,13 +51,13 @@ const ExerciseCard: React.FC<{
   isFavorited: boolean;
   videoCount: number;
   imageCount: number;
-}> = ({ 
-  exercise, 
-  onSelect, 
-  onEdit, 
-  onDelete, 
-  onFavorite, 
-  onRate, 
+}> = ({
+  exercise,
+  onSelect,
+  onEdit,
+  onDelete,
+  onFavorite,
+  onRate,
   onViewStats,
   onUploadVideo,
   onUploadImage,
@@ -59,12 +65,12 @@ const ExerciseCard: React.FC<{
   onViewImages,
   onGenerateQR,
   onGeneratePDF,
-  canManage, 
-  isPatient, 
+  canManage,
+  isPatient,
   isTherapist,
   isFavorited,
   videoCount,
-  imageCount
+  imageCount,
 }) => (
   <div className="group flex flex-col justify-between rounded-lg border border-slate-700 bg-slate-800 p-4 transition-all duration-200">
     <div onClick={onSelect} className="cursor-pointer">
@@ -98,7 +104,7 @@ const ExerciseCard: React.FC<{
             🎥
           </button>
         )}
-        
+
         {imageCount > 0 && (
           <button
             onClick={(e) => {
@@ -170,12 +176,14 @@ const ExerciseCard: React.FC<{
                 ? 'text-yellow-400 hover:bg-slate-700 hover:text-yellow-300'
                 : 'text-slate-400 hover:bg-slate-700 hover:text-yellow-400'
             }`}
-            title={isFavorited ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}
+            title={
+              isFavorited ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'
+            }
           >
             {isFavorited ? '⭐' : '☆'}
           </button>
         )}
-        
+
         {/* Rate button for patients */}
         {isPatient && (
           <button
@@ -189,7 +197,7 @@ const ExerciseCard: React.FC<{
             😊
           </button>
         )}
-        
+
         {/* Stats button for therapists */}
         {isTherapist && (
           <button
@@ -203,7 +211,7 @@ const ExerciseCard: React.FC<{
             📊
           </button>
         )}
-        
+
         {/* Management buttons */}
         {canManage && (
           <>
@@ -237,14 +245,14 @@ const ExerciseCard: React.FC<{
 const ExercisePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
-  const { 
-    exercises, 
-    saveExercise, 
-    deleteExercise, 
+  const {
+    exercises,
+    saveExercise,
+    deleteExercise,
     toggleExerciseFavorite,
     getExerciseFavorites,
     getExerciseVideos,
-    getExerciseImages
+    getExerciseImages,
   } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -276,7 +284,8 @@ const ExercisePage: React.FC = () => {
   const canManage =
     user?.role === UserRole.ADMIN || user?.role === UserRole.FISIOTERAPEUTA;
   const isPatient = user?.role === UserRole.PACIENTE;
-  const isTherapist = user?.role === UserRole.FISIOTERAPEUTA || user?.role === UserRole.ADMIN;
+  const isTherapist =
+    user?.role === UserRole.FISIOTERAPEUTA || user?.role === UserRole.ADMIN;
 
   const userFavorites = useMemo(() => {
     if (!user?.id) return [];
@@ -301,12 +310,21 @@ const ExercisePage: React.FC = () => {
         categoryFilter === 'all' || ex.category === categoryFilter;
       const matchesBodyPart =
         bodyPartFilter === 'all' || ex.bodyPart === bodyPartFilter;
-      const matchesFavorites = !favoritesOnly || 
-        userFavorites.some(fav => fav.exerciseId === ex.id);
-      
-      return matchesSearch && matchesCategory && matchesBodyPart && matchesFavorites;
+      const matchesFavorites =
+        !favoritesOnly || userFavorites.some((fav) => fav.exerciseId === ex.id);
+
+      return (
+        matchesSearch && matchesCategory && matchesBodyPart && matchesFavorites
+      );
     });
-  }, [exercises, searchTerm, categoryFilter, bodyPartFilter, favoritesOnly, userFavorites]);
+  }, [
+    exercises,
+    searchTerm,
+    categoryFilter,
+    bodyPartFilter,
+    favoritesOnly,
+    userFavorites,
+  ]);
 
   const handleSelectExercise = (exercise: Exercise) => {
     setSelectedExercise(exercise);
@@ -404,7 +422,7 @@ const ExercisePage: React.FC = () => {
   };
 
   const isExerciseFavorited = (exerciseId: string) => {
-    return userFavorites.some(fav => fav.exerciseId === exerciseId);
+    return userFavorites.some((fav) => fav.exerciseId === exerciseId);
   };
 
   const getVideoCount = (exerciseId: string) => {
@@ -438,22 +456,22 @@ const ExercisePage: React.FC = () => {
         <div className="flex space-x-2">
           {isTherapist && (
             <>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleOpenImageSearch}
                 className="text-sm"
               >
                 🔍 Buscar Imagens
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleViewCacheManagement}
                 className="text-sm"
               >
                 💾 Cache Offline
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleViewQRAnalytics}
                 className="text-sm"
               >
@@ -505,7 +523,7 @@ const ExercisePage: React.FC = () => {
             </option>
           ))}
         </select>
-        
+
         {/* Favorites filter for therapists */}
         {isTherapist && (
           <button
@@ -556,103 +574,116 @@ const ExercisePage: React.FC = () => {
         )}
       </div>
 
-      {isViewerModalOpen && selectedExercise && 'id' in selectedExercise && (
-        <ExerciseModal
-          isOpen={isViewerModalOpen}
-          onClose={handleCloseModals}
-          exercise={selectedExercise as Exercise}
-        />
-      )}
-      {isEditorModalOpen && (
-        <EditExerciseModal
-          isOpen={isEditorModalOpen}
-          onClose={handleCloseModals}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          exercise={selectedExercise}
-        />
-      )}
-      {isRatingModalOpen && selectedExercise && 'id' in selectedExercise && (
-        <ExerciseRatingModal
-          isOpen={isRatingModalOpen}
-          onClose={handleCloseModals}
-          exercise={selectedExercise as Exercise}
-        />
-      )}
-      {isStatsModalOpen && selectedExercise && 'id' in selectedExercise && (
-        <ExerciseStatsModal
-          isOpen={isStatsModalOpen}
-          onClose={handleCloseModals}
-          exercise={selectedExercise as Exercise}
-        />
-      )}
-      {isVideoUploadModalOpen && selectedExercise && 'id' in selectedExercise && (
-        <VideoUploadModal
-          isOpen={isVideoUploadModalOpen}
-          onClose={handleCloseModals}
-          exercise={selectedExercise as Exercise}
-        />
-      )}
-      {isImageUploadModalOpen && selectedExercise && 'id' in selectedExercise && (
-        <ImageUploadModal
-          isOpen={isImageUploadModalOpen}
-          onClose={handleCloseModals}
-          exercise={selectedExercise as Exercise}
-        />
-      )}
-      {isVideoPlayerModalOpen && selectedExercise && 'id' in selectedExercise && (
-        <VideoPlayerModal
-          isOpen={isVideoPlayerModalOpen}
-          onClose={handleCloseModals}
-          exercise={selectedExercise as Exercise}
-        />
-      )}
-      {isImageGalleryModalOpen && selectedExercise && 'id' in selectedExercise && (
-        <ImageGalleryModal
-          isOpen={isImageGalleryModalOpen}
-          onClose={handleCloseModals}
-          exercise={selectedExercise as Exercise}
-        />
-      )}
-      {isQRGeneratorModalOpen && selectedExercise && 'id' in selectedExercise && (
-        <QRGeneratorModal
-          isOpen={isQRGeneratorModalOpen}
-          onClose={handleCloseModals}
-          type="exercise"
-          exercise={selectedExercise as Exercise}
-        />
-      )}
-      {isQRAnalyticsModalOpen && (
-        <QRAnalyticsModal
-          isOpen={isQRAnalyticsModalOpen}
-          onClose={handleCloseModals}
-        />
-      )}
-      {isPDFModalOpen && selectedExercise && 'id' in selectedExercise && (
-        <ExercisePDFModal
-          isOpen={isPDFModalOpen}
-          onClose={handleCloseModals}
-          exercise={selectedExercise as Exercise}
-        />
-      )}
-      {isCacheModalOpen && (
-        <CacheManagementModal
-          isOpen={isCacheModalOpen}
-          onClose={handleCloseModals}
-        />
-      )}
-      {isImageSearchModalOpen && (
-        <ImageSearchModal
-          isOpen={isImageSearchModalOpen}
-          onClose={handleCloseModals}
-          onSelectImage={(image, exercise) => {
-            if (exercise) {
-              handleViewImages(exercise);
-            }
-            handleCloseModals();
-          }}
-        />
-      )}
+      {/* Modais com Suspense para lazy loading */}
+      <Suspense fallback={<PageLoader />}>
+        {isViewerModalOpen && selectedExercise && 'id' in selectedExercise && (
+          <ExerciseModal
+            isOpen={isViewerModalOpen}
+            onClose={handleCloseModals}
+            exercise={selectedExercise as Exercise}
+          />
+        )}
+        {isEditorModalOpen && (
+          <EditExerciseModal
+            isOpen={isEditorModalOpen}
+            onClose={handleCloseModals}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            exercise={selectedExercise}
+          />
+        )}
+        {isRatingModalOpen && selectedExercise && 'id' in selectedExercise && (
+          <ExerciseRatingModal
+            isOpen={isRatingModalOpen}
+            onClose={handleCloseModals}
+            exercise={selectedExercise as Exercise}
+          />
+        )}
+        {isStatsModalOpen && selectedExercise && 'id' in selectedExercise && (
+          <ExerciseStatsModal
+            isOpen={isStatsModalOpen}
+            onClose={handleCloseModals}
+            exercise={selectedExercise as Exercise}
+          />
+        )}
+        {isVideoUploadModalOpen &&
+          selectedExercise &&
+          'id' in selectedExercise && (
+            <VideoUploadModal
+              isOpen={isVideoUploadModalOpen}
+              onClose={handleCloseModals}
+              exercise={selectedExercise as Exercise}
+            />
+          )}
+        {isImageUploadModalOpen &&
+          selectedExercise &&
+          'id' in selectedExercise && (
+            <ImageUploadModal
+              isOpen={isImageUploadModalOpen}
+              onClose={handleCloseModals}
+              exercise={selectedExercise as Exercise}
+            />
+          )}
+        {isVideoPlayerModalOpen &&
+          selectedExercise &&
+          'id' in selectedExercise && (
+            <VideoPlayerModal
+              isOpen={isVideoPlayerModalOpen}
+              onClose={handleCloseModals}
+              exercise={selectedExercise as Exercise}
+            />
+          )}
+        {isImageGalleryModalOpen &&
+          selectedExercise &&
+          'id' in selectedExercise && (
+            <ImageGalleryModal
+              isOpen={isImageGalleryModalOpen}
+              onClose={handleCloseModals}
+              exercise={selectedExercise as Exercise}
+            />
+          )}
+        {isQRGeneratorModalOpen &&
+          selectedExercise &&
+          'id' in selectedExercise && (
+            <QRGeneratorModal
+              isOpen={isQRGeneratorModalOpen}
+              onClose={handleCloseModals}
+              type="exercise"
+              exercise={selectedExercise as Exercise}
+            />
+          )}
+        {isQRAnalyticsModalOpen && (
+          <QRAnalyticsModal
+            isOpen={isQRAnalyticsModalOpen}
+            onClose={handleCloseModals}
+          />
+        )}
+        {isPDFModalOpen && selectedExercise && 'id' in selectedExercise && (
+          <ExercisePDFModal
+            isOpen={isPDFModalOpen}
+            onClose={handleCloseModals}
+            exercise={selectedExercise as Exercise}
+          />
+        )}
+        {isCacheModalOpen && (
+          <CacheManagementModal
+            isOpen={isCacheModalOpen}
+            onClose={handleCloseModals}
+          />
+        )}
+        {isImageSearchModalOpen && (
+          <ImageSearchModal
+            isOpen={isImageSearchModalOpen}
+            onClose={handleCloseModals}
+            onSelectImage={(image, exercise) => {
+              if (exercise) {
+                handleViewImages(exercise);
+              }
+              handleCloseModals();
+            }}
+          />
+        )}
+      </Suspense>
     </PageShell>
   );
 };

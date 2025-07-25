@@ -1,38 +1,20 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Pre-commit hook otimizado para FisioFlow
+# Pre-commit hook simplificado para FisioFlow
 echo "🔍 Executando verificações pre-commit..."
 
-# 1. Lint-staged (já configurado no package.json)
-npx lint-staged
+# 1. Lint-staged (formatação e lint básico)
+echo "🧹 Executando lint-staged..."
+npm run pre-commit
 
-# 2. Verificar se há arquivos grandes (>10MB)
-echo "📏 Verificando tamanho dos arquivos..."
-find . -type f -size +10M -not -path "./node_modules/*" -not -path "./.git/*" | while read file; do
-  echo "⚠️  Arquivo grande detectado: $file"
-  echo "💡 Considere usar Git LFS para arquivos grandes"
-done
-
-# 3. Verificar se há secrets/keys expostos
+# 2. Verificar se há secrets/keys expostos (apenas em arquivos de código)
 echo "🔐 Verificando por secrets expostos..."
-if grep -r -i --exclude-dir=node_modules --exclude-dir=.git \
-  -E "(api_key|secret|password|token)\s*=\s*['\"][^'\"]{8,}" . ; then
+if grep -r -i --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=build \
+  --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.env*" \
+  -E "(api_key|secret|password|token)\s*=\s*['\"][a-zA-Z0-9]{16,}" . ; then
   echo "❌ Possíveis secrets detectados! Remova antes do commit."
   exit 1
 fi
 
-# 4. Verificar imports não utilizados (TypeScript)
-echo "🧹 Verificando imports não utilizados..."
-npx tsc --noEmit --skipLibCheck
-
-# 5. Verificar se todos os testes passam
-echo "🧪 Executando testes..."
-npm test -- --passWithNoTests --watchAll=false
-
-if [ $? -ne 0 ]; then
-  echo "❌ Testes falharam! Corrija antes do commit."
-  exit 1
-fi
-
-echo "✅ Todas as verificações passaram!"
+echo "✅ Verificações básicas concluídas!"

@@ -28,9 +28,9 @@ const PatientRow: React.FC<PatientRowProps> = ({ index, style, data }) => {
 
   return (
     <div style={style}>
-      <div
+      <button
         onClick={() => onPatientClick(patient)}
-        className="flex cursor-pointer items-center justify-between border-b border-slate-700 p-4 transition-colors last:border-b-0 hover:bg-slate-700/50"
+        className="flex w-full cursor-pointer items-center justify-between border-b border-slate-700 p-4 text-left transition-colors last:border-b-0 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <div className="flex items-center">
           <img
@@ -49,7 +49,7 @@ const PatientRow: React.FC<PatientRowProps> = ({ index, style, data }) => {
           <IconClipboardList className="mr-2 h-5 w-5" />
           <span>{getTasksCount(patient.id)} tarefas</span>
         </div>
-      </div>
+      </button>
     </div>
   );
 };

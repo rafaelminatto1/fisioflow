@@ -129,7 +129,12 @@ const useOptimizedStorage = <T,>(
   useEffect(() => {
     try {
       if (Array.isArray(storedValue)) {
-        dataOptimizer.saveOptimized(key, storedValue, searchFields, tenantField);
+        dataOptimizer.saveOptimized(
+          key,
+          storedValue,
+          searchFields,
+          tenantField
+        );
       } else {
         // Fallback para dados não-array
         window.localStorage.setItem(key, JSON.stringify(storedValue));
@@ -342,6 +347,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const [allExerciseImages, setAllExerciseImages] = useLocalStorage<
     ExerciseImage[]
   >('fisioflow-all-exercise-images', INITIAL_EXERCISE_IMAGES);
+
+  // === SISTEMA DE DIÁRIO DE SINTOMAS ===
+  const [allSymptomDiaryEntries, setAllSymptomDiaryEntries] = useLocalStorage<
+    any[]
+  >('fisioflow-all-symptom-diary-entries', []);
 
   const { addNotification } = useNotification();
 
@@ -2153,7 +2163,7 @@ export const useData = (): DataContextType => {
   const toggleExerciseFavorite = useCallback(
     (exerciseId: string, actingUser: User) => {
       if (!tenantId) return;
-      
+
       const existingFavorite = allExerciseFavorites.find(
         (f) => f.userId === actingUser.id && f.exerciseId === exerciseId
       );
@@ -2161,12 +2171,12 @@ export const useData = (): DataContextType => {
       if (existingFavorite) {
         // Remove favorite
         setAllExerciseFavorites(
-          allExerciseFavorites.filter(f => f.id !== existingFavorite.id)
+          allExerciseFavorites.filter((f) => f.id !== existingFavorite.id)
         );
         addNotification({
           type: 'info',
           title: 'Favorito removido',
-          message: 'Exercício removido dos favoritos'
+          message: 'Exercício removido dos favoritos',
         });
       } else {
         // Add favorite
@@ -2175,13 +2185,13 @@ export const useData = (): DataContextType => {
           userId: actingUser.id,
           exerciseId,
           createdAt: new Date().toISOString(),
-          tenantId
+          tenantId,
         };
         setAllExerciseFavorites([...allExerciseFavorites, newFavorite]);
         addNotification({
           type: 'success',
           title: 'Favorito adicionado',
-          message: 'Exercício adicionado aos favoritos'
+          message: 'Exercício adicionado aos favoritos',
         });
       }
     },
@@ -2193,17 +2203,17 @@ export const useData = (): DataContextType => {
       if (!rating.tenantId) {
         rating.tenantId = tenantId || '';
       }
-      
+
       const newRating: ExerciseRating = {
         ...rating,
         id: `rating-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       };
-      
+
       setAllExerciseRatings([...allExerciseRatings, newRating]);
       addNotification({
         type: 'success',
         title: 'Avaliação salva',
-        message: 'Sua avaliação do exercício foi registrada'
+        message: 'Sua avaliação do exercício foi registrada',
       });
     },
     [allExerciseRatings, setAllExerciseRatings, tenantId, addNotification]
@@ -2211,35 +2221,38 @@ export const useData = (): DataContextType => {
 
   const getExerciseFavorites = useCallback(
     (userId: string) => {
-      return exerciseFavorites.filter(f => f.userId === userId);
+      return exerciseFavorites.filter((f) => f.userId === userId);
     },
     [exerciseFavorites]
   );
 
   const getExerciseRatings = useCallback(
     (exerciseId: string) => {
-      return exerciseRatings.filter(r => r.exerciseId === exerciseId);
+      return exerciseRatings.filter((r) => r.exerciseId === exerciseId);
     },
     [exerciseRatings]
   );
 
   const getExerciseStatistics = useCallback(
     (exerciseId: string): ExerciseStatistics | null => {
-      const exercise = exercises.find(e => e.id === exerciseId);
+      const exercise = exercises.find((e) => e.id === exerciseId);
       if (!exercise) return null;
 
       const ratings = getExerciseRatings(exerciseId);
-      const favorites = exerciseFavorites.filter(f => f.exerciseId === exerciseId);
-      
+      const favorites = exerciseFavorites.filter(
+        (f) => f.exerciseId === exerciseId
+      );
+
       const ratingDistribution = {
-        easy: ratings.filter(r => r.rating === '😊').length,
-        medium: ratings.filter(r => r.rating === '😐').length,
-        difficult: ratings.filter(r => r.rating === '😰').length,
+        easy: ratings.filter((r) => r.rating === '😊').length,
+        medium: ratings.filter((r) => r.rating === '😐').length,
+        difficult: ratings.filter((r) => r.rating === '😰').length,
       };
 
-      const averagePainLevel = ratings.length > 0 
-        ? ratings.reduce((sum, r) => sum + r.painLevel, 0) / ratings.length 
-        : 0;
+      const averagePainLevel =
+        ratings.length > 0
+          ? ratings.reduce((sum, r) => sum + r.painLevel, 0) / ratings.length
+          : 0;
 
       return {
         exerciseId,
@@ -2249,9 +2262,13 @@ export const useData = (): DataContextType => {
         ratingDistribution,
         favoriteCount: favorites.length,
         usageCount: ratings.length, // Using ratings as usage proxy
-        lastUsed: ratings.length > 0 
-          ? ratings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].date 
-          : new Date().toISOString()
+        lastUsed:
+          ratings.length > 0
+            ? ratings.sort(
+                (a, b) =>
+                  new Date(b.date).getTime() - new Date(a.date).getTime()
+              )[0].date
+            : new Date().toISOString(),
       };
     },
     [exercises, exerciseRatings, exerciseFavorites, getExerciseRatings]
@@ -2260,8 +2277,8 @@ export const useData = (): DataContextType => {
   const getMostUsedExercises = useCallback(
     (userId?: string): ExerciseStatistics[] => {
       const stats: ExerciseStatistics[] = [];
-      
-      exercises.forEach(exercise => {
+
+      exercises.forEach((exercise) => {
         const exerciseStats = getExerciseStatistics(exercise.id);
         if (exerciseStats && exerciseStats.totalRatings > 0) {
           stats.push(exerciseStats);
@@ -2274,7 +2291,7 @@ export const useData = (): DataContextType => {
   );
 
   // === SISTEMA DE VÍDEOS ===
-  
+
   const saveExerciseVideo = useCallback(
     (video: Omit<ExerciseVideo, 'id'>, actingUser: User) => {
       const newVideo: ExerciseVideo = {
@@ -2286,7 +2303,7 @@ export const useData = (): DataContextType => {
       };
 
       setAllExerciseVideos([...allExerciseVideos, newVideo]);
-      
+
       addNotification({
         type: 'success',
         title: 'Vídeo adicionado',
@@ -2298,11 +2315,11 @@ export const useData = (): DataContextType => {
 
   const deleteExerciseVideo = useCallback(
     (videoId: string, actingUser: User) => {
-      const videoToDelete = allExerciseVideos.find(v => v.id === videoId);
+      const videoToDelete = allExerciseVideos.find((v) => v.id === videoId);
       if (!videoToDelete) return;
 
-      setAllExerciseVideos(allExerciseVideos.filter(v => v.id !== videoId));
-      
+      setAllExerciseVideos(allExerciseVideos.filter((v) => v.id !== videoId));
+
       addNotification({
         type: 'info',
         title: 'Vídeo removido',
@@ -2315,7 +2332,10 @@ export const useData = (): DataContextType => {
   const getExerciseVideos = useCallback(
     (exerciseId: string): ExerciseVideo[] => {
       return allExerciseVideos
-        .filter(v => v.exerciseId === exerciseId && v.isActive && v.tenantId === tenantId)
+        .filter(
+          (v) =>
+            v.exerciseId === exerciseId && v.isActive && v.tenantId === tenantId
+        )
         .sort((a, b) => a.order - b.order);
     },
     [allExerciseVideos, tenantId]
@@ -2323,10 +2343,14 @@ export const useData = (): DataContextType => {
 
   const incrementVideoView = useCallback(
     (videoId: string, actingUser: User) => {
-      setAllExerciseVideos(videos => 
-        videos.map(v => 
-          v.id === videoId 
-            ? { ...v, viewCount: v.viewCount + 1, lastViewed: new Date().toISOString() }
+      setAllExerciseVideos((videos) =>
+        videos.map((v) =>
+          v.id === videoId
+            ? {
+                ...v,
+                viewCount: v.viewCount + 1,
+                lastViewed: new Date().toISOString(),
+              }
             : v
         )
       );
@@ -2346,7 +2370,7 @@ export const useData = (): DataContextType => {
       };
 
       setAllExerciseImages([...allExerciseImages, newImage]);
-      
+
       addNotification({
         type: 'success',
         title: 'Imagem adicionada',
@@ -2358,12 +2382,12 @@ export const useData = (): DataContextType => {
 
   const updateExerciseImage = useCallback(
     (imageId: string, updates: Partial<ExerciseImage>, actingUser: User) => {
-      const updatedImages = allExerciseImages.map(img => 
+      const updatedImages = allExerciseImages.map((img) =>
         img.id === imageId ? { ...img, ...updates } : img
       );
-      
+
       setAllExerciseImages(updatedImages);
-      
+
       addNotification({
         type: 'success',
         title: 'Imagem atualizada',
@@ -2375,11 +2399,13 @@ export const useData = (): DataContextType => {
 
   const deleteExerciseImage = useCallback(
     (imageId: string, actingUser: User) => {
-      const imageToDelete = allExerciseImages.find(img => img.id === imageId);
+      const imageToDelete = allExerciseImages.find((img) => img.id === imageId);
       if (!imageToDelete) return;
 
-      setAllExerciseImages(allExerciseImages.filter(img => img.id !== imageId));
-      
+      setAllExerciseImages(
+        allExerciseImages.filter((img) => img.id !== imageId)
+      );
+
       addNotification({
         type: 'info',
         title: 'Imagem removida',
@@ -2392,7 +2418,12 @@ export const useData = (): DataContextType => {
   const getExerciseImages = useCallback(
     (exerciseId: string): ExerciseImage[] => {
       return allExerciseImages
-        .filter(img => img.exerciseId === exerciseId && img.isActive && img.tenantId === tenantId)
+        .filter(
+          (img) =>
+            img.exerciseId === exerciseId &&
+            img.isActive &&
+            img.tenantId === tenantId
+        )
         .sort((a, b) => a.order - b.order);
     },
     [allExerciseImages, tenantId]
@@ -2401,11 +2432,12 @@ export const useData = (): DataContextType => {
   const getExerciseImagesByCategory = useCallback(
     (exerciseId: string, category: ImageCategory): ExerciseImage[] => {
       return allExerciseImages
-        .filter(img => 
-          img.exerciseId === exerciseId && 
-          img.category === category && 
-          img.isActive && 
-          img.tenantId === tenantId
+        .filter(
+          (img) =>
+            img.exerciseId === exerciseId &&
+            img.category === category &&
+            img.isActive &&
+            img.tenantId === tenantId
         )
         .sort((a, b) => a.order - b.order);
     },
@@ -2693,7 +2725,7 @@ export const useData = (): DataContextType => {
   const acknowledgeAlert = useCallback(
     (alertId: string, actingUser: User) => {
       if (!actingUser.tenantId) return;
-      
+
       setAllOperationalAlerts((prev) =>
         prev.map((alert) =>
           alert.id === alertId
@@ -2723,7 +2755,7 @@ export const useData = (): DataContextType => {
   const resolveAlert = useCallback(
     (alertId: string, actingUser: User) => {
       if (!actingUser.tenantId) return;
-      
+
       setAllOperationalAlerts((prev) =>
         prev.map((alert) =>
           alert.id === alertId
@@ -2764,9 +2796,7 @@ export const useData = (): DataContextType => {
       if (equipment.id) {
         // Update existing equipment
         setAllEquipment((prev) =>
-          prev.map((eq) =>
-            eq.id === equipment.id ? equipmentWithTenant : eq
-          )
+          prev.map((eq) => (eq.id === equipment.id ? equipmentWithTenant : eq))
         );
         saveAuditLog({
           action: LogAction.UPDATE_TASK,
@@ -2806,7 +2836,7 @@ export const useData = (): DataContextType => {
       if (!equipment) return;
 
       setAllEquipment((prev) => prev.filter((eq) => eq.id !== equipmentId));
-      
+
       saveAuditLog({
         action: LogAction.DELETE_TASK,
         targetCollection: 'equipment',
@@ -2830,16 +2860,18 @@ export const useData = (): DataContextType => {
       if (!actingUser.tenantId) return;
 
       const reportId = crypto.randomUUID();
-      
+
       // Calculate KPIs for the period
       const periodStart = new Date(period.start);
       const periodEnd = new Date(period.end);
-      
+
       const periodAppointments = appointments.filter(
-        (a) => new Date(a.start) >= periodStart && new Date(a.start) <= periodEnd
+        (a) =>
+          new Date(a.start) >= periodStart && new Date(a.start) <= periodEnd
       );
       const periodTransactions = transactions.filter(
-        (t) => new Date(t.dueDate) >= periodStart && new Date(t.dueDate) <= periodEnd
+        (t) =>
+          new Date(t.dueDate) >= periodStart && new Date(t.dueDate) <= periodEnd
       );
 
       const totalRevenue = periodTransactions
@@ -2847,13 +2879,18 @@ export const useData = (): DataContextType => {
         .reduce((sum, t) => sum + t.amount, 0);
 
       const totalAppointments = periodAppointments.length;
-      const avgSatisfaction = qualityIndicators
-        .filter((qi) => qi.type === 'satisfaction')
-        .reduce((sum, qi, _, arr) => sum + qi.value / arr.length, 0) || 0;
+      const avgSatisfaction =
+        qualityIndicators
+          .filter((qi) => qi.type === 'satisfaction')
+          .reduce((sum, qi, _, arr) => sum + qi.value / arr.length, 0) || 0;
 
-      const utilizationRate = totalAppointments > 0 
-        ? (periodAppointments.filter(a => new Date(a.end) < new Date()).length / totalAppointments) * 100 
-        : 0;
+      const utilizationRate =
+        totalAppointments > 0
+          ? (periodAppointments.filter((a) => new Date(a.end) < new Date())
+              .length /
+              totalAppointments) *
+            100
+          : 0;
 
       const newReport: ExecutiveReport = {
         id: reportId,
@@ -2893,10 +2930,10 @@ export const useData = (): DataContextType => {
           totalAppointments,
           averageSatisfaction: avgSatisfaction,
           utilizationRate,
-          topPerformer: users.find(u => u.role === 'fisio')?.name || 'N/A',
+          topPerformer: users.find((u) => u.role === 'fisio')?.name || 'N/A',
           mainConcerns: operationalAlerts
-            .filter(a => a.isActive && a.severity === 'high')
-            .map(a => a.title)
+            .filter((a) => a.isActive && a.severity === 'high')
+            .map((a) => a.title)
             .slice(0, 3),
           recommendations: [
             utilizationRate < 80 ? 'Melhorar taxa de utilização' : null,
@@ -2921,7 +2958,7 @@ export const useData = (): DataContextType => {
       };
 
       setAllExecutiveReports((prev) => [...prev, newReport]);
-      
+
       saveAuditLog({
         action: LogAction.CREATE_TASK,
         targetCollection: 'executiveReports',
@@ -2934,8 +2971,103 @@ export const useData = (): DataContextType => {
 
       return newReport;
     },
-    [appointments, transactions, qualityIndicators, productivityMetrics, equipment, operationalAlerts, users, saveAuditLog]
+    [
+      appointments,
+      transactions,
+      qualityIndicators,
+      productivityMetrics,
+      equipment,
+      operationalAlerts,
+      users,
+      saveAuditLog,
+    ]
   );
+
+  // === FUNÇÕES DO DIÁRIO DE SINTOMAS ===
+  const symptomDiaryEntries = useMemo(
+    () =>
+      allSymptomDiaryEntries.filter(
+        (entry) => entry.tenantId === currentUser?.tenantId
+      ),
+    [allSymptomDiaryEntries, currentUser?.tenantId]
+  );
+
+  const addSymptomDiaryEntry = (entryData: any) => {
+    if (!currentUser?.tenantId) return;
+
+    const newEntry = {
+      ...entryData,
+      id: `symptom-entry-${crypto.randomUUID()}`,
+      tenantId: currentUser.tenantId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setAllSymptomDiaryEntries((prev) => [...prev, newEntry]);
+
+    if (currentUser) {
+      logAction(
+        currentUser,
+        LogAction.CREATE,
+        'symptom_diary_entries',
+        newEntry.id,
+        `Registro de sintomas - ${newEntry.date}`,
+        { data: newEntry }
+      );
+    }
+  };
+
+  const updateSymptomDiaryEntry = (entryId: string, updates: any) => {
+    if (!currentUser?.tenantId) return;
+
+    setAllSymptomDiaryEntries((prev) =>
+      prev.map((entry) =>
+        entry.id === entryId && entry.tenantId === currentUser.tenantId
+          ? { ...entry, ...updates, updatedAt: new Date().toISOString() }
+          : entry
+      )
+    );
+
+    if (currentUser) {
+      logAction(
+        currentUser,
+        LogAction.UPDATE,
+        'symptom_diary_entries',
+        entryId,
+        `Registro de sintomas - ${updates.date || 'sem data'}`,
+        { updates }
+      );
+    }
+  };
+
+  const deleteSymptomDiaryEntry = (entryId: string) => {
+    if (!currentUser?.tenantId) return;
+
+    const entryToDelete = allSymptomDiaryEntries.find(
+      (entry) => entry.id === entryId && entry.tenantId === currentUser.tenantId
+    );
+
+    if (entryToDelete) {
+      setAllSymptomDiaryEntries((prev) =>
+        prev.filter((entry) => entry.id !== entryId)
+      );
+
+      if (currentUser) {
+        logAction(
+          currentUser,
+          LogAction.DELETE,
+          'symptom_diary_entries',
+          entryId,
+          `Registro de sintomas - ${entryToDelete.date}`,
+          { deletedEntry: entryToDelete }
+        );
+      }
+    }
+  };
+
+  const getSymptomDiaryEntriesForPatient = (patientId: string) => {
+    return symptomDiaryEntries.filter((entry) => entry.patientId === patientId);
+  };
 
   const getAllData = useCallback(() => {
     return {
@@ -2944,6 +3076,7 @@ export const useData = (): DataContextType => {
       patients: rest.allPatients,
       appointments: rest.allAppointments,
       transactions: rest.allTransactions,
+      symptomDiaryEntries: rest.allSymptomDiaryEntries,
       // Add other data as needed
     };
   }, [rest]);
@@ -3053,5 +3186,11 @@ export const useData = (): DataContextType => {
     deleteExerciseImage,
     getExerciseImages,
     getExerciseImagesByCategory,
+    // Sistema de Diário de Sintomas
+    symptomDiaryEntries,
+    addSymptomDiaryEntry,
+    updateSymptomDiaryEntry,
+    deleteSymptomDiaryEntry,
+    getSymptomDiaryEntriesForPatient,
   } as DataContextType;
 };

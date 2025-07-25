@@ -3,7 +3,7 @@ import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { Tenant, BillingPlan, SubscriptionPlan } from '../types';
 import { IconCheckCircle } from './icons/IconComponents';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 
 const ALL_PLANS: Omit<BillingPlan, 'isCurrent'>[] = [
   {

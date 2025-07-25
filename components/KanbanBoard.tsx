@@ -7,7 +7,7 @@ import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import PageShell from './ui/PageShell';
 import PageLoader from './ui/PageLoader';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import { TASK_STATUSES } from '../constants';
 
 const KanbanBoard: React.FC = () => {
@@ -79,8 +79,6 @@ const KanbanBoard: React.FC = () => {
     handleCloseModal();
   };
 
-
-
   if (isLoading) {
     return <PageLoader message="Carregando quadro de projetos..." />;
   }
@@ -96,18 +94,17 @@ const KanbanBoard: React.FC = () => {
     >
       <div className="flex space-x-4 overflow-x-auto pb-4">
         {TASK_STATUSES.map((status) => (
-            <KanbanColumn
-              key={status}
-              status={status}
-              tasks={tasks.filter((task) => task.status === status)}
-              users={users}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onSelectTask={handleOpenTaskModal}
-            />
-          )
-        )}
+          <KanbanColumn
+            key={status}
+            status={status}
+            tasks={tasks.filter((task) => task.status === status)}
+            users={users}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onSelectTask={handleOpenTaskModal}
+          />
+        ))}
       </div>
       {isModalOpen && (
         <TaskModal

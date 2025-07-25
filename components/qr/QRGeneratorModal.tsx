@@ -5,7 +5,7 @@ import { useData } from '../../hooks/useData.minimal';
 import { qrCodeService } from '../../services/qrCodeService';
 import { pdfService } from '../../services/pdfService';
 import BaseModal from '../ui/BaseModal';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 
 interface QRGeneratorModalProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
 }) => {
   const { user } = useAuth();
   const { exercises, getExerciseVideos, getExerciseImages } = useData();
-  
+
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -48,36 +48,49 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
     if (!user?.tenantId) return;
 
     setIsGenerating(true);
-    
+
     try {
       let qrCode = '';
-      
+
       switch (type) {
         case 'exercise':
           if (exercise) {
-            qrCode = await qrCodeService.generateExerciseQR(exercise, user.tenantId);
+            qrCode = await qrCodeService.generateExerciseQR(
+              exercise,
+              user.tenantId
+            );
           }
           break;
-          
+
         case 'prescription':
           if (prescription && exercise) {
-            qrCode = await qrCodeService.generatePrescriptionQR(prescription, exercise, user.tenantId);
+            qrCode = await qrCodeService.generatePrescriptionQR(
+              prescription,
+              exercise,
+              user.tenantId
+            );
           }
           break;
-          
+
         case 'patient_portal':
           if (patient) {
-            qrCode = await qrCodeService.generatePatientPortalQR(patient.id, user.tenantId);
+            qrCode = await qrCodeService.generatePatientPortalQR(
+              patient.id,
+              user.tenantId
+            );
           }
           break;
-          
+
         case 'program':
           if (patient) {
-            qrCode = await qrCodeService.generatePatientProgramQR(patient.id, user.tenantId);
+            qrCode = await qrCodeService.generatePatientProgramQR(
+              patient.id,
+              user.tenantId
+            );
           }
           break;
       }
-      
+
       setQrCodeUrl(qrCode);
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
@@ -119,7 +132,7 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
 
   const handleDownload = () => {
     if (!qrCodeUrl) return;
-    
+
     const link = document.createElement('a');
     link.download = `qrcode-${type}-${Date.now()}.png`;
     link.href = qrCodeUrl;
@@ -128,20 +141,22 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
 
   const handleShare = (platform: 'whatsapp' | 'email') => {
     if (!qrCodeUrl) return;
-    
+
     const title = getTitle();
     const description = getDescription();
-    
+
     switch (platform) {
       case 'whatsapp':
         const whatsappText = `${title}\n\n${description}\n\nEscaneie o QR Code para acessar!`;
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
         window.open(whatsappUrl, '_blank');
         break;
-        
+
       case 'email':
         const emailSubject = encodeURIComponent(title);
-        const emailBody = encodeURIComponent(`${description}\n\nEscaneie o QR Code em anexo para acessar o conteúdo.`);
+        const emailBody = encodeURIComponent(
+          `${description}\n\nEscaneie o QR Code em anexo para acessar o conteúdo.`
+        );
         const emailUrl = `mailto:?subject=${emailSubject}&body=${emailBody}`;
         window.open(emailUrl);
         break;
@@ -150,10 +165,10 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
 
   const handlePrint = () => {
     if (!qrCodeUrl) return;
-    
+
     const printWindow = window.open('', '', 'width=600,height=600');
     if (!printWindow) return;
-    
+
     printWindow.document.write(`
       <html>
         <head>
@@ -218,10 +233,10 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
     printWindow.focus();
-    
+
     setTimeout(() => {
       printWindow.print();
       printWindow.close();
@@ -230,27 +245,26 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
 
   const handleGenerateQRPDF = async () => {
     if (!qrCodeUrl) return;
-    
+
     setIsGeneratingPDF(true);
-    
+
     try {
       const instructions = [
         'Abra a câmera do seu celular',
         'Aponte para o QR Code',
         'Toque na notificação que aparecer',
-        'Acesse o conteúdo diretamente'
+        'Acesse o conteúdo diretamente',
       ];
-      
+
       const pdfBlob = await pdfService.generateQRCodePDF(
         qrCodeUrl,
         getTitle(),
         getDescription(),
         instructions
       );
-      
+
       const filename = `qr-code-${type}-${Date.now()}.pdf`;
       await pdfService.savePDF(pdfBlob, filename);
-      
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       alert('Erro ao gerar PDF. Tente novamente.');
@@ -261,27 +275,26 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
 
   const handleGenerateExercisePDF = async () => {
     if (!exercise || !qrCodeUrl) return;
-    
+
     setIsGeneratingPDF(true);
-    
+
     try {
       const videos = getExerciseVideos(exercise.id);
       const images = getExerciseImages(exercise.id);
-      
+
       const exerciseData = {
         exercise,
         videos,
         images,
         qrCodeUrl,
         prescription,
-        patient
+        patient,
       };
-      
+
       const pdfBlob = await pdfService.generateExercisePDF(exerciseData);
-      
+
       const filename = `exercicio-${exercise.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.pdf`;
       await pdfService.savePDF(pdfBlob, filename);
-      
     } catch (error) {
       console.error('Erro ao gerar PDF do exercício:', error);
       alert('Erro ao gerar PDF. Tente novamente.');
@@ -296,7 +309,12 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
   }
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title={getTitle()} size="medium">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={getTitle()}
+      size="medium"
+    >
       <div className="space-y-6">
         {/* Description */}
         <div className="rounded-lg bg-blue-50 p-4">
@@ -307,19 +325,19 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
         <div className="text-center">
           {isGenerating ? (
             <div className="flex flex-col items-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500"></div>
               <p className="text-slate-600">Gerando QR Code...</p>
             </div>
           ) : qrCodeUrl ? (
             <div className="space-y-4">
-              <div className="inline-block p-4 bg-white border-2 border-slate-200 rounded-lg">
+              <div className="inline-block rounded-lg border-2 border-slate-200 bg-white p-4">
                 <img
                   src={qrCodeUrl}
                   alt="QR Code"
-                  className="w-64 h-64 mx-auto"
+                  className="mx-auto h-64 w-64"
                 />
               </div>
-              
+
               {/* Info */}
               <div className="text-sm text-slate-600">
                 <p>📱 Escaneie com a câmera do celular</p>
@@ -337,56 +355,58 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
         {/* Share Options */}
         {qrCodeUrl && (
           <div className="space-y-4">
-            <h4 className="font-medium text-slate-900">Compartilhar e Exportar</h4>
+            <h4 className="font-medium text-slate-900">
+              Compartilhar e Exportar
+            </h4>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <button
                 onClick={handleDownload}
-                className="flex flex-col items-center space-y-2 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex flex-col items-center space-y-2 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50"
               >
                 <span className="text-2xl">💾</span>
                 <span className="text-xs font-medium">Download PNG</span>
               </button>
-              
+
               <button
                 onClick={() => handleShare('whatsapp')}
-                className="flex flex-col items-center space-y-2 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex flex-col items-center space-y-2 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50"
               >
                 <span className="text-2xl">💬</span>
                 <span className="text-xs font-medium">WhatsApp</span>
               </button>
-              
+
               <button
                 onClick={() => handleShare('email')}
-                className="flex flex-col items-center space-y-2 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex flex-col items-center space-y-2 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50"
               >
                 <span className="text-2xl">📧</span>
                 <span className="text-xs font-medium">Email</span>
               </button>
-              
+
               <button
                 onClick={handlePrint}
-                className="flex flex-col items-center space-y-2 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex flex-col items-center space-y-2 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50"
               >
                 <span className="text-2xl">🖨️</span>
                 <span className="text-xs font-medium">Imprimir</span>
               </button>
-              
+
               <button
                 onClick={handleGenerateQRPDF}
                 disabled={isGeneratingPDF}
-                className="flex flex-col items-center space-y-2 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="flex flex-col items-center space-y-2 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50 disabled:opacity-50"
               >
                 <span className="text-2xl">📄</span>
                 <span className="text-xs font-medium">
                   {isGeneratingPDF ? 'Gerando...' : 'PDF QR Only'}
                 </span>
               </button>
-              
+
               {type === 'exercise' && exercise && (
                 <button
                   onClick={handleGenerateExercisePDF}
                   disabled={isGeneratingPDF}
-                  className="flex flex-col items-center space-y-2 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  className="flex flex-col items-center space-y-2 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50 disabled:opacity-50"
                 >
                   <span className="text-2xl">📋</span>
                   <span className="text-xs font-medium">
@@ -395,12 +415,18 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
                 </button>
               )}
             </div>
-            
+
             {type === 'exercise' && exercise && (
-              <div className="text-sm text-slate-600 bg-blue-50 p-3 rounded-lg">
-                <p className="font-medium mb-1">💡 Opções de PDF:</p>
-                <p>• <strong>PDF QR Only:</strong> Apenas o QR Code otimizado para impressão</p>
-                <p>• <strong>PDF Completo:</strong> Exercício com descrição, vídeos, imagens e QR Code</p>
+              <div className="rounded-lg bg-blue-50 p-3 text-sm text-slate-600">
+                <p className="mb-1 font-medium">💡 Opções de PDF:</p>
+                <p>
+                  • <strong>PDF QR Only:</strong> Apenas o QR Code otimizado
+                  para impressão
+                </p>
+                <p>
+                  • <strong>PDF Completo:</strong> Exercício com descrição,
+                  vídeos, imagens e QR Code
+                </p>
               </div>
             )}
           </div>
@@ -413,16 +439,14 @@ const QRGeneratorModal: React.FC<QRGeneratorModalProps> = ({
           </Button>
           {qrCodeUrl && (
             <>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleGenerateQRPDF}
                 disabled={isGeneratingPDF}
               >
                 {isGeneratingPDF ? 'Gerando PDF...' : 'PDF QR Code'}
               </Button>
-              <Button onClick={handleDownload}>
-                Download PNG
-              </Button>
+              <Button onClick={handleDownload}>Download PNG</Button>
             </>
           )}
         </div>

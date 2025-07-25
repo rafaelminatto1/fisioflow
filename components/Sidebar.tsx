@@ -27,6 +27,7 @@ import {
   FlaskConical,
   TrendingUp,
   BarChart,
+  X as IconX,
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -77,12 +78,16 @@ interface SidebarProps {
   activeView: string;
   setActiveView: (view: string) => void;
   handleSelectPage: (pageId: string) => void;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   activeView,
   setActiveView,
   handleSelectPage,
+  isSidebarOpen,
+  setIsSidebarOpen,
 }) => {
   const { user, logout } = useAuth();
 
@@ -222,7 +227,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'parcerias',
       label: 'Parcerias',
-      icon: <Users />,
+      icon: <Users />, // Corrigido para usar o componente
       roles: [UserRole.ADMIN],
     },
     {
@@ -248,32 +253,87 @@ const Sidebar: React.FC<SidebarProps> = ({
     .map((id) => accessibleNavItems.find((item) => item.id === id))
     .filter(Boolean);
 
-  return (
-    <>
-      {/* Mobile Bottom Bar */}
-      <aside className="fixed bottom-0 left-0 z-40 grid h-16 w-full grid-cols-5 border-t border-slate-700 bg-slate-800 md:hidden">
-        {mobileNavItems.map((item) => (
+  const desktopSidebar = (
+    <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-slate-700 bg-slate-800/50 p-4 md:flex">
+      <div className="mb-6 flex items-center">
+        <div className="mr-3 rounded-lg bg-blue-500 p-2">
+          <Stethoscope className="text-white" />
+        </div>
+        <h1 className="text-xl font-bold text-white">FisioFlow</h1>
+      </div>
+
+      <nav className="sidebar-nav flex-1 space-y-2 overflow-y-auto">
+        {accessibleNavItems.map((item) => (
           <NavItem
-            key={`${item!.id}-mobile`}
-            isMobile
-            icon={item!.icon}
-            label={item!.label}
-            isActive={activeView === item!.id}
-            onClick={() => setActiveView(item!.id)}
+            key={item.id}
+            icon={item.icon}
+            label={item.label}
+            isActive={activeView === item.id}
+            onClick={() => setActiveView(item.id)}
           />
         ))}
-      </aside>
+        <div className="border-t border-slate-700 pt-4">
+          <NotebookTree onSelectPage={handleSelectPage} />
+        </div>
+      </nav>
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-slate-700 bg-slate-800/50 p-4 md:flex">
-        <div className="mb-6 flex items-center">
-          <div className="mr-3 rounded-lg bg-blue-500 p-2">
-            <Stethoscope className="text-white" />
+      <div className="mt-auto pt-4">
+        <button
+          onClick={logout}
+          className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+        >
+          <LogOut size={20} className="mr-3" />
+          Sair
+        </button>
+      </div>
+    </aside>
+  );
+
+  const mobileBottomBar = (
+    <aside className="fixed bottom-0 left-0 z-40 grid h-16 w-full grid-cols-5 border-t border-slate-700 bg-slate-800 md:hidden">
+      {mobileNavItems.map((item) => (
+        <NavItem
+          key={`${item!.id}-mobile`}
+          isMobile
+          icon={item!.icon}
+          label={item!.label}
+          isActive={activeView === item!.id}
+          onClick={() => setActiveView(item!.id)}
+        />
+      ))}
+    </aside>
+  );
+
+  const mobileSidebar = (
+    <div
+      className={`fixed inset-0 z-50 md:hidden ${
+        isSidebarOpen ? 'block' : 'hidden'
+      }`}
+    >
+      {/* Overlay */}
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={() => setIsSidebarOpen(false)}
+      ></div>
+
+      {/* Sidebar Content */}
+      <aside className="absolute left-0 top-0 flex h-full w-64 flex-shrink-0 flex-col border-r border-slate-700 bg-slate-800 p-4">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="mr-3 rounded-lg bg-blue-500 p-2">
+              <Stethoscope className="text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-white">FisioFlow</h1>
           </div>
-          <h1 className="text-xl font-bold text-white">FisioFlow</h1>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="text-slate-400 hover:text-white"
+          >
+            <IconX size={24} />
+          </button>
         </div>
 
-        <nav className="flex-1 space-y-2">
+        <nav className="sidebar-nav flex-1 space-y-2 overflow-y-auto">
           {accessibleNavItems.map((item) => (
             <NavItem
               key={item.id}
@@ -288,7 +348,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </nav>
 
-        <div className="mt-auto">
+        <div className="mt-auto pt-4">
           <button
             onClick={logout}
             className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
@@ -298,6 +358,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
       </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {desktopSidebar}
+      {mobileSidebar}
+      {mobileBottomBar}
     </>
   );
 };

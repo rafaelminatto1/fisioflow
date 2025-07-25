@@ -16,7 +16,7 @@ import MetricCard from './MetricCard';
 import TransactionModal from './TransactionModal';
 import PageLoader from './ui/PageLoader';
 import PageShell from './ui/PageShell';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import FinancialSummaryDashboard from './FinancialSummaryDashboard';
 
 const formatCurrency = (value: number) => {

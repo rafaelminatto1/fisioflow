@@ -3,7 +3,7 @@ import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { ClinicalCase, UserRole } from '../types';
 import PageShell from './ui/PageShell';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import FormField from './ui/FormField';
 import NewClinicalCaseModal from './NewClinicalCaseModal';
 import {

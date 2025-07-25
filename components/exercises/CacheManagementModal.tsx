@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData.minimal';
 import { cacheService, CachedExercise } from '../../services/cacheService';
 import BaseModal from '../ui/BaseModal';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 
 interface CacheManagementModalProps {
   isOpen: boolean;
@@ -17,7 +17,7 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
 }) => {
   const { user } = useAuth();
   const { exercises, getExerciseVideos, getExerciseImages } = useData();
-  
+
   const [cachedExercises, setCachedExercises] = useState<CachedExercise[]>([]);
   const [cacheStats, setCacheStats] = useState({
     totalCached: 0,
@@ -26,7 +26,10 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
     newestCache: null as string | null,
   });
   const [isPreCaching, setIsPreCaching] = useState(false);
-  const [preCacheProgress, setPreCacheProgress] = useState({ current: 0, total: 0 });
+  const [preCacheProgress, setPreCacheProgress] = useState({
+    current: 0,
+    total: 0,
+  });
 
   // Only allow therapists and admins to manage cache
   if (user?.role !== UserRole.FISIOTERAPEUTA && user?.role !== UserRole.ADMIN) {
@@ -72,7 +75,11 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
   };
 
   const handleClearCache = () => {
-    if (confirm('Tem certeza que deseja limpar todo o cache? Isso removerá todos os dados offline.')) {
+    if (
+      confirm(
+        'Tem certeza que deseja limpar todo o cache? Isso removerá todos os dados offline.'
+      )
+    ) {
       cacheService.clearAllCache();
       refreshCacheData();
       alert('Cache limpo com sucesso!');
@@ -101,57 +108,72 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
   };
 
   const getOnlineStatusColor = () => {
-    return cacheService.isOnline() ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100';
+    return cacheService.isOnline()
+      ? 'text-green-700 bg-green-100'
+      : 'text-red-700 bg-red-100';
   };
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title="Gerenciar Cache Offline" size="large">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Gerenciar Cache Offline"
+      size="large"
+    >
       <div className="space-y-6">
         {/* Status Section */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="bg-blue-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-blue-700">{cacheStats.totalCached}</div>
+          <div className="rounded-lg bg-blue-50 p-4 text-center">
+            <div className="text-2xl font-bold text-blue-700">
+              {cacheStats.totalCached}
+            </div>
             <div className="text-sm text-blue-600">Exercícios em Cache</div>
           </div>
-          
-          <div className="bg-green-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-green-700">{cacheStats.totalSize}</div>
+
+          <div className="rounded-lg bg-green-50 p-4 text-center">
+            <div className="text-2xl font-bold text-green-700">
+              {cacheStats.totalSize}
+            </div>
             <div className="text-sm text-green-600">Tamanho do Cache</div>
           </div>
-          
-          <div className="bg-purple-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-purple-700">{exercises.length}</div>
+
+          <div className="rounded-lg bg-purple-50 p-4 text-center">
+            <div className="text-2xl font-bold text-purple-700">
+              {exercises.length}
+            </div>
             <div className="text-sm text-purple-600">Total de Exercícios</div>
           </div>
-          
-          <div className="bg-slate-50 rounded-lg p-4 text-center">
-            <div className={`text-sm font-medium px-2 py-1 rounded-full ${getOnlineStatusColor()}`}>
+
+          <div className="rounded-lg bg-slate-50 p-4 text-center">
+            <div
+              className={`rounded-full px-2 py-1 text-sm font-medium ${getOnlineStatusColor()}`}
+            >
               {getOnlineStatus()}
             </div>
-            <div className="text-sm text-slate-600 mt-1">Status da Conexão</div>
+            <div className="mt-1 text-sm text-slate-600">Status da Conexão</div>
           </div>
         </div>
 
         {/* Actions Section */}
         <div className="space-y-4">
           <h4 className="font-semibold text-slate-900">Ações</h4>
-          
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <button
               onClick={handlePreCacheAll}
               disabled={isPreCaching}
-              className="flex items-center justify-center space-x-2 p-3 border border-blue-200 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50"
             >
               <span className="text-lg">💾</span>
               <span className="font-medium">
                 {isPreCaching ? 'Armazenando...' : 'Armazenar Todos'}
               </span>
             </button>
-            
+
             <button
               onClick={handleClearCache}
               disabled={isPreCaching}
-              className="flex items-center justify-center space-x-2 p-3 border border-red-200 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-3 text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50"
             >
               <span className="text-lg">🗑️</span>
               <span className="font-medium">Limpar Cache</span>
@@ -159,8 +181,8 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
           </div>
 
           {isPreCaching && (
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
+            <div className="rounded-lg bg-blue-50 p-4">
+              <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm font-medium text-blue-800">
                   Armazenando exercícios para acesso offline...
                 </span>
@@ -168,11 +190,11 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
                   {preCacheProgress.current} / {preCacheProgress.total}
                 </span>
               </div>
-              <div className="w-full bg-blue-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${preCacheProgress.total > 0 ? (preCacheProgress.current / preCacheProgress.total) * 100 : 0}%` 
+              <div className="h-2 w-full rounded-full bg-blue-200">
+                <div
+                  className="h-2 rounded-full bg-blue-600 transition-all duration-300"
+                  style={{
+                    width: `${preCacheProgress.total > 0 ? (preCacheProgress.current / preCacheProgress.total) * 100 : 0}%`,
                   }}
                 />
               </div>
@@ -181,10 +203,14 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
         </div>
 
         {/* Info Section */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          <h5 className="font-medium text-blue-900 mb-2">💡 Como funciona o cache offline:</h5>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Os exercícios são automaticamente armazenados quando acessados</li>
+        <div className="rounded-lg bg-blue-50 p-4">
+          <h5 className="mb-2 font-medium text-blue-900">
+            💡 Como funciona o cache offline:
+          </h5>
+          <ul className="space-y-1 text-sm text-blue-800">
+            <li>
+              • Os exercícios são automaticamente armazenados quando acessados
+            </li>
             <li>• Dados ficam disponíveis mesmo sem internet</li>
             <li>• QR Codes funcionam offline para exercícios em cache</li>
             <li>• Cache expira automaticamente após 24 horas</li>
@@ -195,19 +221,19 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
         {/* Cached Exercises List */}
         {cachedExercises.length > 0 && (
           <div>
-            <h4 className="font-semibold text-slate-900 mb-3">
+            <h4 className="mb-3 font-semibold text-slate-900">
               Exercícios em Cache ({cachedExercises.length})
             </h4>
-            <div className="max-h-64 overflow-y-auto space-y-2">
+            <div className="max-h-64 space-y-2 overflow-y-auto">
               {cachedExercises.map((cached) => (
                 <div
                   key={cached.exercise.id}
-                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                  className="flex items-center justify-between rounded-lg bg-slate-50 p-3"
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
                       <div>
-                        <h6 className="font-medium text-slate-900 text-sm">
+                        <h6 className="text-sm font-medium text-slate-900">
                           {cached.exercise.name}
                         </h6>
                         <div className="flex items-center space-x-2 text-xs text-slate-500">
@@ -219,14 +245,16 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
                         </div>
                       </div>
                     </div>
-                    <div className="text-xs text-slate-400 mt-1">
+                    <div className="mt-1 text-xs text-slate-400">
                       Armazenado em: {formatDate(cached.cachedAt)}
                     </div>
                   </div>
-                  
+
                   <button
-                    onClick={() => handleRemoveCachedExercise(cached.exercise.id)}
-                    className="ml-3 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    onClick={() =>
+                      handleRemoveCachedExercise(cached.exercise.id)
+                    }
+                    className="ml-3 rounded-md p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
                     title="Remover do cache"
                   >
                     🗑️
@@ -238,8 +266,8 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
         )}
 
         {cachedExercises.length === 0 && (
-          <div className="text-center py-8 text-slate-500">
-            <div className="text-4xl mb-2">📱</div>
+          <div className="py-8 text-center text-slate-500">
+            <div className="mb-2 text-4xl">📱</div>
             <p className="font-medium">Nenhum exercício em cache</p>
             <p className="text-sm">
               Use "Armazenar Todos" para disponibilizar exercícios offline
@@ -249,9 +277,7 @@ const CacheManagementModal: React.FC<CacheManagementModalProps> = ({
 
         {/* Action Buttons */}
         <div className="flex justify-end pt-4">
-          <Button onClick={onClose}>
-            Fechar
-          </Button>
+          <Button onClick={onClose}>Fechar</Button>
         </div>
       </div>
     </BaseModal>

@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { UserRole } from '../types';
+import { toast } from 'sonner';
+import { Button } from './ui/Button'; // Importando o novo botão
 import {
   IconUsers,
   IconUserShield,
@@ -10,15 +12,18 @@ import {
 import { Stethoscope } from 'lucide-react';
 
 const RoleButton: React.FC<{
-  role?: UserRole;
+  role?: UserRole | 'new_clinic';
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
   sublabel?: string;
-}> = ({ role, label, icon, onClick, sublabel }) => (
-  <button
+  isLoading: boolean;
+}> = ({ role, label, icon, onClick, sublabel, isLoading }) => (
+  <Button
     onClick={onClick}
-    className="group flex w-full flex-col items-center justify-center rounded-lg border border-slate-700 bg-slate-800 p-6 text-center transition-all duration-300 hover:border-blue-500 hover:bg-slate-700"
+    isLoading={isLoading}
+    variant="secondary"
+    className="group flex h-auto flex-col items-center justify-center rounded-lg border border-slate-700 bg-slate-800 p-6 text-center transition-all duration-300 hover:border-blue-500 hover:bg-slate-700"
   >
     <div className="mb-4 text-slate-400 transition-colors group-hover:text-blue-500">
       {icon}
@@ -27,11 +32,30 @@ const RoleButton: React.FC<{
     {sublabel && (
       <span className="text-sm capitalize text-slate-400">{sublabel}</span>
     )}
-  </button>
+  </Button>
 );
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
+  const [loadingRole, setLoadingRole] = useState<
+    UserRole | 'new_clinic' | null
+  >(null);
+
+  const handleLogin = async (role: UserRole, tenantId?: string) => {
+    setLoadingRole(tenantId ? 'new_clinic' : role);
+
+    // Simula uma chamada de API
+    await new Promise((resolve) => setTimeout(resolve, 750));
+
+    try {
+      login(role, tenantId);
+      toast.success(`Login como ${role} realizado com sucesso!`);
+    } catch (error) {
+      toast.error('Ocorreu um erro ao tentar fazer login.');
+      console.error(error);
+    }
+    // O setLoadingRole(null) não é necessário porque o componente será desmontado
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center bg-slate-900 p-4">
@@ -43,37 +67,44 @@ const LoginPage: React.FC = () => {
       </div>
       <div className="grid w-full max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
         <RoleButton
+          role={UserRole.ADMIN}
           label="Admin Clínica"
           sublabel="(Existente)"
           icon={<IconUserShield size={48} />}
-          onClick={() => login(UserRole.ADMIN, '1')}
+          onClick={() => handleLogin(UserRole.ADMIN, '1')}
+          isLoading={loadingRole === UserRole.ADMIN}
         />
         <RoleButton
+          role="new_clinic"
           label="Nova Clínica"
           sublabel="(Onboarding)"
           icon={<IconBuilding size={48} />}
-          onClick={() => login(UserRole.ADMIN, '5')}
+          onClick={() => handleLogin(UserRole.ADMIN, '5')}
+          isLoading={loadingRole === 'new_clinic'}
         />
         <RoleButton
           role={UserRole.FISIOTERAPEUTA}
           label="Fisioterapeuta"
           icon={<Stethoscope size={48} />}
-          onClick={() => login(UserRole.FISIOTERAPEUTA)}
+          onClick={() => handleLogin(UserRole.FISIOTERAPEUTA)}
           sublabel={UserRole.FISIOTERAPEUTA}
+          isLoading={loadingRole === UserRole.FISIOTERAPEUTA}
         />
         <RoleButton
           role={UserRole.ESTAGIARIO}
           label="Estagiário"
           icon={<IconUsers size={48} />}
-          onClick={() => login(UserRole.ESTAGIARIO)}
+          onClick={() => handleLogin(UserRole.ESTAGIARIO)}
           sublabel={UserRole.ESTAGIARIO}
+          isLoading={loadingRole === UserRole.ESTAGIARIO}
         />
         <RoleButton
           role={UserRole.PACIENTE}
           label="Paciente"
           icon={<IconUser size={48} />}
-          onClick={() => login(UserRole.PACIENTE)}
+          onClick={() => handleLogin(UserRole.PACIENTE)}
           sublabel={UserRole.PACIENTE}
+          isLoading={loadingRole === UserRole.PACIENTE}
         />
       </div>
       <p className="mt-12 text-sm text-slate-500">

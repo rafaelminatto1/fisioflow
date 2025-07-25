@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { IconTrash } from './icons/IconComponents';
 import BaseModal from './ui/BaseModal';
 import FormField from './ui/FormField';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 
 type UserErrors = {
   name?: string;

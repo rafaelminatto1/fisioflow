@@ -5,7 +5,7 @@ import { getTaskSummary } from '../services/geminiService';
 import { TASK_STATUS_LABELS, TASK_PRIORITY_STYLES } from '../constants';
 import { IconSparkles, IconTrash } from './icons/IconComponents';
 import BaseModal from './ui/BaseModal';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import FormField from './ui/FormField';
 
 const TaskModal: React.FC<TaskModalProps> = ({

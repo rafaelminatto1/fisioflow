@@ -3,7 +3,7 @@ import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { ClinicalProtocol, UserRole } from '../types';
 import PageShell from './ui/PageShell';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import FormField from './ui/FormField';
 import NewProtocolModal from './NewProtocolModal';
 import {
@@ -295,7 +295,7 @@ const ClinicalProtocolsLibraryPage: React.FC<
               <p className="text-sm text-slate-400">
                 {filteredAndSortedProtocols.length} protocolo(s) encontrado(s)
               </p>
-              <Button variant="secondary" onClick={clearFilters} >
+              <Button variant="secondary" onClick={clearFilters}>
                 Limpar Filtros
               </Button>
             </div>

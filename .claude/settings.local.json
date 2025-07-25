@@ -27,7 +27,8 @@
       "Bash(.scriptssetup-fase1-interno.bat)",
       "Bash(npx expo install:*)",
       "Bash(npm run ios:*)",
-      "Bash(npx eas build:*)"
+      "Bash(npx eas build:*)",
+      "Bash(timeout 30 npm run build)"
     ],
     "deny": []
   }

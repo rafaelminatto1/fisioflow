@@ -14,6 +14,7 @@ import {
 import PatientFeedbackModal from './PatientFeedbackModal';
 import ExerciseModal from './ExerciseModal';
 import ExerciseFeedbackModal from './ExerciseFeedbackModal';
+import { SymptomDiaryIntegration } from './SymptomDiaryIntegration';
 import {
   IconLogout,
   IconClipboardList,
@@ -526,6 +527,21 @@ const PatientPortal: React.FC = () => {
           </div>
         )}
 
+        {/* Diário de Sintomas e Evolução */}
+        {patientProfile && (
+          <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-6">
+            <h2 className="mb-4 text-lg font-semibold text-slate-100">
+              📊 Diário de Sintomas e Evolução
+            </h2>
+            <p className="mb-4 text-sm text-slate-400">
+              Registre seus sintomas diários para ajudar no acompanhamento do
+              seu tratamento. O sistema gera insights automáticos para você e
+              seu fisioterapeuta.
+            </p>
+            <SymptomDiaryIntegration patient={patientProfile} />
+          </div>
+        )}
+
         <section>
           <h2 className="mb-4 text-2xl font-bold text-slate-100">
             Minhas Finanças
@@ -678,14 +694,16 @@ const PatientPortal: React.FC = () => {
           patientData={aiAssistantData}
         />
       )}
-      
+
       {/* Chat Interface */}
       {(isChatOpen || isChatMinimized) && (
-        <div className={`fixed z-50 ${
-          isChatMinimized 
-            ? 'bottom-4 right-4' 
-            : 'bottom-4 right-4 top-20 left-1/3'
-        }`}>
+        <div
+          className={`fixed z-50 ${
+            isChatMinimized
+              ? 'bottom-4 right-4'
+              : 'bottom-4 left-1/3 right-4 top-20'
+          }`}
+        >
           <ChatInterface
             isMinimized={isChatMinimized}
             onToggleMinimize={() => {
@@ -697,7 +715,7 @@ const PatientPortal: React.FC = () => {
             }}
             className="h-full"
           />
-          
+
           {/* Botão de fechar quando não minimizado */}
           {!isChatMinimized && (
             <button
@@ -705,7 +723,7 @@ const PatientPortal: React.FC = () => {
                 setIsChatOpen(false);
                 setIsChatMinimized(false);
               }}
-              className="absolute -top-2 -left-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-sm transition-colors"
+              className="absolute -left-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-sm text-white transition-colors hover:bg-red-600"
               title="Fechar chat"
             >
               ✕

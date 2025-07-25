@@ -8,7 +8,7 @@ import {
   ProtocolProgressNote,
 } from '../types';
 import PageShell from './ui/PageShell';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import FormField from './ui/FormField';
 import BaseModal from './ui/BaseModal';
 import {
@@ -365,7 +365,6 @@ const PatientProtocolTrackingPage: React.FC = () => {
                 <div className="flex space-x-2">
                   <Button
                     variant="primary"
-                    
                     onClick={() => {
                       setSelectedProtocol(patientProtocol);
                       setIsProgressModalOpen(true);
@@ -379,7 +378,6 @@ const PatientProtocolTrackingPage: React.FC = () => {
                   {patientProtocol.status === 'Ativo' && (
                     <Button
                       variant="secondary"
-                      
                       onClick={() =>
                         updatePatientProtocolStatus(
                           patientProtocol.id,
@@ -394,7 +392,6 @@ const PatientProtocolTrackingPage: React.FC = () => {
                   {patientProtocol.status === 'Pausado' && (
                     <Button
                       variant="secondary"
-                      
                       onClick={() =>
                         updatePatientProtocolStatus(patientProtocol.id, 'Ativo')
                       }
@@ -430,7 +427,6 @@ const PatientProtocolTrackingPage: React.FC = () => {
             setSelectedProtocol(null);
           }}
           title="Registrar Progresso"
-          
         >
           {selectedProtocol && (
             <div className="space-y-6">

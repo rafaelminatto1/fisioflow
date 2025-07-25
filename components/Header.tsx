@@ -2,7 +2,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useData } from '../hooks/useData.minimal';
 import { BreadcrumbItem, UserRole } from '../types';
-import { IconChevronRight, IconBell } from './icons/IconComponents';
+import {
+  IconChevronRight,
+  IconBell,
+  IconMenu,
+  IconX,
+} from './icons/IconComponents';
 import NotificationDropdown from './NotificationDropdown';
 
 const useClickOutside = (
@@ -25,9 +30,10 @@ const useClickOutside = (
   }, [ref, handler]);
 };
 
-const Header: React.FC<{ breadcrumbs: BreadcrumbItem[] }> = ({
-  breadcrumbs,
-}) => {
+const Header: React.FC<{
+  breadcrumbs: BreadcrumbItem[];
+  toggleSidebar: () => void;
+}> = ({ breadcrumbs, toggleSidebar }) => {
   const { user } = useAuth();
   const { tasks, exerciseLogs } = useData();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -68,25 +74,30 @@ const Header: React.FC<{ breadcrumbs: BreadcrumbItem[] }> = ({
 
   return (
     <header className="flex flex-shrink-0 items-center justify-between border-b border-slate-700 bg-slate-900 px-4 py-3 md:px-6">
-      <div className="hidden items-center text-sm md:flex">
-        {breadcrumbs.map((crumb, index) => (
-          <div key={index} className="flex items-center">
-            <a
-              href={crumb.href}
-              className="text-slate-400 transition-colors hover:text-slate-200"
-            >
-              {crumb.name}
-            </a>
-            {index < breadcrumbs.length - 1 && (
-              <IconChevronRight className="mx-1 h-4 w-4 text-slate-500" />
-            )}
-          </div>
-        ))}
+      <div className="flex items-center">
+        <button
+          onClick={toggleSidebar}
+          className="mr-4 text-slate-400 hover:text-white md:hidden"
+        >
+          <IconMenu size={24} />
+        </button>
+        <div className="hidden items-center text-sm md:flex">
+          {breadcrumbs.map((crumb, index) => (
+            <div key={index} className="flex items-center">
+              <a
+                href={crumb.href}
+                className="text-slate-400 transition-colors hover:text-slate-200"
+              >
+                {crumb.name}
+              </a>
+              {index < breadcrumbs.length - 1 && (
+                <IconChevronRight className="mx-1 h-4 w-4 text-slate-500" />
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="md:hidden">
-        {/* Placeholder for mobile menu icon if needed in the future */}
-      </div>
-      <div className="flex items-center space-x-4">
+      <div className="header-user-menu flex items-center space-x-4">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen((prev) => !prev)}

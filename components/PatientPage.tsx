@@ -2,22 +2,21 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { Patient } from '../types';
-import PatientModal from './PatientModal';
-import { IconPlus } from './icons/IconComponents';
+import PatientModal from './PatientModal'; // Manteremos o modal para edição/criação
+import { IconPlus, IconArrowLeft } from './icons/IconComponents';
 import PageLoader from './ui/PageLoader';
 import PageShell from './ui/PageShell';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import SearchInput from './ui/SearchInput';
 import VirtualizedPatientList from './ui/VirtualizedPatientList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/Tabs';
 
-const PatientPage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+// Componente para os detalhes do paciente com abas
+const PatientDetails: React.FC<{ patient: Patient; onBack: () => void }> = ({
+  patient,
+  onBack,
+}) => {
   const {
-    patients,
-    exercises,
-    savePatient,
-    deletePatient,
     getTasksForPatient,
     getAppointmentsForPatient,
     getPrescriptionsForPatient,
@@ -26,14 +25,84 @@ const PatientPage: React.FC = () => {
     getTransactionsForPatient,
     getDocumentsForPatient,
   } = useData();
+
+  return (
+    <div className="animate-fade-in-up">
+      <Button onClick={onBack} variant="ghost" className="mb-4">
+        <IconArrowLeft className="mr-2" />
+        Voltar para a lista
+      </Button>
+      <h2 className="mb-4 text-2xl font-bold">{patient.name}</h2>
+
+      <Tabs defaultValue="info">
+        <TabsList>
+          <TabsTrigger value="info">Informações</TabsTrigger>
+          <TabsTrigger value="appointments">Agenda</TabsTrigger>
+          <TabsTrigger value="protocols">Protocolos</TabsTrigger>
+          <TabsTrigger value="financial">Financeiro</TabsTrigger>
+          <TabsTrigger value="documents">Documentos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="info">
+          <div className="rounded-lg bg-secondary p-4">
+            <p>
+              <strong>Email:</strong> {patient.email}
+            </p>
+            <p>
+              <strong>Telefone:</strong> {patient.phone}
+            </p>
+            <p>
+              <strong>Histórico:</strong> {patient.medicalHistory}
+            </p>
+          </div>
+        </TabsContent>
+        <TabsContent value="appointments">
+          {/* Aqui entraria a lista de agendamentos */}
+          <p>
+            {getAppointmentsForPatient(patient.id!).length} agendamento(s)
+            encontrado(s).
+          </p>
+        </TabsContent>
+        <TabsContent value="protocols">
+          {/* Aqui entraria a lista de protocolos */}
+          <p>
+            {getPrescriptionsForPatient(patient.id!).length} protocolo(s)
+            prescrito(s).
+          </p>
+        </TabsContent>
+        <TabsContent value="financial">
+          {/* Aqui entraria a lista de transações */}
+          <p>
+            {getTransactionsForPatient(patient.id!).length} transação(ões)
+            encontrada(s).
+          </p>
+        </TabsContent>
+        <TabsContent value="documents">
+          {/* Aqui entraria a lista de documentos */}
+          <p>
+            {getDocumentsForPatient(patient.id!).length} documento(s)
+            encontrado(s).
+          </p>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+const PatientPage: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const { patients, savePatient, deletePatient, getTasksForPatient } =
+    useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<
+  const [editingPatient, setEditingPatient] = useState<
     Patient | Partial<Patient> | null
   >(null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 300); // Simulate loading
+    const timer = setTimeout(() => setIsLoading(false), 300);
     return () => clearTimeout(timer);
   }, []);
 
@@ -46,7 +115,7 @@ const PatientPage: React.FC = () => {
   );
 
   const handleOpenModal = (patient: Patient | Partial<Patient> | null) => {
-    setSelectedPatient(patient);
+    setEditingPatient(patient);
     setIsModalOpen(true);
   };
 
@@ -63,7 +132,7 @@ const PatientPage: React.FC = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedPatient(null);
+    setEditingPatient(null);
   };
 
   const handleSavePatient = (patientToSave: Patient) => {
@@ -82,11 +151,21 @@ const PatientPage: React.FC = () => {
     return <PageLoader message="Carregando lista de pacientes..." />;
   }
 
+  if (selectedPatient) {
+    return (
+      <PatientDetails
+        patient={selectedPatient}
+        onBack={() => setSelectedPatient(null)}
+      />
+    );
+  }
+
   return (
     <PageShell
       title="Pacientes"
       action={
-        <Button onClick={handleOpenNewModal} icon={<IconPlus />}>
+        <Button onClick={handleOpenNewModal} className="new-patient-button">
+          <IconPlus className="mr-2" />
           Novo Paciente
         </Button>
       }
@@ -101,11 +180,11 @@ const PatientPage: React.FC = () => {
 
       <VirtualizedPatientList
         patients={filteredPatients}
-        onPatientClick={handleOpenModal}
+        onPatientClick={(patient) => setSelectedPatient(patient)} // Alterado para mostrar detalhes
         getTasksCount={(patientId: string) =>
           getTasksForPatient(patientId).length
         }
-        height={Math.min(filteredPatients.length * 80 + 20, 600)} // Max height of 600px
+        height={Math.min(filteredPatients.length * 80 + 20, 600)}
       />
 
       {isModalOpen && (
@@ -114,43 +193,8 @@ const PatientPage: React.FC = () => {
           onClose={handleCloseModal}
           onSave={handleSavePatient}
           onDelete={handleDeletePatient}
-          patient={selectedPatient}
-          tasks={
-            selectedPatient && 'id' in selectedPatient
-              ? getTasksForPatient(selectedPatient.id!)
-              : []
-          }
-          appointments={
-            selectedPatient && 'id' in selectedPatient
-              ? getAppointmentsForPatient(selectedPatient.id!)
-              : []
-          }
-          prescribedExercises={
-            selectedPatient && 'id' in selectedPatient
-              ? getPrescriptionsForPatient(selectedPatient.id!)
-              : []
-          }
-          exercises={exercises}
-          exerciseLogs={
-            selectedPatient && 'id' in selectedPatient
-              ? getExerciseLogsForPatient(selectedPatient.id!)
-              : []
-          }
-          assessments={
-            selectedPatient && 'id' in selectedPatient
-              ? getAssessmentsForPatient(selectedPatient.id!)
-              : []
-          }
-          transactions={
-            selectedPatient && 'id' in selectedPatient
-              ? getTransactionsForPatient(selectedPatient.id!)
-              : []
-          }
-          documents={
-            selectedPatient && 'id' in selectedPatient
-              ? getDocumentsForPatient(selectedPatient.id!)
-              : []
-          }
+          patient={editingPatient}
+          // As props complexas podem ser removidas se o modal for apenas para edição de dados básicos
         />
       )}
     </PageShell>

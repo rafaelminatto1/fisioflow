@@ -5,7 +5,7 @@
 
 import React, { useState, useCallback } from 'react';
 import BaseModal from '../ui/BaseModal';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 import PatientBasicInfo from './PatientBasicInfo';
 import PatientMedicalInfo from './PatientMedicalInfo';
 import { Patient } from '../../types';
@@ -30,7 +30,9 @@ const PatientModal: React.FC<PatientModalProps> = ({
   const { addNotification } = useNotification();
 
   const [activeTab, setActiveTab] = useState<'basic' | 'medical'>('basic');
-  const [formData, setFormData] = useState<Partial<Patient>>(() => patient || {});
+  const [formData, setFormData] = useState<Partial<Patient>>(
+    () => patient || {}
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Atualiza form quando paciente muda
@@ -43,20 +45,23 @@ const PatientModal: React.FC<PatientModalProps> = ({
     setErrors({});
   }, [patient]);
 
-  const handleFieldChange = useCallback((field: keyof Patient, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    // Limpa erro do campo quando usuário edita
-    if (errors[field]) {
-      setErrors(prev => ({
+  const handleFieldChange = useCallback(
+    (field: keyof Patient, value: any) => {
+      setFormData((prev) => ({
         ...prev,
-        [field]: '',
+        [field]: value,
       }));
-    }
-  }, [errors]);
+
+      // Limpa erro do campo quando usuário edita
+      if (errors[field]) {
+        setErrors((prev) => ({
+          ...prev,
+          [field]: '',
+        }));
+      }
+    },
+    [errors]
+  );
 
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
@@ -70,7 +75,10 @@ const PatientModal: React.FC<PatientModalProps> = ({
       newErrors.email = 'Email inválido';
     }
 
-    if (formData.phone && !/^\(\d{2}\)\s?\d{4,5}-?\d{4}$/.test(formData.phone)) {
+    if (
+      formData.phone &&
+      !/^\(\d{2}\)\s?\d{4,5}-?\d{4}$/.test(formData.phone)
+    ) {
       newErrors.phone = 'Telefone deve estar no formato (11) 99999-9999';
     }
 
@@ -97,16 +105,24 @@ const PatientModal: React.FC<PatientModalProps> = ({
       } else if (mode === 'edit' && patient?.id) {
         await updatePatient(patient.id, formData);
       }
-      
+
       onClose();
-      
     } catch (error) {
       addNotification({
         type: 'error',
         message: 'Erro ao salvar paciente',
       });
     }
-  }, [mode, formData, patient?.id, validateForm, addPatient, updatePatient, onClose, addNotification]);
+  }, [
+    mode,
+    formData,
+    patient?.id,
+    validateForm,
+    addPatient,
+    updatePatient,
+    onClose,
+    addNotification,
+  ]);
 
   const handleClose = useCallback(() => {
     setFormData(patient || {});
@@ -154,15 +170,11 @@ const PatientModal: React.FC<PatientModalProps> = ({
 
   const footer = (
     <div className="flex justify-between">
-      <Button
-        variant="secondary"
-        onClick={handleClose}
-        disabled={loading}
-      >
+      <Button variant="secondary" onClick={handleClose} disabled={loading}>
         <X size={16} className="mr-2" />
         Cancelar
       </Button>
-      
+
       {canSave && (
         <Button
           variant="primary"
@@ -193,10 +205,10 @@ const PatientModal: React.FC<PatientModalProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`border-b-2 px-1 py-2 text-sm font-medium ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-300'
+                    : 'border-transparent text-slate-400 hover:border-slate-300 hover:text-slate-300'
                 }`}
               >
                 {tab.label}
@@ -206,14 +218,12 @@ const PatientModal: React.FC<PatientModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="min-h-[400px]">
-          {renderContent()}
-        </div>
+        <div className="min-h-[400px]">{renderContent()}</div>
 
         {/* Progress indicator */}
         {mode !== 'view' && (
-          <div className="text-xs text-slate-500 text-center">
-            Aba {tabs.findIndex(t => t.id === activeTab) + 1} de {tabs.length}
+          <div className="text-center text-xs text-slate-500">
+            Aba {tabs.findIndex((t) => t.id === activeTab) + 1} de {tabs.length}
           </div>
         )}
       </div>

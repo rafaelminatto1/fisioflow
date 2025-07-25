@@ -6,7 +6,7 @@ import { IconPlus, IconPencil, IconSearch } from './icons/IconComponents';
 import StaffModal from './StaffModal';
 import PageShell from './ui/PageShell';
 import PageLoader from './ui/PageLoader';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 
 const StaffPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);

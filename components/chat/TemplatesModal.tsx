@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { MessageTemplate } from '../../types';
-import BaseModal from '../BaseModal';
+import BaseModal from '../ui/BaseModal';
 
 interface TemplatesModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const categories = useMemo(() => {
-    const cats = new Set(templates.map(t => t.category));
+    const cats = new Set(templates.map((t) => t.category));
     return Array.from(cats).sort();
   }, [templates]);
 
@@ -28,16 +28,21 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
 
     // Filtro por busca
     if (searchQuery.trim()) {
-      filtered = filtered.filter(template => 
-        template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        template.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        template.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter(
+        (template) =>
+          template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          template.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          template.description
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase())
       );
     }
 
     // Filtro por categoria
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(template => template.category === selectedCategory);
+      filtered = filtered.filter(
+        (template) => template.category === selectedCategory
+      );
     }
 
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
@@ -122,15 +127,15 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
         {/* Controles de busca e filtro */}
         <div className="flex space-x-3">
           {/* Barra de busca */}
-          <div className="flex-1 relative">
+          <div className="relative flex-1">
             <input
               type="text"
               placeholder="Buscar templates..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 pl-10 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 transform text-slate-400">
               🔍
             </div>
           </div>
@@ -139,10 +144,10 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="rounded-lg border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Todas as categorias</option>
-            {categories.map(category => (
+            {categories.map((category) => (
               <option key={category} value={category}>
                 {getCategoryIcon(category)} {getCategoryName(category)}
               </option>
@@ -151,11 +156,13 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
         </div>
 
         {/* Estatísticas */}
-        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-3">
           <span className="text-sm text-slate-600">
-            {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} encontrado{filteredTemplates.length !== 1 ? 's' : ''}
+            {filteredTemplates.length} template
+            {filteredTemplates.length !== 1 ? 's' : ''} encontrado
+            {filteredTemplates.length !== 1 ? 's' : ''}
           </span>
-          
+
           <div className="flex items-center space-x-4">
             <span className="text-xs text-slate-500">
               Total: {templates.length} templates
@@ -167,11 +174,11 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
         </div>
 
         {/* Lista de templates */}
-        <div className="max-h-96 overflow-y-auto border border-slate-200 rounded-lg">
+        <div className="max-h-96 overflow-y-auto rounded-lg border border-slate-200">
           {filteredTemplates.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
-              <div className="text-4xl mb-2">📝</div>
-              <p className="font-medium mb-1">Nenhum template encontrado</p>
+              <div className="mb-2 text-4xl">📝</div>
+              <p className="mb-1 font-medium">Nenhum template encontrado</p>
               <p className="text-sm">Tente ajustar os filtros de busca</p>
             </div>
           ) : (
@@ -179,43 +186,48 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
               {filteredTemplates.map((template) => (
                 <div
                   key={template.id}
-                  className="p-4 hover:bg-slate-50 transition-colors"
+                  className="p-4 transition-colors hover:bg-slate-50"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       {/* Header do template */}
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h4 className="font-medium text-slate-900 truncate">
+                      <div className="mb-2 flex items-center space-x-2">
+                        <h4 className="truncate font-medium text-slate-900">
                           {template.name}
                         </h4>
-                        
-                        <span className={`text-xs px-2 py-1 rounded-full ${getCategoryColor(template.category)}`}>
-                          {getCategoryIcon(template.category)} {getCategoryName(template.category)}
+
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs ${getCategoryColor(template.category)}`}
+                        >
+                          {getCategoryIcon(template.category)}{' '}
+                          {getCategoryName(template.category)}
                         </span>
                       </div>
 
                       {/* Descrição */}
                       {template.description && (
-                        <p className="text-sm text-slate-600 mb-2">
+                        <p className="mb-2 text-sm text-slate-600">
                           {template.description}
                         </p>
                       )}
 
                       {/* Preview do conteúdo */}
-                      <div className="bg-slate-50 p-3 rounded-lg mb-3">
-                        <p className="text-sm text-slate-700 line-clamp-3">
+                      <div className="mb-3 rounded-lg bg-slate-50 p-3">
+                        <p className="line-clamp-3 text-sm text-slate-700">
                           {template.content}
                         </p>
                       </div>
 
                       {/* Variáveis (se houver) */}
                       {template.variables && template.variables.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          <span className="text-xs text-slate-500">Variáveis:</span>
+                        <div className="mb-2 flex flex-wrap gap-1">
+                          <span className="text-xs text-slate-500">
+                            Variáveis:
+                          </span>
                           {template.variables.map((variable, index) => (
                             <span
                               key={index}
-                              className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded"
+                              className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700"
                             >
                               {`{${variable}}`}
                             </span>
@@ -225,9 +237,17 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
 
                       {/* Metadados */}
                       <div className="flex items-center space-x-4 text-xs text-slate-400">
-                        <span>Categoria: {getCategoryName(template.category)}</span>
+                        <span>
+                          Categoria: {getCategoryName(template.category)}
+                        </span>
                         {template.isActive !== undefined && (
-                          <span className={template.isActive ? 'text-green-600' : 'text-red-600'}>
+                          <span
+                            className={
+                              template.isActive
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }
+                          >
                             {template.isActive ? '✓ Ativo' : '✗ Inativo'}
                           </span>
                         )}
@@ -238,7 +258,7 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
                     <button
                       onClick={() => handleUseTemplate(template.id)}
                       disabled={template.isActive === false}
-                      className="ml-4 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                      className="ml-4 flex-shrink-0 rounded-lg bg-blue-500 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Usar Template
                     </button>
@@ -250,14 +270,15 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({
         </div>
 
         {/* Botões de ação */}
-        <div className="flex justify-between pt-4 border-t border-slate-200">
+        <div className="flex justify-between border-t border-slate-200 pt-4">
           <div className="text-sm text-slate-500">
-            💡 <strong>Dica:</strong> Use {`{nome}`}, {`{data}`} e outras variáveis nos templates para personalização automática
+            💡 <strong>Dica:</strong> Use {`{nome}`}, {`{data}`} e outras
+            variáveis nos templates para personalização automática
           </div>
-          
+
           <button
             onClick={onClose}
-            className="px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            className="rounded-lg border border-slate-300 px-4 py-2 text-slate-600 transition-colors hover:bg-slate-50"
           >
             Fechar
           </button>

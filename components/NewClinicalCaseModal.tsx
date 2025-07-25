@@ -8,7 +8,7 @@ import {
   CaseEvolution,
 } from '../types';
 import BaseModal from './ui/BaseModal';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import FormField from './ui/FormField';
 import { IconPlus, IconTrash, IconUpload } from './icons/IconComponents';
 
@@ -347,7 +347,11 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button variant="primary" onClick={handleSave} disabled={!isFormValid}>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            disabled={!isFormValid}
+          >
             Salvar Caso
           </Button>
         </div>
@@ -431,7 +435,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 placeholder="Adicionar tag..."
                 className="flex-1 rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-slate-50"
               />
-              <Button variant="secondary" onClick={addTag} >
+              <Button variant="secondary" onClick={addTag}>
                 <IconPlus />
               </Button>
             </div>
@@ -536,7 +540,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
             <h3 className="text-lg font-semibold text-slate-50">
               Exames Realizados
             </h3>
-            <Button variant="secondary" onClick={addExamination} >
+            <Button variant="secondary" onClick={addExamination}>
               <IconPlus />
               <span>Adicionar Exame</span>
             </Button>
@@ -554,7 +558,6 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 <Button
                   variant="danger"
                   onClick={() => removeExamination(index)}
-                  
                 >
                   <IconTrash />
                 </Button>
@@ -646,7 +649,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 placeholder="Adicionar objetivo..."
                 className="flex-1 rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-slate-50"
               />
-              <Button variant="secondary" onClick={addObjective} >
+              <Button variant="secondary" onClick={addObjective}>
                 <IconPlus />
               </Button>
             </div>
@@ -660,7 +663,6 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   <Button
                     variant="danger"
                     onClick={() => removeObjective(index)}
-                    
                   >
                     <IconTrash className="h-3 w-3" />
                   </Button>
@@ -675,7 +677,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
               <label className="block text-sm font-medium text-slate-300">
                 Intervenções
               </label>
-              <Button variant="secondary" onClick={addIntervention} >
+              <Button variant="secondary" onClick={addIntervention}>
                 <IconPlus />
                 <span>Adicionar Intervenção</span>
               </Button>
@@ -693,7 +695,6 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   <Button
                     variant="danger"
                     onClick={() => removeIntervention(index)}
-                    
                   >
                     <IconTrash />
                   </Button>
@@ -767,7 +768,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 placeholder="Adicionar precaução..."
                 className="flex-1 rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-slate-50"
               />
-              <Button variant="secondary" onClick={addPrecaution} >
+              <Button variant="secondary" onClick={addPrecaution}>
                 <IconPlus />
               </Button>
             </div>
@@ -781,7 +782,6 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                   <Button
                     variant="danger"
                     onClick={() => removePrecaution(index)}
-                    
                   >
                     <IconTrash className="h-3 w-3" />
                   </Button>
@@ -797,7 +797,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
             <h3 className="text-lg font-semibold text-slate-50">
               Evolução do Caso
             </h3>
-            <Button variant="secondary" onClick={addEvolution} >
+            <Button variant="secondary" onClick={addEvolution}>
               <IconPlus />
               <span>Adicionar Sessão</span>
             </Button>
@@ -812,11 +812,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 <span className="font-medium text-slate-300">
                   Sessão #{evolution.sessionNumber}
                 </span>
-                <Button
-                  variant="danger"
-                  onClick={() => removeEvolution(index)}
-                  
-                >
+                <Button variant="danger" onClick={() => removeEvolution(index)}>
                   <IconTrash />
                 </Button>
               </div>
@@ -907,7 +903,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
               placeholder="Adicionar questão para discussão..."
               className="flex-1 rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-slate-50"
             />
-            <Button variant="secondary" onClick={addQuestion} >
+            <Button variant="secondary" onClick={addQuestion}>
               <IconPlus />
             </Button>
           </div>
@@ -918,11 +914,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 className="flex items-center justify-between rounded bg-slate-800 p-2"
               >
                 <span className="text-slate-300">{question}</span>
-                <Button
-                  variant="danger"
-                  onClick={() => removeQuestion(index)}
-                  
-                >
+                <Button variant="danger" onClick={() => removeQuestion(index)}>
                   <IconTrash className="h-3 w-3" />
                 </Button>
               </li>
@@ -947,11 +939,7 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
               placeholder="Adicionar objetivo de aprendizado..."
               className="flex-1 rounded-md border border-slate-600 bg-slate-700 px-3 py-2 text-slate-50"
             />
-            <Button
-              variant="secondary"
-              onClick={addLearningObjective}
-              
-            >
+            <Button variant="secondary" onClick={addLearningObjective}>
               <IconPlus />
             </Button>
           </div>
@@ -965,7 +953,6 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
                 <Button
                   variant="danger"
                   onClick={() => removeLearningObjective(index)}
-                  
                 >
                   <IconTrash className="h-3 w-3" />
                 </Button>
@@ -994,7 +981,6 @@ const NewClinicalCaseModal: React.FC<NewClinicalCaseModalProps> = ({
           </label>
         </div>
       </div>
-
     </BaseModal>
   );
 };

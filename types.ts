@@ -175,8 +175,26 @@ export interface Exercise {
   id: string;
   name: string;
   description: string;
-  category: 'Fortalecimento' | 'Mobilidade' | 'Cardio' | 'Equilíbrio' | 'Mobilização Neural' | 'Alongamento' | 'Propriocepção' | 'Relaxamento';
-  bodyPart: 'Ombro' | 'Joelho' | 'Coluna' | 'Quadril' | 'Tornozelo' | 'Geral' | 'Cervical' | 'Membros Superiores' | 'Tronco' | 'Membros Inferiores';
+  category:
+    | 'Fortalecimento'
+    | 'Mobilidade'
+    | 'Cardio'
+    | 'Equilíbrio'
+    | 'Mobilização Neural'
+    | 'Alongamento'
+    | 'Propriocepção'
+    | 'Relaxamento';
+  bodyPart:
+    | 'Ombro'
+    | 'Joelho'
+    | 'Coluna'
+    | 'Quadril'
+    | 'Tornozelo'
+    | 'Geral'
+    | 'Cervical'
+    | 'Membros Superiores'
+    | 'Tronco'
+    | 'Membros Inferiores';
   subcategory?: string;
   videoUrl: string; // YouTube embed URL
   indications: string[]; // Indicações clínicas específicas
@@ -191,7 +209,11 @@ export interface Exercise {
 // === SISTEMA DE VÍDEOS ===
 
 export type VideoQuality = 'low' | 'medium' | 'high' | 'auto';
-export type VideoType = 'demonstration' | 'progression' | 'variation' | 'alternative';
+export type VideoType =
+  | 'demonstration'
+  | 'progression'
+  | 'variation'
+  | 'alternative';
 
 export interface ExerciseVideo {
   id: string;
@@ -218,7 +240,13 @@ export interface ExerciseVideo {
 
 // === SISTEMA DE IMAGENS ===
 
-export type ImageCategory = 'initial_position' | 'execution' | 'final_position' | 'anatomy' | 'equipment' | 'variation';
+export type ImageCategory =
+  | 'initial_position'
+  | 'execution'
+  | 'final_position'
+  | 'anatomy'
+  | 'equipment'
+  | 'variation';
 
 export interface ExerciseImage {
   id: string;
@@ -374,7 +402,14 @@ export interface Document {
   tenantId: string;
 }
 
-export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'exercise' | 'appointment' | 'file';
+export type MessageType =
+  | 'text'
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'exercise'
+  | 'appointment'
+  | 'file';
 
 export interface ChatMessage {
   id: string;
@@ -454,7 +489,13 @@ export interface MessageTemplate {
   id: string;
   title: string;
   content: string;
-  category: 'greeting' | 'appointment' | 'exercise' | 'followup' | 'reminder' | 'general';
+  category:
+    | 'greeting'
+    | 'appointment'
+    | 'exercise'
+    | 'followup'
+    | 'reminder'
+    | 'general';
   userRole: UserRole; // para qual tipo de usuário é o template
   isActive: boolean;
   usageCount: number;
@@ -1043,6 +1084,21 @@ export interface DataContextType {
   // Sistema de Vídeos e Imagens
   exerciseVideos: ExerciseVideo[];
   exerciseImages: ExerciseImage[];
+  // Sistema de Lembretes e Notificações
+  reminderRules: ReminderRule[];
+  scheduledReminders: ScheduledReminder[];
+  reminderSettings: ReminderSettings[];
+  notificationDeliveryLogs: NotificationDeliveryLog[];
+  reminderAnalytics: ReminderAnalytics[];
+  smartReminderInsights: SmartReminderInsight[];
+  // Sistema de Diário de Sintomas
+  symptomDiaryEntries: SymptomDiaryEntry[];
+  symptomDiaryTemplates: SymptomDiaryTemplate[];
+  symptomAnalyses: SymptomAnalysis[];
+  symptomInsights: SymptomInsight[];
+  symptomAlerts: SymptomAlert[];
+  symptomReports: SymptomReport[];
+  symptomDiarySettings: SymptomDiarySettings[];
   saveTenant: (tenant: Partial<Tenant>, actingUser: User) => void;
   saveUser: (user: User, actingUser: User) => void;
   deleteUser: (userId: string, actingUser: User) => void;
@@ -1150,20 +1206,152 @@ export interface DataContextType {
   getAllData: () => any;
   // Sistema de Favoritos e Avaliações - Funções
   toggleExerciseFavorite: (exerciseId: string, actingUser: User) => void;
-  saveExerciseRating: (rating: Omit<ExerciseRating, 'id'>, actingUser: User) => void;
+  saveExerciseRating: (
+    rating: Omit<ExerciseRating, 'id'>,
+    actingUser: User
+  ) => void;
   getExerciseFavorites: (userId: string) => ExerciseFavorite[];
   getExerciseRatings: (exerciseId: string) => ExerciseRating[];
   getExerciseStatistics: (exerciseId: string) => ExerciseStatistics | null;
   getMostUsedExercises: (userId?: string) => ExerciseStatistics[];
   // Sistema de Vídeos e Imagens - Funções
-  saveExerciseVideo: (video: Omit<ExerciseVideo, 'id'>, actingUser: User) => void;
+  saveExerciseVideo: (
+    video: Omit<ExerciseVideo, 'id'>,
+    actingUser: User
+  ) => void;
   deleteExerciseVideo: (videoId: string, actingUser: User) => void;
   getExerciseVideos: (exerciseId: string) => ExerciseVideo[];
   incrementVideoView: (videoId: string, actingUser: User) => void;
-  saveExerciseImage: (image: Omit<ExerciseImage, 'id'>, actingUser: User) => void;
+  saveExerciseImage: (
+    image: Omit<ExerciseImage, 'id'>,
+    actingUser: User
+  ) => void;
   deleteExerciseImage: (imageId: string, actingUser: User) => void;
   getExerciseImages: (exerciseId: string) => ExerciseImage[];
-  getExerciseImagesByCategory: (exerciseId: string, category: ImageCategory) => ExerciseImage[];
+  getExerciseImagesByCategory: (
+    exerciseId: string,
+    category: ImageCategory
+  ) => ExerciseImage[];
+  // Sistema de Lembretes e Notificações - Funções
+  saveReminderRule: (rule: Omit<ReminderRule, 'id'>, actingUser: User) => void;
+  updateReminderRule: (
+    ruleId: string,
+    updates: Partial<ReminderRule>,
+    actingUser: User
+  ) => void;
+  deleteReminderRule: (ruleId: string, actingUser: User) => void;
+  scheduleReminder: (
+    reminder: Omit<ScheduledReminder, 'id'>,
+    actingUser: User
+  ) => void;
+  cancelScheduledReminder: (reminderId: string, actingUser: User) => void;
+  markReminderAsSent: (
+    reminderId: string,
+    channel: NotificationChannel,
+    messageId?: string,
+    actingUser?: User
+  ) => void;
+  markReminderAsRead: (reminderId: string, actingUser?: User) => void;
+  saveReminderSettings: (
+    settings: Omit<ReminderSettings, 'id'>,
+    actingUser: User
+  ) => void;
+  updateReminderSettings: (
+    patientId: string,
+    updates: Partial<ReminderSettings>,
+    actingUser: User
+  ) => void;
+  logNotificationDelivery: (
+    log: Omit<NotificationDeliveryLog, 'id'>,
+    actingUser?: User
+  ) => void;
+  generateReminderAnalytics: (
+    patientId?: string,
+    ruleId?: string,
+    period?: { start: string; end: string },
+    actingUser?: User
+  ) => ReminderAnalytics;
+  generateSmartInsights: (
+    patientId: string,
+    actingUser: User
+  ) => SmartReminderInsight[];
+  getReminderRulesForPatient: (patientId: string) => ReminderRule[];
+  getScheduledRemindersForPatient: (patientId: string) => ScheduledReminder[];
+  getReminderSettingsForPatient: (patientId: string) => ReminderSettings | null;
+  processScheduledReminders: () => Promise<void>;
+  // Sistema de Diário de Sintomas - Funções
+  saveSymptomDiaryEntry: (
+    entry: Omit<SymptomDiaryEntry, 'id'>,
+    actingUser: User
+  ) => void;
+  updateSymptomDiaryEntry: (
+    entryId: string,
+    updates: Partial<SymptomDiaryEntry>,
+    actingUser: User
+  ) => void;
+  deleteSymptomDiaryEntry: (entryId: string, actingUser: User) => void;
+  getSymptomDiaryEntries: (
+    patientId: string,
+    startDate?: string,
+    endDate?: string
+  ) => SymptomDiaryEntry[];
+  getTodaysSymptomEntry: (patientId: string) => SymptomDiaryEntry | null;
+  createSymptomDiaryTemplate: (
+    template: Omit<SymptomDiaryTemplate, 'id'>,
+    actingUser: User
+  ) => void;
+  updateSymptomDiaryTemplate: (
+    templateId: string,
+    updates: Partial<SymptomDiaryTemplate>,
+    actingUser: User
+  ) => void;
+  deleteSymptomDiaryTemplate: (templateId: string, actingUser: User) => void;
+  generateSymptomAnalysis: (
+    patientId: string,
+    period: { start: string; end: string },
+    actingUser: User
+  ) => SymptomAnalysis;
+  generateSymptomInsights: (
+    patientId: string,
+    actingUser: User
+  ) => SymptomInsight[];
+  createSymptomAlert: (
+    alert: Omit<SymptomAlert, 'id'>,
+    actingUser: User
+  ) => void;
+  acknowledgeSymptomAlert: (alertId: string, actingUser: User) => void;
+  resolveSymptomAlert: (alertId: string, actingUser: User) => void;
+  generateSymptomReport: (
+    patientId: string,
+    reportType: SymptomReport['reportType'],
+    period: { start: string; end: string },
+    actingUser: User
+  ) => SymptomReport;
+  getSymptomDiarySettings: (patientId: string) => SymptomDiarySettings | null;
+  updateSymptomDiarySettings: (
+    patientId: string,
+    settings: Partial<SymptomDiarySettings>,
+    actingUser: User
+  ) => void;
+  analyzeSymptomTrends: (
+    patientId: string,
+    metric: 'pain' | 'energy' | 'sleep' | 'mood',
+    days: number
+  ) => { trend: 'improving' | 'worsening' | 'stable'; rate: number };
+  findSymptomCorrelations: (
+    patientId: string,
+    days: number
+  ) => Array<{ metric1: string; metric2: string; correlation: number }>;
+  getSymptomPatterns: (
+    patientId: string,
+    days: number
+  ) => { dailyPatterns: any; weeklyPatterns: any; cyclicPatterns: any };
+  checkSymptomAlerts: (patientId: string) => SymptomAlert[];
+  exportSymptomData: (
+    patientId: string,
+    format: 'csv' | 'json' | 'pdf',
+    period: { start: string; end: string }
+  ) => string;
 }
 
 // Gestão Operacional - Modelos de Dados
@@ -1318,4 +1506,680 @@ export interface ChartDataset {
   backgroundColor?: string | string[];
   borderColor?: string;
   borderWidth?: number;
+}
+
+// Sistema de Lembretes e Notificações Inteligentes
+
+export type ReminderType =
+  | 'exercise_daily'
+  | 'appointment_24h'
+  | 'appointment_2h'
+  | 'medication'
+  | 'assessment_followup'
+  | 'payment_reminder'
+  | 'treatment_progress'
+  | 'custom';
+
+export type NotificationChannel =
+  | 'push'
+  | 'email'
+  | 'sms'
+  | 'whatsapp'
+  | 'in_app';
+
+export type ReminderFrequency =
+  | 'once'
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'custom';
+
+export interface ReminderRule {
+  id: string;
+  type: ReminderType;
+  title: string;
+  message: string;
+  isActive: boolean;
+  patientId?: string; // null for global rules
+  channels: NotificationChannel[];
+  frequency: ReminderFrequency;
+  customFrequencyDays?: number[];
+  timeOfDay: string; // HH:MM format
+  conditions?: {
+    minDaysSinceLastAppointment?: number;
+    exerciseComplianceThreshold?: number;
+    paymentOverdueDays?: number;
+    customConditions?: Record<string, any>;
+  };
+  personalization: {
+    usePatientName: boolean;
+    useTherapistName: boolean;
+    includeProgressData: boolean;
+    customFields: string[];
+  };
+  scheduling: {
+    allowedDays?: number[]; // 0-6 (Sunday-Saturday)
+    blackoutDates?: string[]; // ISO dates
+    timezone: string;
+    respectQuietHours: boolean;
+  };
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  tenantId: string;
+}
+
+export interface ScheduledReminder {
+  id: string;
+  ruleId: string;
+  patientId: string;
+  scheduledFor: string; // ISO timestamp
+  title: string;
+  message: string;
+  channels: NotificationChannel[];
+  status: 'pending' | 'sent' | 'failed' | 'cancelled';
+  attempts: number;
+  lastAttempt?: string;
+  sentAt?: string;
+  readAt?: string;
+  metadata: {
+    originalScheduledTime: string;
+    rescheduleCount: number;
+    failureReason?: string;
+    deliveryDetails?: Record<
+      NotificationChannel,
+      {
+        sent: boolean;
+        timestamp?: string;
+        error?: string;
+        messageId?: string;
+      }
+    >;
+  };
+  tenantId: string;
+}
+
+export interface ReminderSettings {
+  id: string;
+  patientId: string;
+  globalSettings: {
+    enabled: boolean;
+    preferredChannels: NotificationChannel[];
+    quietHours: {
+      enabled: boolean;
+      start: string; // HH:MM
+      end: string; // HH:MM
+    };
+    timezone: string;
+    language: 'pt' | 'en' | 'es';
+  };
+  channelSettings: {
+    push: {
+      enabled: boolean;
+      sound: boolean;
+      vibration: boolean;
+      showPreview: boolean;
+    };
+    email: {
+      enabled: boolean;
+      emailAddress?: string;
+    };
+    sms: {
+      enabled: boolean;
+      phoneNumber?: string;
+    };
+    whatsapp: {
+      enabled: boolean;
+      phoneNumber?: string;
+    };
+  };
+  typeSettings: Record<
+    ReminderType,
+    {
+      enabled: boolean;
+      preferredChannels: NotificationChannel[];
+      customTime?: string; // Override default time
+      snoozeOptions: number[]; // minutes
+    }
+  >;
+  locationBasedSettings?: {
+    enabled: boolean;
+    clinicRadius: number; // meters
+    homeRemindersOnly: boolean;
+  };
+  smartSettings: {
+    adaptiveScheduling: boolean; // Adjust based on patient behavior
+    skipWeekends: boolean;
+    skipHolidays: boolean;
+    consolidateReminders: boolean; // Group multiple reminders
+  };
+  updatedAt: string;
+  tenantId: string;
+}
+
+export interface NotificationDeliveryLog {
+  id: string;
+  reminderId: string;
+  patientId: string;
+  channel: NotificationChannel;
+  status: 'sent' | 'delivered' | 'read' | 'failed' | 'bounced';
+  timestamp: string;
+  messageId?: string;
+  errorMessage?: string;
+  responseData?: any;
+  metadata: {
+    deviceType?: string;
+    userAgent?: string;
+    location?: string;
+    retryCount: number;
+  };
+  tenantId: string;
+}
+
+export interface ReminderAnalytics {
+  id: string;
+  patientId?: string; // null for global analytics
+  ruleId?: string; // null for all rules
+  period: {
+    start: string;
+    end: string;
+  };
+  metrics: {
+    totalScheduled: number;
+    totalSent: number;
+    totalDelivered: number;
+    totalRead: number;
+    totalFailed: number;
+    deliveryRate: number; // %
+    readRate: number; // %
+    responseRate: number; // %
+    averageResponseTime: number; // minutes
+    channelPerformance: Record<
+      NotificationChannel,
+      {
+        sent: number;
+        delivered: number;
+        read: number;
+        failed: number;
+        rate: number;
+      }
+    >;
+    timeSlotPerformance: Record<
+      string,
+      {
+        sent: number;
+        read: number;
+        rate: number;
+      }
+    >;
+    patientEngagement: {
+      highEngagement: number;
+      mediumEngagement: number;
+      lowEngagement: number;
+      noEngagement: number;
+    };
+  };
+  generatedAt: string;
+  tenantId: string;
+}
+
+export interface SmartReminderInsight {
+  id: string;
+  patientId: string;
+  type:
+    | 'timing_optimization'
+    | 'channel_preference'
+    | 'frequency_adjustment'
+    | 'content_personalization';
+  insight: string;
+  recommendation: string;
+  confidence: number; // 0-100
+  basedOnData: {
+    dataPoints: number;
+    timeFrame: string;
+    patterns: string[];
+  };
+  implementationSuggestion?: {
+    action: string;
+    parameters: Record<string, any>;
+    expectedImprovement: number; // % improvement expected
+  };
+  status: 'new' | 'reviewed' | 'implemented' | 'dismissed';
+  createdAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  tenantId: string;
+}
+
+// Sistema de Diário de Sintomas e Evolução
+
+export type PainQuality =
+  | 'stabbing' // pontada
+  | 'burning' // queimação
+  | 'aching' // dolorida
+  | 'throbbing' // latejante
+  | 'sharp' // aguda
+  | 'dull' // surda
+  | 'cramping' // cãibra
+  | 'tingling' // formigamento
+  | 'numb'; // dormência
+
+export type BodyRegion =
+  | 'head'
+  | 'neck'
+  | 'shoulder_left'
+  | 'shoulder_right'
+  | 'arm_left'
+  | 'arm_right'
+  | 'elbow_left'
+  | 'elbow_right'
+  | 'wrist_left'
+  | 'wrist_right'
+  | 'hand_left'
+  | 'hand_right'
+  | 'chest'
+  | 'upper_back'
+  | 'middle_back'
+  | 'lower_back'
+  | 'abdomen'
+  | 'hip_left'
+  | 'hip_right'
+  | 'thigh_left'
+  | 'thigh_right'
+  | 'knee_left'
+  | 'knee_right'
+  | 'calf_left'
+  | 'calf_right'
+  | 'ankle_left'
+  | 'ankle_right'
+  | 'foot_left'
+  | 'foot_right';
+
+export type MoodLevel = 1 | 2 | 3 | 4 | 5; // 1 = muito ruim, 5 = excelente
+export type EnergyLevel = 1 | 2 | 3 | 4 | 5; // 1 = exausto, 5 = muito energético
+export type SleepQuality = 1 | 2 | 3 | 4 | 5; // 1 = péssima, 5 = excelente
+
+export interface PainLocation {
+  id: string;
+  region: BodyRegion;
+  intensity: number; // 0-10
+  quality: PainQuality[];
+  coordinates?: {
+    x: number; // posição x no mapa corporal (%)
+    y: number; // posição y no mapa corporal (%)
+  };
+  notes?: string;
+}
+
+export interface MedicationTaken {
+  id: string;
+  name: string;
+  dosage: string;
+  time: string; // HH:MM
+  takenAsScheduled: boolean;
+  sideEffects?: string[];
+  effectiveness?: number; // 1-5 escala de efetividade
+}
+
+export interface ExerciseCompleted {
+  id: string;
+  exerciseId: string;
+  exerciseName: string;
+  duration: number; // minutos
+  intensity: number; // 1-5
+  difficulty: number; // 1-5 (como se sentiu)
+  completedSets?: number;
+  completedReps?: number;
+  notes?: string;
+}
+
+export interface SymptomDiaryEntry {
+  id: string;
+  patientId: string;
+  date: string; // YYYY-MM-DD
+  timestamp: string; // ISO string - quando foi registrado
+
+  // Métricas principais
+  overallPainLevel: number; // 0-10 escala geral de dor
+  painLocations: PainLocation[];
+  energyLevel: EnergyLevel;
+  sleepQuality: SleepQuality;
+  sleepHours?: number;
+  moodLevel: MoodLevel;
+  stressLevel?: number; // 0-10
+
+  // Atividades e medicamentos
+  medicationsTaken: MedicationTaken[];
+  exercisesCompleted: ExerciseCompleted[];
+
+  // Fatores externos
+  weatherInfluence?: boolean;
+  workStressLevel?: number; // 0-10
+  physicalActivityLevel?: number; // 0-10
+
+  // Notas e observações
+  symptoms: string[]; // lista de sintomas relatados
+  notes?: string;
+  progressPhotos?: string[]; // URLs das fotos
+
+  // Contexto do tratamento
+  treatmentAdherence?: number; // 0-10 aderência ao tratamento
+  treatmentSatisfaction?: number; // 0-10 satisfação com o tratamento
+
+  // Metadata
+  entryDuration?: number; // tempo gasto preenchendo (segundos)
+  isComplete: boolean; // entrada foi completamente preenchida
+  lastModified: string; // ISO string
+  tenantId: string;
+}
+
+export interface SymptomDiaryTemplate {
+  id: string;
+  name: string;
+  description: string;
+  patientId?: string; // null para templates globais
+
+  // Configuração dos campos
+  fieldsConfig: {
+    painLevel: { enabled: boolean; required: boolean };
+    painLocations: { enabled: boolean; required: boolean };
+    energy: { enabled: boolean; required: boolean };
+    sleep: { enabled: boolean; required: boolean };
+    mood: { enabled: boolean; required: boolean };
+    stress: { enabled: boolean; required: boolean };
+    medications: { enabled: boolean; required: boolean };
+    exercises: { enabled: boolean; required: boolean };
+    photos: { enabled: boolean; required: boolean };
+    symptoms: { enabled: boolean; required: boolean };
+    notes: { enabled: boolean; required: boolean };
+  };
+
+  // Configuração de lembretes
+  reminderConfig?: {
+    enabled: boolean;
+    times: string[]; // horários para lembrar
+    frequency: 'daily' | 'weekly' | 'custom';
+    customDays?: number[]; // dias da semana (0-6)
+  };
+
+  createdAt: string;
+  updatedAt: string;
+  tenantId: string;
+}
+
+export interface SymptomAnalysis {
+  id: string;
+  patientId: string;
+  analysisDate: string;
+  period: {
+    start: string;
+    end: string;
+  };
+
+  // Tendências identificadas
+  trends: {
+    painTrend: 'improving' | 'worsening' | 'stable' | 'fluctuating';
+    energyTrend: 'improving' | 'worsening' | 'stable' | 'fluctuating';
+    sleepTrend: 'improving' | 'worsening' | 'stable' | 'fluctuating';
+    moodTrend: 'improving' | 'worsening' | 'stable' | 'fluctuating';
+    overallTrend: 'improving' | 'worsening' | 'stable' | 'fluctuating';
+  };
+
+  // Correlações encontradas
+  correlations: {
+    sleepPainCorrelation: number; // -1 a 1
+    exercisePainCorrelation: number;
+    moodEnergyCorrelation: number;
+    medicationEffectivenessCorrelation: number;
+    weatherPainCorrelation: number;
+    stressPainCorrelation: number;
+  };
+
+  // Padrões identificados
+  patterns: {
+    bestDaysOfWeek: number[]; // dias da semana com menores sintomas
+    worstDaysOfWeek: number[];
+    bestTimeOfDay?: string; // horário com menos dor
+    worstTimeOfDay?: string;
+    cyclicPatterns: boolean; // se há padrões cíclicos
+    cycleLength?: number; // em dias
+  };
+
+  // Estatísticas
+  statistics: {
+    averagePainLevel: number;
+    painReduction?: number; // % de redução comparado ao período anterior
+    averageEnergyLevel: number;
+    averageSleepQuality: number;
+    averageMoodLevel: number;
+    adherenceRate: number; // % de dias com registro completo
+    mostCommonSymptoms: string[];
+    mostEffectiveMedications: string[];
+    mostEffectiveExercises: string[];
+  };
+
+  // Insights e alertas
+  insights: SymptomInsight[];
+  alerts: SymptomAlert[];
+
+  confidence: number; // 0-100 confiança da análise
+  tenantId: string;
+}
+
+export interface SymptomInsight {
+  id: string;
+  type: 'pattern' | 'correlation' | 'trend' | 'recommendation' | 'warning';
+  title: string;
+  description: string;
+  insight: string;
+  recommendation?: string;
+  evidence: string[]; // dados que suportam o insight
+  confidence: number; // 0-100
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  actionable: boolean;
+  category:
+    | 'pain'
+    | 'sleep'
+    | 'energy'
+    | 'mood'
+    | 'medication'
+    | 'exercise'
+    | 'lifestyle';
+
+  // Dados específicos do insight
+  data?: {
+    beforeValue?: number;
+    afterValue?: number;
+    changePercentage?: number;
+    timeframe?: string;
+    correlationStrength?: number;
+  };
+
+  // Sugestões de ação
+  suggestedActions?: {
+    action: string;
+    expectedOutcome: string;
+    effort: 'low' | 'medium' | 'high';
+    timeframe: string;
+  }[];
+
+  createdAt: string;
+  isRead: boolean;
+  isDismissed: boolean;
+  tenantId: string;
+}
+
+export interface SymptomAlert {
+  id: string;
+  patientId: string;
+  type:
+    | 'deterioration'
+    | 'improvement'
+    | 'anomaly'
+    | 'missed_entries'
+    | 'medication_concern';
+  severity: 'info' | 'warning' | 'critical';
+  title: string;
+  message: string;
+
+  // Dados do alerta
+  triggerData: {
+    metric: string;
+    currentValue: number;
+    thresholdValue: number;
+    changeRate?: number;
+    timeframe: string;
+    comparisonPeriod?: string;
+  };
+
+  // Recomendações
+  recommendations: string[];
+
+  // Status
+  status: 'active' | 'acknowledged' | 'resolved' | 'dismissed';
+  acknowledgedAt?: string;
+  acknowledgedBy?: string;
+  resolvedAt?: string;
+
+  // Notificações
+  notifyTherapist: boolean;
+  notifyPatient: boolean;
+  notificationsSent?: {
+    therapist?: string; // timestamp
+    patient?: string; // timestamp
+  };
+
+  createdAt: string;
+  updatedAt: string;
+  tenantId: string;
+}
+
+export interface SymptomReport {
+  id: string;
+  patientId: string;
+  reportType: 'weekly' | 'monthly' | 'quarterly' | 'custom';
+  period: {
+    start: string;
+    end: string;
+  };
+
+  // Resumo executivo
+  summary: {
+    totalEntries: number;
+    averagePainLevel: number;
+    painTrend: 'improving' | 'worsening' | 'stable';
+    keyHighlights: string[];
+    majorConcerns: string[];
+    achievements: string[];
+  };
+
+  // Métricas detalhadas
+  metrics: {
+    pain: {
+      average: number;
+      min: number;
+      max: number;
+      trend: number; // taxa de mudança
+      worstAreas: BodyRegion[];
+      improvingAreas: BodyRegion[];
+    };
+    energy: {
+      average: number;
+      trend: number;
+      lowEnergyDays: number;
+    };
+    sleep: {
+      averageQuality: number;
+      averageHours: number;
+      sleepIssues: number; // dias com problemas
+    };
+    mood: {
+      average: number;
+      trend: number;
+      goodMoodDays: number;
+    };
+    adherence: {
+      diaryCompletionRate: number;
+      medicationAdherence: number;
+      exerciseAdherence: number;
+    };
+  };
+
+  // Gráficos e visualizações
+  chartData: {
+    painOverTime: Array<{ date: string; value: number }>;
+    energyOverTime: Array<{ date: string; value: number }>;
+    sleepOverTime: Array<{ date: string; value: number }>;
+    moodOverTime: Array<{ date: string; value: number }>;
+    correlationMatrix: Array<{ x: string; y: string; correlation: number }>;
+  };
+
+  // Comparações
+  comparisons?: {
+    previousPeriod?: {
+      painChange: number;
+      energyChange: number;
+      sleepChange: number;
+      moodChange: number;
+    };
+    baseline?: {
+      painChange: number;
+      energyChange: number;
+      sleepChange: number;
+      moodChange: number;
+    };
+  };
+
+  // Recomendações
+  recommendations: {
+    immediate: string[];
+    shortTerm: string[];
+    longTerm: string[];
+  };
+
+  generatedAt: string;
+  generatedBy: string; // user ID
+  isShared: boolean;
+  sharedWith?: string[]; // user IDs
+  tenantId: string;
+}
+
+export interface SymptomDiarySettings {
+  id: string;
+  patientId: string;
+
+  // Configurações de entrada
+  reminderTimes: string[]; // horários para lembretes
+  reminderFrequency: 'daily' | 'twice_daily' | 'weekly' | 'custom';
+  customReminderDays?: number[]; // dias da semana
+
+  // Preferências de interface
+  quickEntryMode: boolean; // modo rápido vs completo
+  defaultPainScale: 'numeric' | 'visual' | 'descriptive';
+  showBodyMap: boolean;
+  enablePhotos: boolean;
+  enableVoiceNotes: boolean;
+
+  // Configurações de análise
+  analysisFrequency: 'weekly' | 'monthly' | 'on_demand';
+  autoGenerateInsights: boolean;
+  alertThresholds: {
+    painIncrease: number; // % de aumento que gera alerta
+    energyDecrease: number;
+    sleepQualityDecrease: number;
+    moodDecrease: number;
+    missedEntriesThreshold: number; // dias consecutivos sem entrada
+  };
+
+  // Configurações de privacidade
+  shareWithTherapist: boolean;
+  shareDetailedData: boolean; // compartilhar dados detalhados ou apenas resumos
+  allowAnalysis: boolean;
+
+  // Configurações de backup
+  autoBackup: boolean;
+  backupFrequency: 'daily' | 'weekly' | 'monthly';
+
+  updatedAt: string;
+  tenantId: string;
 }

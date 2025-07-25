@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { Exercise, ExerciseRating, ExerciseRatingEmoji, UserRole } from '../../types';
+import {
+  Exercise,
+  ExerciseRating,
+  ExerciseRatingEmoji,
+  UserRole,
+} from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData.minimal';
 import BaseModal from '../ui/BaseModal';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 
 interface ExerciseRatingModalProps {
   isOpen: boolean;
@@ -23,15 +28,28 @@ const ExerciseRatingModal: React.FC<ExerciseRatingModalProps> = ({
   const { user } = useAuth();
   const { saveExerciseRating } = useData();
 
-  const [selectedRating, setSelectedRating] = useState<ExerciseRatingEmoji | null>(null);
+  const [selectedRating, setSelectedRating] =
+    useState<ExerciseRatingEmoji | null>(null);
   const [painLevel, setPainLevel] = useState<number>(0);
   const [comments, setComments] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const ratingOptions = [
-    { emoji: '😊' as ExerciseRatingEmoji, label: 'Fácil', description: 'Exercício foi fácil de executar' },
-    { emoji: '😐' as ExerciseRatingEmoji, label: 'Médio', description: 'Exercício com dificuldade moderada' },
-    { emoji: '😰' as ExerciseRatingEmoji, label: 'Difícil', description: 'Exercício foi difícil de executar' },
+    {
+      emoji: '😊' as ExerciseRatingEmoji,
+      label: 'Fácil',
+      description: 'Exercício foi fácil de executar',
+    },
+    {
+      emoji: '😐' as ExerciseRatingEmoji,
+      label: 'Médio',
+      description: 'Exercício com dificuldade moderada',
+    },
+    {
+      emoji: '😰' as ExerciseRatingEmoji,
+      label: 'Difícil',
+      description: 'Exercício foi difícil de executar',
+    },
   ];
 
   const painLevels = [
@@ -52,7 +70,7 @@ const ExerciseRatingModal: React.FC<ExerciseRatingModalProps> = ({
     if (!selectedRating || !user) return;
 
     setIsSubmitting(true);
-    
+
     try {
       const ratingData: Omit<ExerciseRating, 'id'> = {
         patientId: user.id,
@@ -67,7 +85,7 @@ const ExerciseRatingModal: React.FC<ExerciseRatingModalProps> = ({
       };
 
       saveExerciseRating(ratingData, user);
-      
+
       // Reset form
       setSelectedRating(null);
       setPainLevel(0);
@@ -119,7 +137,9 @@ const ExerciseRatingModal: React.FC<ExerciseRatingModalProps> = ({
               >
                 <div className="text-3xl">{option.emoji}</div>
                 <div className="mt-1 font-medium">{option.label}</div>
-                <div className="mt-1 text-xs text-slate-500">{option.description}</div>
+                <div className="mt-1 text-xs text-slate-500">
+                  {option.description}
+                </div>
               </button>
             ))}
           </div>
@@ -146,7 +166,7 @@ const ExerciseRatingModal: React.FC<ExerciseRatingModalProps> = ({
             ))}
           </div>
           <div className="mt-2 text-center text-sm text-slate-500">
-            {painLevels.find(l => l.value === painLevel)?.label}
+            {painLevels.find((l) => l.value === painLevel)?.label}
           </div>
         </div>
 

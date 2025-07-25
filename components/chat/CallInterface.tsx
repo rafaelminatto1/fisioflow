@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Chat } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData.minimal';
-import BaseModal from '../BaseModal';
+import BaseModal from '../ui/BaseModal';
 
 interface CallInterfaceProps {
   isOpen: boolean;
@@ -19,14 +19,16 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
 }) => {
   const { user } = useAuth();
   const { users } = useData();
-  
+
   const [isCallActive, setIsCallActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoEnabled, setIsVideoEnabled] = useState(callType === 'video');
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
-  const [callStatus, setCallStatus] = useState<'connecting' | 'ringing' | 'active' | 'ended'>('connecting');
-  
+  const [callStatus, setCallStatus] = useState<
+    'connecting' | 'ringing' | 'active' | 'ended'
+  >('connecting');
+
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout>();
@@ -38,7 +40,7 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
     // Simula conexão
     const connectTimer = setTimeout(() => {
       setCallStatus('ringing');
-      
+
       // Simula atendimento após 3 segundos
       const answerTimer = setTimeout(() => {
         setCallStatus('active');
@@ -55,7 +57,7 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
   // Timer da chamada
   const startCallTimer = () => {
     callTimerRef.current = setInterval(() => {
-      setCallDuration(prev => prev + 1);
+      setCallDuration((prev) => prev + 1);
     }, 1000);
   };
 
@@ -74,15 +76,15 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
 
   const getOtherParticipant = () => {
     if (!chat) return null;
-    const otherParticipantId = chat.participants.find(id => id !== user?.id);
-    return users.find(u => u.id === otherParticipantId);
+    const otherParticipantId = chat.participants.find((id) => id !== user?.id);
+    return users.find((u) => u.id === otherParticipantId);
   };
 
   const handleEndCall = () => {
     setCallStatus('ended');
     setIsCallActive(false);
     stopCallTimer();
-    
+
     setTimeout(() => {
       onClose();
       // Reset states
@@ -116,50 +118,52 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
       size="lg"
       hideCloseButton
     >
-      <div className="bg-gradient-to-br from-blue-900 to-indigo-900 text-white rounded-lg overflow-hidden">
+      <div className="overflow-hidden rounded-lg bg-gradient-to-br from-blue-900 to-indigo-900 text-white">
         {callType === 'video' && isCallActive ? (
           /* Interface de videochamada */
           <div className="relative h-96">
             {/* Vídeo remoto (principal) */}
             <video
               ref={remoteVideoRef}
-              className="w-full h-full object-cover bg-slate-800"
+              className="h-full w-full bg-slate-800 object-cover"
               autoPlay
               playsInline
             />
-            
+
             {/* Avatar quando vídeo está desabilitado */}
             {!isVideoEnabled && (
               <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
                 <div className="text-center">
-                  <div className="w-24 h-24 bg-slate-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 mx-auto">
+                  <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-slate-600 text-2xl font-bold">
                     {otherUser?.avatarUrl ? (
-                      <img 
-                        src={otherUser.avatarUrl} 
+                      <img
+                        src={otherUser.avatarUrl}
                         alt={otherUser.name}
-                        className="w-full h-full rounded-full object-cover"
+                        className="h-full w-full rounded-full object-cover"
                       />
                     ) : (
                       otherUser?.name.charAt(0) || '?'
                     )}
                   </div>
-                  <p className="text-lg font-medium">{otherUser?.name || 'Usuário'}</p>
+                  <p className="text-lg font-medium">
+                    {otherUser?.name || 'Usuário'}
+                  </p>
                 </div>
               </div>
             )}
 
             {/* Vídeo local (pequeno) */}
-            <div className="absolute top-4 right-4 w-32 h-24 bg-slate-700 rounded-lg overflow-hidden border-2 border-white/20">
+            <div className="absolute right-4 top-4 h-24 w-32 overflow-hidden rounded-lg border-2 border-white/20 bg-slate-700">
               <video
                 ref={localVideoRef}
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
                 autoPlay
                 playsInline
                 muted
               />
               {!isVideoEnabled && (
                 <div className="absolute inset-0 flex items-center justify-center bg-slate-700">
-                  <div className="w-8 h-8 bg-slate-500 rounded-full flex items-center justify-center text-xs">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-500 text-xs">
                     {user?.name.charAt(0) || '?'}
                   </div>
                 </div>
@@ -167,9 +171,9 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
             </div>
 
             {/* Status da chamada */}
-            <div className="absolute top-4 left-4 bg-black/50 px-3 py-1 rounded-full">
+            <div className="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1">
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
                 <span className="text-sm font-medium">
                   {formatCallDuration(callDuration)}
                 </span>
@@ -178,14 +182,14 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
           </div>
         ) : (
           /* Interface de chamada de voz */
-          <div className="text-center py-12">
+          <div className="py-12 text-center">
             {/* Avatar do usuário */}
-            <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center text-4xl font-bold mb-6 mx-auto">
+            <div className="mx-auto mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-white/20 text-4xl font-bold">
               {otherUser?.avatarUrl ? (
-                <img 
-                  src={otherUser.avatarUrl} 
+                <img
+                  src={otherUser.avatarUrl}
                   alt={otherUser.name}
-                  className="w-full h-full rounded-full object-cover"
+                  className="h-full w-full rounded-full object-cover"
                 />
               ) : (
                 otherUser?.name.charAt(0) || '?'
@@ -193,7 +197,7 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
             </div>
 
             {/* Nome do usuário */}
-            <h3 className="text-2xl font-semibold mb-2">
+            <h3 className="mb-2 text-2xl font-semibold">
               {otherUser?.name || 'Usuário'}
             </h3>
 
@@ -204,14 +208,16 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
               )}
               {callStatus === 'ringing' && (
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce"></div>
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-white/60"></div>
                   <p className="text-white/80">Chamando...</p>
                 </div>
               )}
               {callStatus === 'active' && (
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <p className="text-white/80">{formatCallDuration(callDuration)}</p>
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
+                  <p className="text-white/80">
+                    {formatCallDuration(callDuration)}
+                  </p>
                 </div>
               )}
               {callStatus === 'ended' && (
@@ -221,12 +227,12 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
 
             {/* Qualidade da chamada */}
             {isCallActive && (
-              <div className="flex items-center justify-center space-x-1 text-white/60 text-sm mb-4">
+              <div className="mb-4 flex items-center justify-center space-x-1 text-sm text-white/60">
                 <div className="flex space-x-1">
-                  {[1, 2, 3, 4].map(bar => (
+                  {[1, 2, 3, 4].map((bar) => (
                     <div
                       key={bar}
-                      className={`w-1 h-3 rounded-full ${
+                      className={`h-3 w-1 rounded-full ${
                         bar <= 3 ? 'bg-green-400' : 'bg-white/30'
                       }`}
                     />
@@ -244,8 +250,10 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
             {/* Botão de mute */}
             <button
               onClick={toggleMute}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-white/20 hover:bg-white/30'
+              className={`flex h-12 w-12 items-center justify-center rounded-full transition-colors ${
+                isMuted
+                  ? 'bg-red-500 hover:bg-red-600'
+                  : 'bg-white/20 hover:bg-white/30'
               }`}
               title={isMuted ? 'Ativar microfone' : 'Silenciar microfone'}
             >
@@ -256,8 +264,10 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
             {callType === 'video' && (
               <button
                 onClick={toggleVideo}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                  !isVideoEnabled ? 'bg-red-500 hover:bg-red-600' : 'bg-white/20 hover:bg-white/30'
+                className={`flex h-12 w-12 items-center justify-center rounded-full transition-colors ${
+                  !isVideoEnabled
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : 'bg-white/20 hover:bg-white/30'
                 }`}
                 title={isVideoEnabled ? 'Desativar vídeo' : 'Ativar vídeo'}
               >
@@ -268,10 +278,14 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
             {/* Botão de alto-falante */}
             <button
               onClick={toggleSpeaker}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                isSpeakerOn ? 'bg-blue-500 hover:bg-blue-600' : 'bg-white/20 hover:bg-white/30'
+              className={`flex h-12 w-12 items-center justify-center rounded-full transition-colors ${
+                isSpeakerOn
+                  ? 'bg-blue-500 hover:bg-blue-600'
+                  : 'bg-white/20 hover:bg-white/30'
               }`}
-              title={isSpeakerOn ? 'Desativar alto-falante' : 'Ativar alto-falante'}
+              title={
+                isSpeakerOn ? 'Desativar alto-falante' : 'Ativar alto-falante'
+              }
             >
               {isSpeakerOn ? '🔊' : '🔇'}
             </button>
@@ -279,7 +293,7 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
             {/* Botão de encerrar chamada */}
             <button
               onClick={handleEndCall}
-              className="w-12 h-12 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500 transition-colors hover:bg-red-600"
               title="Encerrar chamada"
             >
               📞
@@ -288,10 +302,10 @@ const CallInterface: React.FC<CallInterfaceProps> = ({
 
           {/* Informações adicionais */}
           {isCallActive && (
-            <div className="text-center mt-4 text-white/60 text-sm">
+            <div className="mt-4 text-center text-sm text-white/60">
               <p>
-                {callType === 'video' ? 'Videochamada' : 'Chamada de voz'} • 
-                Qualidade: {isSpeakerOn ? 'Alto-falante' : 'Fone'} • 
+                {callType === 'video' ? 'Videochamada' : 'Chamada de voz'} •
+                Qualidade: {isSpeakerOn ? 'Alto-falante' : 'Fone'} •
                 {isMuted ? 'Microfone desativado' : 'Microfone ativo'}
               </p>
             </div>

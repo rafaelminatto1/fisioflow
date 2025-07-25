@@ -22,7 +22,7 @@ import { useData } from '../hooks/useData.minimal';
 import { useAuth } from '../hooks/useAuth';
 import { predictAbandonmentRisk } from '../services/geminiService';
 import type { AbandonmentRiskPrediction } from '../types';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import PageLoader from './ui/PageLoader';
 import OnboardingChecklist from './OnboardingChecklist';
 
