@@ -221,37 +221,80 @@ class AICache {
   }
 
   /**
-   * Persiste cache no localStorage
+   * Persiste cache no localStorage de forma segura
    */
   private saveToStorage(): void {
     try {
+      // Verifica se localStorage está disponível
+      if (typeof Storage === 'undefined') {
+        console.warn('localStorage não disponível');
+        return;
+      }
+
       const cacheData = {
         cache: Array.from(this.cache.entries()),
         rateLimits: Array.from(this.rateLimits.entries()),
         timestamp: Date.now()
       };
-      localStorage.setItem('aiCache', JSON.stringify(cacheData));
+      
+      const dataString = JSON.stringify(cacheData);
+      
+      // Verifica se o tamanho não excede limites do localStorage (geralmente 5MB)
+      if (dataString.length > 4 * 1024 * 1024) { // 4MB limite
+        console.warn('Cache muito grande, fazendo limpeza automática');
+        this.evictOldEntries();
+        return;
+      }
+      
+      localStorage.setItem('aiCache', dataString);
     } catch (error) {
-      console.warn('Erro ao salvar cache:', error);
+      if (error.name === 'QuotaExceededError') {
+        console.warn('localStorage cheio, limpando cache antigo');
+        this.evictOldEntries();
+      } else {
+        console.warn('Erro ao salvar cache:', error);
+      }
     }
   }
 
   /**
-   * Carrega cache do localStorage
+   * Carrega cache do localStorage de forma segura
    */
   private loadFromStorage(): void {
     try {
+      if (typeof Storage === 'undefined') {
+        console.warn('localStorage não disponível');
+        return;
+      }
+
       const data = localStorage.getItem('aiCache');
       if (data) {
         const parsed = JSON.parse(data);
-        this.cache = new Map(parsed.cache || []);
-        this.rateLimits = new Map(parsed.rateLimits || []);
-        console.log(`🔄 Cache carregado: ${this.cache.size} entradas`);
+        
+        // Valida estrutura dos dados
+        if (parsed && typeof parsed === 'object') {
+          this.cache = new Map(Array.isArray(parsed.cache) ? parsed.cache : []);
+          this.rateLimits = new Map(Array.isArray(parsed.rateLimits) ? parsed.rateLimits : []);
+          
+          // Remove entradas expiradas na inicialização
+          this.cleanup();
+          
+          console.log(`🔄 Cache carregado: ${this.cache.size} entradas`);
+        } else {
+          throw new Error('Estrutura de cache inválida');
+        }
       }
     } catch (error) {
-      console.warn('Erro ao carregar cache:', error);
+      console.warn('Erro ao carregar cache, iniciando cache limpo:', error);
       this.cache = new Map();
       this.rateLimits = new Map();
+      
+      // Remove cache corrompido
+      try {
+        localStorage.removeItem('aiCache');
+      } catch (removeError) {
+        console.warn('Erro ao remover cache corrompido:', removeError);
+      }
     }
   }
 

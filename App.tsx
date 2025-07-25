@@ -52,6 +52,7 @@ import {
   UnifiedDashboard,
   AnalyticsDashboard,
   FinancialSummaryDashboard,
+  ExecutiveDashboard,
   IntegrationsPage,
 } from './components/LazyRoutes';
 import SubscriptionMetricsPanel from './components/admin/SubscriptionMetricsPanel';
@@ -124,12 +125,12 @@ const AppContent: React.FC = () => {
 
   const breadcrumbs = useMemo(() => {
     const base = [{ name: 'FisioFlow', href: '#' }];
-    switch (
-      activeView
-      // ... (cases for breadcrumbs)
-    ) {
+    switch (activeView) {
+      case 'executive-dashboard':
+        return [...base, { name: 'Dashboard Executivo IA', href: '#' }];
+      default:
+        return base;
     }
-    return base;
   }, [activeView, activePageId, notebooks]);
 
   if (!user) {
@@ -236,6 +237,8 @@ const AppContent: React.FC = () => {
                   return <AnalyticsDashboard />;
                 case 'financial-summary':
                   return <FinancialSummaryDashboard />;
+                case 'executive-dashboard':
+                  return <ExecutiveDashboard />;
                 case 'integrations':
                   return <IntegrationsPage />;
                 case 'notebook':

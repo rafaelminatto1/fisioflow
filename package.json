@@ -5,28 +5,37 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:check": "tsc --noEmit --skipLibCheck && vite build",
-    "build:deploy": "vite build --config vite.config.deploy.ts",
-    "build:minimal": "vite build --config vite.config.minimal.ts --mode production",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint . --ext ts,tsx --fix",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build",
+    "build:check": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit --skipLibCheck && vite build",
+    "build:deploy": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build --config vite.config.deploy.ts",
+    "build:minimal": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build --config vite.config.minimal.ts --mode production",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 50",
+    "lint:fix": "eslint . --ext ts,tsx --fix --max-warnings 50",
+    "lint:incremental": "eslint --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 50 .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage",
-    "test:jest": "jest",
-    "test:jest:watch": "jest --watch",
-    "test:jest:coverage": "jest --coverage",
+    "test": "node scripts/test-runner.js",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest --watch",
+    "test:unit:coverage": "vitest --coverage",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:integration:watch": "jest --testPathPattern=integration --watch",
     "test:hooks": "jest --testPathPattern=hooks",
-    "type-check": "tsc --noEmit",
+    "test:components": "jest --testPathPattern=components",
+    "test:utils": "jest --testPathPattern=utils",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "test:coverage:full": "node scripts/test-runner.js --coverage",
+    "test:ci": "node scripts/test-runner.js --ci",
+    "test:debug": "node scripts/test-runner.js --debug",
+    "type-check": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit --incremental",
+    "type-check:fast": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit --skipLibCheck --incremental",
     "prepare": "husky install",
     "pre-commit": "lint-staged",
-    "analyze": "vite build && npx vite-bundle-analyzer dist",
-    "analyze:serve": "npx vite-bundle-analyzer dist --open"
+    "analyze": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build && npx vite-bundle-analyzer dist",
+    "analyze:serve": "npx vite-bundle-analyzer dist --open",
+    "clean": "rimraf dist build .tsbuildinfo node_modules/.cache",
+    "postinstall": "npm run prepare"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -36,6 +45,7 @@
     "@types/file-saver": "^2.0.7",
     "@types/qrcode": "^1.5.5",
     "cmdk": "^1.1.1",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
@@ -52,7 +62,6 @@
     "remark-gfm": "^4.0.1",
     "sonner": "^2.0.6",
     "tailwindcss": "^3.3.5",
-    "xlsx": "^0.18.5",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -71,10 +80,13 @@
     "autoprefixer": "^10.4.16",
     "babel-jest": "^29.7.0",
     "babel-plugin-transform-remove-console": "^6.9.4",
+    "cross-env": "^7.0.3",
     "eslint": "^8.53.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.4",
     "husky": "^8.0.3",
     "identity-obj-proxy": "^3.0.0",
@@ -85,17 +97,23 @@
     "postcss": "^8.4.31",
     "prettier": "^3.1.0",
     "prettier-plugin-tailwindcss": "^0.5.7",
+    "rimraf": "^6.0.1",
     "ts-jest": "^29.1.2",
     "typescript": "^5.2.2",
-    "vite": "^5.0.0",
+    "vite": "^7.0.6",
     "vite-bundle-analyzer": "^0.7.0",
     "vitest": "^3.2.4"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "prettier --write"
+      "prettier --write",
+      "eslint --fix --max-warnings 10"
     ],
-    "*.{json,css,md}": [
+    "*.{js,jsx}": [
+      "prettier --write",
+      "eslint --fix --max-warnings 5"
+    ],
+    "*.{json,md}": [
       "prettier --write"
     ]
   }

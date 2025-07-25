@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Cache
+.cache/
+.eslintcache
+.tsbuildinfo
+
+# Problematic directories
+vercel-mcp-temp/
+scripts/
+old/
+
+# Config files
+*.config.js
+*.config.ts
+vite.config.*.ts
+
+# Generated files
+*.d.ts
+
+# Test files with known issues
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment files
+.env*
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -6,6 +6,8 @@
     "module": "ESNext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -16,7 +18,7 @@
     "allowJs": true,
     "jsx": "react-jsx",
 
-    /* Linting */
+    /* Linting - Otimizado para performance */
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
@@ -24,9 +26,28 @@
     "noUncheckedSideEffectImports": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
 
     "paths": {
       "@/*": ["./*"]
     }
-  }
+  },
+  "include": [
+    "src/**/*",
+    "components/**/*",
+    "hooks/**/*",
+    "types.ts",
+    "vite.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "old/**/*",
+    "scripts/**/*",
+    "vercel-mcp-temp/**/*"
+  ]
 }

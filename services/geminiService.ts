@@ -9,8 +9,18 @@ import type {
 import { TASK_STATUS_LABELS } from '../constants';
 
 // This implementation now uses the real Gemini API.
-// The API key is expected to be available in the environment variables.
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// The API key should be configured in the environment or passed from backend
+const getGeminiInstance = () => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 
+                process.env.VITE_GEMINI_API_KEY || 
+                localStorage.getItem('GEMINI_API_KEY') || '';
+  
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY não configurada. Configure a chave da API.');
+  }
+  
+  return new GoogleGenerativeAI(apiKey);
+};
 
 /**
  * Generates a summary and feedback for a physiotherapist's progress note.
@@ -37,6 +47,7 @@ export async function getTaskSummary(progressNote: string, userId = 'anonymous')
     const systemInstruction =
       'Você é um fisioterapeuta sênior e mentor. Sua tarefa é analisar a anotação de progresso de um estagiário de fisioterapia. Forneça um feedback construtivo, em português, destacando pontos positivos, áreas para melhoria e sugestões práticas para aprimorar o tratamento e o registro clínico. A resposta deve ser em formato de bullet points concisos e claros.';
 
+    const ai = getGeminiInstance();
     const model = ai.getGenerativeModel({ 
       model: "gemini-pro",
       systemInstruction: systemInstruction
@@ -98,6 +109,7 @@ export async function searchKnowledgeBase(
 
     const content = `Base de Conhecimento:\n---\n${knowledgeBase}\n---\n\nPergunta do Usuário: "${query}"`;
 
+    const ai = getGeminiInstance();
     const model = ai.getGenerativeModel({ 
       model: "gemini-pro",
       systemInstruction: systemInstruction
@@ -173,6 +185,7 @@ A resposta deve ser em formato Markdown, pronta para ser copiada. Use um tom for
       .join('\n');
     const content = `**Histórico Clínico do Paciente:**\n${patient.medicalHistory}\n\n**Tarefas e Evolução:**\n${taskHistory || 'Nenhuma tarefa registrada.'}`;
 
+    const ai = getGeminiInstance();
     const model = ai.getGenerativeModel({ 
       model: "gemini-pro",
       systemInstruction: systemInstruction
@@ -243,6 +256,7 @@ A resposta deve ser em formato Markdown e em português.`;
 
 Com base nesses dados, gere o plano de tratamento.`;
 
+    const ai = getGeminiInstance();
     const model = ai.getGenerativeModel({ 
       model: "gemini-pro",
       systemInstruction: systemInstruction
@@ -286,6 +300,7 @@ export async function predictAbandonmentRisk(
       "Você é um analista de dados para uma clínica de fisioterapia. Analise a lista de métricas de pacientes anonimizados para identificar indivíduos com alto risco de abandonar o tratamento. Retorne um array JSON de objetos, cada um com 'patientId', 'riskLevel' ('Alto', 'Médio', 'Baixo') e um 'reason' conciso. Foque em padrões como longos intervalos entre consultas, baixa adesão a exercícios e pagamentos pendentes.";
     // Schema removed due to API compatibility issues
 
+    const ai = getGeminiInstance();
     const model = ai.getGenerativeModel({ 
       model: "gemini-pro",
       systemInstruction: systemInstruction
@@ -315,8 +330,8 @@ export async function generateSOAPNote(notes: string): Promise<{
   try {
     const systemInstruction =
       'Você é um escriba médico especializado em fisioterapia. Converta as seguintes anotações de consulta não estruturadas em uma nota SOAP estruturada (Subjetivo, Objetivo, Avaliação, Plano). Garanta que a saída seja um objeto JSON. Seja conciso e use linguagem clínica.';
-    // Schema removed due to API compatibility issues
-
+    
+    const ai = getGeminiInstance();
     const model = ai.getGenerativeModel({ 
       model: "gemini-pro",
       systemInstruction: systemInstruction
@@ -329,5 +344,615 @@ export async function generateSOAPNote(notes: string): Promise<{
   } catch (error) {
     console.error('Error in generateSOAPNote:', error);
     throw new Error('Falha ao gerar nota SOAP.');
+  }
+}
+
+/**
+ * Generates evolution reports based on patient progress data.
+ * @param patient Patient information
+ * @param sessions Array of session data
+ * @param timeframe Time period for the report
+ * @returns Evolution report in markdown format
+ */
+export async function generateEvolutionReport(
+  patient: Patient,
+  sessions: any[],
+  timeframe: string,
+  userId = 'anonymous'
+): Promise<string> {
+  const cacheKey = `evolution_${patient.id}_${timeframe}_${sessions.length}`;
+  
+  try {
+    const cached = aiCache.get(cacheKey, JSON.stringify(sessions), userId);
+    if (cached) {
+      console.log('📈 Retornando relatório de evolução do cache (economia ~$0.04)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Generating evolution report (custo ~$0.04): ${patient.name}`);
+  
+  try {
+    const systemInstruction = `Você é um fisioterapeuta experiente gerando um relatório de evolução clínica. 
+    Com base nos dados das sessões, crie um relatório estruturado em markdown com:
+    1. **Resumo Executivo** - Breve overview da evolução
+    2. **Análise de Progresso** - Detalhamento das melhoras observadas
+    3. **Métricas Quantitativas** - Dados numéricos quando disponíveis
+    4. **Observações Clínicas** - Aspectos qualitativos relevantes
+    5. **Recomendações** - Ajustes sugeridos para o tratamento
+    Use linguagem técnica mas clara, com foco na evolução funcional do paciente.`;
+
+    const sessionData = sessions.map(s => 
+      `Data: ${s.date}, Dor: ${s.painLevel}/10, Observações: ${s.notes || 'N/A'}`
+    ).join('\n');
+
+    const content = `**Paciente:** ${patient.name}
+**Período:** ${timeframe}
+**Histórico:** ${patient.medicalHistory}
+
+**Dados das Sessões:**
+${sessionData}`;
+
+    const ai = getGeminiInstance();
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
+    });
+
+    const response = await model.generateContent(content);
+    const result = await response.response;
+    const text = result.text();
+    
+    if (!text) {
+      return 'Não foi possível gerar o relatório de evolução. Tente novamente.';
+    }
+
+    aiCache.set(cacheKey, JSON.stringify(sessions), text);
+    return text;
+  } catch (error) {
+    console.error('Error generating evolution report:', error);
+    return 'Erro ao gerar relatório de evolução. Verifique os dados e tente novamente.';
+  }
+}
+
+/**
+ * Generates insurance/audit reports with specific formatting.
+ * @param patient Patient data
+ * @param appointments Appointment history
+ * @param assessments Assessment data
+ * @param reportType Type of report (convenio, pericia, alta)
+ * @returns Formatted report for external use
+ */
+export async function generateInsuranceReport(
+  patient: Patient,
+  appointments: any[],
+  assessments: any[],
+  reportType: 'convenio' | 'pericia' | 'alta',
+  userId = 'anonymous'
+): Promise<string> {
+  const cacheKey = `insurance_${patient.id}_${reportType}_${appointments.length}`;
+  
+  try {
+    const cached = aiCache.get(cacheKey, patient.medicalHistory || '', userId);
+    if (cached) {
+      console.log('📋 Retornando relatório de convênio do cache (economia ~$0.05)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Generating insurance report (custo ~$0.05): ${reportType}`);
+  
+  try {
+    const reportConfig = {
+      convenio: {
+        title: 'RELATÓRIO MÉDICO PARA CONVÊNIO',
+        focus: 'Justificar a necessidade do tratamento fisioterapêutico e documentar o progresso para aprovação de sessões adicionais.',
+        sections: ['Identificação', 'Diagnóstico', 'Histórico Clínico', 'Tratamento Realizado', 'Evolução', 'Prognóstico', 'Necessidade de Continuidade']
+      },
+      pericia: {
+        title: 'RELATÓRIO PERICIAL FISIOTERAPÊUTICO',
+        focus: 'Avaliar objetivamente a capacidade funcional e limitações do paciente para fins periciais.',
+        sections: ['Identificação', 'Anamnese', 'Exame Físico', 'Avaliação Funcional', 'Limitações Identificadas', 'Capacidade Laboral', 'Conclusão Pericial']
+      },
+      alta: {
+        title: 'RELATÓRIO DE ALTA FISIOTERAPÊUTICA',
+        focus: 'Documentar os resultados obtidos e orientações para manutenção dos ganhos funcionais.',
+        sections: ['Identificação', 'Resumo do Tratamento', 'Objetivos Alcançados', 'Estado Funcional Atual', 'Orientações de Manutenção', 'Prognóstico a Longo Prazo']
+      }
+    };
+
+    const config = reportConfig[reportType];
+    const systemInstruction = `Você é um fisioterapeuta especialista em documentação clínica oficial. 
+    Gere um ${config.title} profissional e técnico.
+    Foco: ${config.focus}
+    Estruture o relatório com as seções: ${config.sections.join(', ')}.
+    Use linguagem formal, técnica e objetiva, apropriada para documentação oficial.
+    Inclua dados quantitativos quando disponíveis e evite linguagem subjetiva.`;
+
+    const appointmentSummary = appointments.map(apt => 
+      `${apt.date}: ${apt.notes || 'Sessão realizada'}`
+    ).join('\n');
+
+    const assessmentSummary = assessments.map(ass => 
+      `${ass.date}: Dor ${ass.painLevel}/10, Diagnóstico: ${ass.diagnosticHypothesis}`
+    ).join('\n');
+
+    const content = `**DADOS DO PACIENTE:**
+Nome: ${patient.name}
+Histórico: ${patient.medicalHistory}
+
+**SESSÕES REALIZADAS:**
+${appointmentSummary || 'Nenhuma sessão registrada'}
+
+**AVALIAÇÕES:**
+${assessmentSummary || 'Nenhuma avaliação registrada'}`;
+
+    const ai = getGeminiInstance();
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
+    });
+
+    const response = await model.generateContent(content);
+    const result = await response.response;
+    const text = result.text();
+    
+    if (!text) {
+      return 'Não foi possível gerar o relatório. Tente novamente.';
+    }
+
+    aiCache.set(cacheKey, patient.medicalHistory || '', text);
+    return text;
+  } catch (error) {
+    console.error('Error generating insurance report:', error);
+    return 'Erro ao gerar relatório. Verifique os dados e tente novamente.';
+  }
+}
+
+/**
+ * Generates exercise prescription documents with detailed instructions.
+ * @param prescriptions Array of exercise prescriptions
+ * @param exercises Array of exercise details
+ * @param patient Patient information
+ * @returns Formatted exercise prescription document
+ */
+export async function generateExercisePrescription(
+  prescriptions: any[],
+  exercises: any[],
+  patient: Patient,
+  userId = 'anonymous'
+): Promise<string> {
+  const cacheKey = `prescription_${patient.id}_${prescriptions.length}`;
+  
+  try {
+    const cached = aiCache.get(cacheKey, JSON.stringify(prescriptions), userId);
+    if (cached) {
+      console.log('💊 Retornando receituário do cache (economia ~$0.03)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Generating exercise prescription (custo ~$0.03): ${patient.name}`);
+  
+  try {
+    const systemInstruction = `Você é um fisioterapeuta criando um receituário de exercícios profissional.
+    Gere um documento estruturado em markdown com:
+    1. **Cabeçalho** - Título e dados do paciente
+    2. **Prescrição de Exercícios** - Lista detalhada com instruções claras
+    3. **Orientações Gerais** - Cuidados e precauções
+    4. **Progresso e Reavaliação** - Critérios para evolução
+    5. **Contato** - Informações para dúvidas
+    Use linguagem clara para o paciente, mas tecnicamente precisa.`;
+
+    const exerciseDetails = prescriptions.map(p => {
+      const exercise = exercises.find(e => e.id === p.exerciseId);
+      return {
+        name: exercise?.name || 'Exercício não encontrado',
+        description: exercise?.description || '',
+        sets: p.sets,
+        reps: p.reps,
+        frequency: p.frequency,
+        notes: p.notes || ''
+      };
+    });
+
+    const content = `**PACIENTE:** ${patient.name}
+**CONDIÇÃO CLÍNICA:** ${patient.medicalHistory}
+
+**EXERCÍCIOS PRESCRITOS:**
+${exerciseDetails.map(ex => 
+  `- **${ex.name}**: ${ex.description}
+  - Séries: ${ex.sets}, Repetições: ${ex.reps}
+  - Frequência: ${ex.frequency}
+  - Observações: ${ex.notes}`
+).join('\n\n')}`;
+
+    const ai = getGeminiInstance();
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
+    });
+
+    const response = await model.generateContent(content);
+    const result = await response.response;
+    const text = result.text();
+    
+    if (!text) {
+      return 'Não foi possível gerar o receituário. Tente novamente.';
+    }
+
+    aiCache.set(cacheKey, JSON.stringify(prescriptions), text);
+    return text;
+  } catch (error) {
+    console.error('Error generating exercise prescription:', error);
+    return 'Erro ao gerar receituário de exercícios. Verifique os dados e tente novamente.';
+  }
+}
+
+/**
+ * Converts voice notes to structured text with medical terminology.
+ * @param voiceText Raw voice-to-text output
+ * @param contextType Type of clinical context (assessment, progress, etc.)
+ * @returns Structured and corrected text
+ */
+export async function processVoiceToText(
+  voiceText: string,
+  contextType: 'assessment' | 'progress' | 'prescription' | 'general',
+  userId = 'anonymous'
+): Promise<string> {
+  const cacheKey = `voice_${contextType}_${voiceText.slice(0, 50)}`;
+  
+  try {
+    const cached = aiCache.get(cacheKey, voiceText, userId);
+    if (cached) {
+      console.log('🎤 Retornando processamento de voz do cache (economia ~$0.02)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Processing voice to text (custo ~$0.02): ${contextType}`);
+  
+  try {
+    const contextInstructions = {
+      assessment: 'Estruture as informações como dados de avaliação fisioterapêutica, corrigindo terminologia médica e organizando em tópicos relevantes.',
+      progress: 'Organize as informações como nota de evolução, com estrutura temporal e observações clínicas claras.',
+      prescription: 'Formate as informações como prescrição de exercícios, com instruções claras sobre execução, frequência e cuidados.',
+      general: 'Corrija a terminologia médica e estruture o texto de forma clara e profissional.'
+    };
+
+    const systemInstruction = `Você é um assistente especializado em documentação clínica fisioterapêutica.
+    Sua tarefa é processar texto convertido de voz para escrita, realizando:
+    1. Correção de terminologia médica e anatômica
+    2. Estruturação do conteúdo de forma organizada
+    3. Melhoria da clareza e precisão técnica
+    4. Padronização do formato conforme o contexto clínico
+    
+    Contexto específico: ${contextInstructions[contextType]}
+    Mantenha o conteúdo original, apenas melhorando a estrutura e precisão terminológica.`;
+
+    const ai = getGeminiInstance();
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
+    });
+
+    const response = await model.generateContent(`Processe este texto de voz: "${voiceText}"`);
+    const result = await response.response;
+    const text = result.text();
+    
+    if (!text) {
+      return voiceText; // Retorna texto original se falhar
+    }
+
+    aiCache.set(cacheKey, voiceText, text);
+    return text;
+  } catch (error) {
+    console.error('Error processing voice to text:', error);
+    return voiceText; // Retorna texto original em caso de erro
+  }
+}
+
+/**
+ * Extracts structured information from free-form clinical text.
+ * @param freeText Unstructured clinical notes
+ * @param extractionType Type of information to extract
+ * @returns Structured data object
+ */
+export async function extractClinicalInformation(
+  freeText: string,
+  extractionType: 'symptoms' | 'medications' | 'exercises' | 'measurements',
+  userId = 'anonymous'
+): Promise<any> {
+  const cacheKey = `extract_${extractionType}_${freeText.slice(0, 50)}`;
+  
+  try {
+    const cached = aiCache.get(cacheKey, freeText, userId);
+    if (cached) {
+      console.log('🔍 Retornando extração de dados do cache (economia ~$0.03)');
+      return JSON.parse(cached);
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Extracting clinical information (custo ~$0.03): ${extractionType}`);
+  
+  try {
+    const extractionPrompts = {
+      symptoms: `Extraia sintomas mencionados no texto, retornando um JSON com:
+        {
+          "symptoms": [
+            {
+              "name": "nome do sintoma",
+              "intensity": "intensidade (0-10 se mencionada)",
+              "location": "localização anatômica",
+              "duration": "duração se mencionada",
+              "quality": "qualidade da dor/sintoma"
+            }
+          ]
+        }`,
+      medications: `Extraia medicamentos mencionados no texto, retornando um JSON com:
+        {
+          "medications": [
+            {
+              "name": "nome do medicamento",
+              "dosage": "dosagem se mencionada",
+              "frequency": "frequência se mencionada",
+              "notes": "observações relevantes"
+            }
+          ]
+        }`,
+      exercises: `Extraia exercícios mencionados no texto, retornando um JSON com:
+        {
+          "exercises": [
+            {
+              "name": "nome do exercício",
+              "sets": "número de séries se mencionado",
+              "reps": "repetições se mencionadas",
+              "frequency": "frequência se mencionada",
+              "notes": "observações sobre execução"
+            }
+          ]
+        }`,
+      measurements: `Extraia medidas e avaliações mencionadas no texto, retornando um JSON com:
+        {
+          "measurements": [
+            {
+              "type": "tipo de medida (ADM, força, etc.)",
+              "value": "valor medido",
+              "unit": "unidade de medida",
+              "location": "local anatômico",
+              "method": "método de avaliação se mencionado"
+            }
+          ]
+        }`
+    };
+
+    const systemInstruction = `Você é um especialista em extração de informações clínicas de fisioterapia.
+    Analise o texto fornecido e extraia as informações relevantes conforme solicitado.
+    Seja preciso e extraia apenas informações explicitamente mencionadas no texto.
+    Retorne sempre um JSON válido seguindo exatamente a estrutura solicitada.`;
+
+    const prompt = `${extractionPrompts[extractionType]}
+
+Texto para análise: "${freeText}"`;
+
+    const ai = getGeminiInstance();
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
+    });
+
+    const response = await model.generateContent(prompt);
+    const result = await response.response;
+    const jsonText = result.text().trim();
+    
+    const extractedData = JSON.parse(jsonText);
+    aiCache.set(cacheKey, freeText, jsonText);
+    return extractedData;
+  } catch (error) {
+    console.error('Error extracting clinical information:', error);
+    return { [extractionType]: [] }; // Retorna estrutura vazia em caso de erro
+  }
+}
+
+/**
+ * Generates SMART goals from general treatment objectives.
+ * @param generalObjectives Unstructured treatment goals
+ * @param patientContext Patient information for context
+ * @returns Structured SMART goals
+ */
+export async function generateSMARTGoals(
+  generalObjectives: string,
+  patientContext: string,
+  userId = 'anonymous'
+): Promise<any[]> {
+  const cacheKey = `smart_goals_${generalObjectives.slice(0, 50)}`;
+  
+  try {
+    const cached = aiCache.get(cacheKey, generalObjectives + patientContext, userId);
+    if (cached) {
+      console.log('🎯 Retornando objetivos SMART do cache (economia ~$0.03)');
+      return JSON.parse(cached);
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Generating SMART goals (custo ~$0.03)`);
+  
+  try {
+    const systemInstruction = `Você é um especialista em definição de objetivos terapêuticos SMART (Específicos, Mensuráveis, Atingíveis, Relevantes, Temporais).
+    Transforme objetivos gerais de tratamento em objetivos SMART estruturados.
+    
+    Para cada objetivo, defina:
+    - Specific: Descrição específica e clara
+    - Measurable: Como será medido (escalas, testes, etc.)
+    - Achievable: Por que é realizável
+    - Relevant: Relevância para o paciente
+    - Time-bound: Prazo para atingir o objetivo
+    
+    Retorne um JSON com array de objetivos SMART.`;
+
+    const prompt = `Com base no contexto do paciente e objetivos gerais, crie objetivos SMART:
+
+**Contexto do Paciente:** ${patientContext}
+
+**Objetivos Gerais:** ${generalObjectives}
+
+Retorne JSON com estrutura:
+{
+  "smartGoals": [
+    {
+      "id": "objetivo_1",
+      "title": "Título do objetivo",
+      "specific": "Descrição específica",
+      "measurable": "Como será medido",
+      "achievable": "Por que é atingível",
+      "relevant": "Relevância para o paciente",
+      "timeBound": "Prazo definido",
+      "priority": "alta/média/baixa",
+      "category": "dor/funcionalidade/força/mobilidade"
+    }
+  ]
+}`;
+
+    const ai = getGeminiInstance();
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
+    });
+
+    const response = await model.generateContent(prompt);
+    const result = await response.response;
+    const jsonText = result.text().trim();
+    
+    const smartGoals = JSON.parse(jsonText);
+    aiCache.set(cacheKey, generalObjectives + patientContext, jsonText);
+    return smartGoals.smartGoals || [];
+  } catch (error) {
+    console.error('Error generating SMART goals:', error);
+    return [];
+  }
+}
+
+/**
+ * Corrects medical terminology in clinical text.
+ * @param clinicalText Text with potential terminology errors
+ * @returns Text with corrected medical terminology
+ */
+export async function correctMedicalTerminology(
+  clinicalText: string,
+  userId = 'anonymous'
+): Promise<string> {
+  const cacheKey = `terminology_${clinicalText.slice(0, 50)}`;
+  
+  try {
+    const cached = aiCache.get(cacheKey, clinicalText, userId);
+    if (cached) {
+      console.log('📚 Retornando correção terminológica do cache (economia ~$0.02)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Correcting medical terminology (custo ~$0.02)`);
+  
+  try {
+    const systemInstruction = `Você é um especialista em terminologia médica e fisioterapêutica.
+    Corrija erros de terminologia anatômica, patológica e técnica no texto fornecido.
+    Mantenha o conteúdo e estrutura originais, corrigindo apenas:
+    - Nomes anatômicos incorretos
+    - Terminologia médica imprecisa
+    - Grafias incorretas de termos técnicos
+    - Uso inadequado de termos clínicos
+    
+    Preserve o contexto e significado original do texto.`;
+
+    const ai = getGeminiInstance();
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
+    });
+
+    const response = await model.generateContent(`Corrija a terminologia médica neste texto: "${clinicalText}"`);
+    const result = await response.response;
+    const correctedText = result.text();
+    
+    if (!correctedText) {
+      return clinicalText; // Retorna texto original se falhar
+    }
+
+    aiCache.set(cacheKey, clinicalText, correctedText);
+    return correctedText;
+  } catch (error) {
+    console.error('Error correcting medical terminology:', error);
+    return clinicalText; // Retorna texto original em caso de erro
+  }
+}
+
+/**
+ * Translates technical terms to patient-friendly language.
+ * @param technicalText Technical clinical text
+ * @returns Patient-friendly explanation
+ */
+export async function translateToPatientLanguage(
+  technicalText: string,
+  userId = 'anonymous'
+): Promise<string> {
+  const cacheKey = `patient_lang_${technicalText.slice(0, 50)}`;
+  
+  try {
+    const cached = aiCache.get(cacheKey, technicalText, userId);
+    if (cached) {
+      console.log('👥 Retornando tradução para paciente do cache (economia ~$0.02)');
+      return cached;
+    }
+  } catch (error) {
+    console.warn('Cache error:', error);
+  }
+
+  console.log(`🤖 Translating to patient language (custo ~$0.02)`);
+  
+  try {
+    const systemInstruction = `Você é um especialista em comunicação médico-paciente.
+    Traduza termos técnicos e jargões médicos para linguagem acessível ao paciente.
+    
+    Diretrizes:
+    - Use palavras simples e compreensíveis
+    - Mantenha a precisão médica
+    - Adicione explicações quando necessário
+    - Use analogias quando apropriado
+    - Mantenha tom respeitoso e empático
+    - Evite causar ansiedade desnecessária`;
+
+    const ai = getGeminiInstance();
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-pro",
+      systemInstruction: systemInstruction
+    });
+
+    const response = await model.generateContent(`Traduza este texto técnico para linguagem do paciente: "${technicalText}"`);
+    const result = await response.response;
+    const patientText = result.text();
+    
+    if (!patientText) {
+      return technicalText; // Retorna texto original se falhar
+    }
+
+    aiCache.set(cacheKey, technicalText, patientText);
+    return patientText;
+  } catch (error) {
+    console.error('Error translating to patient language:', error);
+    return technicalText; // Retorna texto original em caso de erro
   }
 }

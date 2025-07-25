@@ -378,10 +378,6 @@ describe('Subscription Data Integrity Tests', () => {
 
   describe('Security Validations', () => {
     it('should validate transaction ownership', async () => {
-      const { result } = renderHook(() => useAppleIAP(), {
-        wrapper: TestWrapper,
-      });
-
       // Mock transaction with different ownership
       const sharedTransaction = {
         transactionId: 'txn_shared',
@@ -398,6 +394,11 @@ describe('Subscription Data Integrity Tests', () => {
 
       localStorageMock.getItem.mockReturnValue(JSON.stringify([sharedTransaction]));
 
+      const { result } = renderHook(() => useAppleIAP(), {
+        wrapper: TestWrapper,
+      });
+
+      // Wait for initialization to complete
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 100));
       });
@@ -406,14 +407,11 @@ describe('Subscription Data Integrity Tests', () => {
       const sharedSub = activeSubscriptions.find(t => t.transactionId === 'txn_shared');
 
       // Should handle family shared subscriptions appropriately
+      expect(sharedSub).toBeDefined();
       expect(sharedSub?.ownershipType).toBe('FAMILY_SHARED');
     });
 
     it('should validate subscription environment (Sandbox vs Production)', async () => {
-      const { result } = renderHook(() => useAppleIAP(), {
-        wrapper: TestWrapper,
-      });
-
       const sandboxTransaction = {
         transactionId: 'txn_sandbox',
         productId: 'com.fisioflow.silver.monthly',
@@ -429,6 +427,11 @@ describe('Subscription Data Integrity Tests', () => {
 
       localStorageMock.getItem.mockReturnValue(JSON.stringify([sandboxTransaction]));
 
+      const { result } = renderHook(() => useAppleIAP(), {
+        wrapper: TestWrapper,
+      });
+
+      // Wait for initialization to complete
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 100));
       });
@@ -437,6 +440,7 @@ describe('Subscription Data Integrity Tests', () => {
       const sandboxSub = activeSubscriptions.find(t => t.transactionId === 'txn_sandbox');
 
       // Should properly identify sandbox transactions
+      expect(sandboxSub).toBeDefined();
       expect(sandboxSub?.environment).toBe('Sandbox');
     });
   });

@@ -142,6 +142,11 @@ export const FinancialSummaryDashboard = lazy(() =>
   import(/* webpackChunkName: "analytics" */ './FinancialSummaryDashboard')
 );
 
+export const ExecutiveDashboard = lazy(() => 
+  import(/* webpackChunkName: "analytics" */ './analytics/ExecutiveDashboardEnhanced')
+    .then(module => ({ default: module.ExecutiveDashboardEnhanced }))
+);
+
 // === WRAPPER COMPONENT COM LOADING ===
 interface LazyWrapperProps {
   children: React.ReactNode;

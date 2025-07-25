@@ -27,6 +27,7 @@ import {
   FlaskConical,
   TrendingUp,
   BarChart,
+  Brain,
   X as IconX,
 } from 'lucide-react';
 
@@ -180,6 +181,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       id: 'protocol-analytics',
       label: 'Analytics de Protocolos',
       icon: <BarChart size={20} />,
+      roles: [UserRole.ADMIN, UserRole.FISIOTERAPEUTA],
+    },
+    {
+      id: 'executive-dashboard',
+      label: 'Dashboard Executivo IA',
+      icon: <Brain size={20} />,
       roles: [UserRole.ADMIN, UserRole.FISIOTERAPEUTA],
     },
     {

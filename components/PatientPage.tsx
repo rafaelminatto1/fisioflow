@@ -4,6 +4,8 @@ import { useAuth } from '../hooks/useAuth';
 import { Patient } from '../types';
 import PatientModal from './PatientModal'; // Manteremos o modal para edição/criação
 import { IconPlus, IconArrowLeft } from './icons/IconComponents';
+import { Brain } from 'lucide-react';
+import { AIDocumentationAssistant } from './AIDocumentationAssistant';
 import PageLoader from './ui/PageLoader';
 import PageShell from './ui/PageShell';
 import { Button } from './ui/Button';
@@ -16,6 +18,7 @@ const PatientDetails: React.FC<{ patient: Patient; onBack: () => void }> = ({
   patient,
   onBack,
 }) => {
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const {
     getTasksForPatient,
     getAppointmentsForPatient,
@@ -28,10 +31,19 @@ const PatientDetails: React.FC<{ patient: Patient; onBack: () => void }> = ({
 
   return (
     <div className="animate-fade-in-up">
-      <Button onClick={onBack} variant="ghost" className="mb-4">
-        <IconArrowLeft className="mr-2" />
-        Voltar para a lista
-      </Button>
+      <div className="flex items-center justify-between mb-4">
+        <Button onClick={onBack} variant="ghost">
+          <IconArrowLeft className="mr-2" />
+          Voltar para a lista
+        </Button>
+        <Button 
+          onClick={() => setIsAIAssistantOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <Brain className="h-4 w-4 mr-2" />
+          Documentação IA
+        </Button>
+      </div>
       <h2 className="mb-4 text-2xl font-bold">{patient.name}</h2>
 
       <Tabs defaultValue="info">
@@ -85,6 +97,14 @@ const PatientDetails: React.FC<{ patient: Patient; onBack: () => void }> = ({
           </p>
         </TabsContent>
       </Tabs>
+
+      {/* Assistente de Documentação IA - Suas Assinaturas! */}
+      <AIDocumentationAssistant
+        isOpen={isAIAssistantOpen}
+        onClose={() => setIsAIAssistantOpen(false)}
+        patient={patient}
+        contextType="assessment"
+      />
     </div>
   );
 };

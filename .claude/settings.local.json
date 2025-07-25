@@ -28,7 +28,10 @@
       "Bash(npx expo install:*)",
       "Bash(npm run ios:*)",
       "Bash(npx eas build:*)",
-      "Bash(timeout 30 npm run build)"
+      "Bash(timeout 30 npm run build)",
+      "Bash(node:*)",
+      "Bash(del test-integration.js)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }
