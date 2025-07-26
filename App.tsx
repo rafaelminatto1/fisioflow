@@ -54,6 +54,7 @@ import {
   FinancialSummaryDashboard,
   ExecutiveDashboard,
   IntegrationsPage,
+  LegalDocumentsPage,
 } from './components/LazyRoutes';
 import SubscriptionMetricsPanel from './components/admin/SubscriptionMetricsPanel';
 
@@ -241,6 +242,8 @@ const AppContent: React.FC = () => {
                   return <ExecutiveDashboard />;
                 case 'integrations':
                   return <IntegrationsPage />;
+                case 'legal-documents':
+                  return <LegalDocumentsPage />;
                 case 'notebook':
                   return <NotebookPage activePageId={activePageId} />;
                 case 'subscription-metrics':

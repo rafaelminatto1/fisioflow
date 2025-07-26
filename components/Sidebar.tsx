@@ -28,6 +28,7 @@ import {
   TrendingUp,
   BarChart,
   Brain,
+  FileText,
   X as IconX,
 } from 'lucide-react';
 
@@ -200,6 +201,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Compliance',
       icon: <Shield size={20} />,
       roles: [UserRole.ADMIN],
+    },
+    {
+      id: 'legal-documents',
+      label: 'Documentos Legais',
+      icon: <FileText size={20} />,
+      roles: [UserRole.ADMIN, UserRole.FISIOTERAPEUTA],
     },
     {
       id: 'status',

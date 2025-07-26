@@ -1,0 +1,198 @@
+#!/bin/sh
+# Commit-msg hook para FisioFlow
+# Valida o formato das mensagens de commit
+
+set -e
+
+# Cores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Função para imprimir com cor
+print_color() {
+    printf "${1}${2}${NC}\n"
+}
+
+# Arquivo da mensagem de commit
+commit_msg_file="$1"
+commit_msg=$(cat "$commit_msg_file")
+
+# Ignorar commits de merge
+if echo "$commit_msg" | grep -q "^Merge "; then
+    print_color $BLUE "🔀 Commit de merge detectado, pulando validação"
+    exit 0
+fi
+
+# Ignorar commits de revert
+if echo "$commit_msg" | grep -q "^Revert "; then
+    print_color $BLUE "↩️  Commit de revert detectado, pulando validação"
+    exit 0
+fi
+
+# Ignorar commits automáticos do GitHub
+if echo "$commit_msg" | grep -qE "^(Initial commit|Update .*\.md|Create .*)"; then
+    print_color $BLUE "🤖 Commit automático detectado, pulando validação"
+    exit 0
+fi
+
+print_color $BLUE "📝 Validando mensagem de commit..."
+
+# Extrair a primeira linha (título)
+title=$(echo "$commit_msg" | head -n1)
+
+# Verificar se a primeira linha não está vazia
+if [ -z "$title" ]; then
+    print_color $RED "❌ Mensagem de commit vazia!"
+    exit 1
+fi
+
+# Verificar comprimento do título (máximo 50 caracteres)
+if [ ${#title} -gt 50 ]; then
+    print_color $RED "❌ Título muito longo (${#title} caracteres, máximo 50)"
+    print_color $YELLOW "💡 Título atual: $title"
+    exit 1
+fi
+
+# Padrão Conventional Commits
+# Formato: tipo(escopo): descrição
+conventional_pattern="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\\([a-z0-9-]+\\))?: .+"
+
+if ! echo "$title" | grep -qE "$conventional_pattern"; then
+    print_color $RED "❌ Formato de commit inválido!"
+    print_color $YELLOW "📋 Formato esperado: tipo(escopo): descrição"
+    print_color $YELLOW "🏷️  Tipos válidos:"
+    print_color $YELLOW "   • feat:     Nova funcionalidade"
+    print_color $YELLOW "   • fix:      Correção de bug"
+    print_color $YELLOW "   • docs:     Documentação"
+    print_color $YELLOW "   • style:    Formatação (sem mudança de código)"
+    print_color $YELLOW "   • refactor: Refatoração de código"
+    print_color $YELLOW "   • test:     Testes"
+    print_color $YELLOW "   • chore:    Tarefas de build, configuração"
+    print_color $YELLOW "   • perf:     Melhoria de performance"
+    print_color $YELLOW "   • ci:       Configuração de CI"
+    print_color $YELLOW "   • build:    Sistema de build"
+    print_color $YELLOW "   • revert:   Reverter commit"
+    print_color $YELLOW "📝 Exemplos:"
+    print_color $YELLOW "   • feat(auth): adicionar login com Google"
+    print_color $YELLOW "   • fix(ui): corrigir layout responsivo"
+    print_color $YELLOW "   • docs(api): atualizar documentação"
+    print_color $YELLOW "💡 Título atual: $title"
+    exit 1
+fi
+
+# Extrair tipo e escopo
+type=$(echo "$title" | sed -E 's/^([a-z]+)(\\([^)]+\\))?: .*/\\1/')
+scope=$(echo "$title" | sed -E 's/^[a-z]+(\\(([^)]+)\\))?: .*/\\2/')
+description=$(echo "$title" | sed -E 's/^[a-z]+(\\([^)]+\\))?: (.*)/\\3/')
+
+# Verificar se a descrição começa com letra minúscula
+first_char=$(echo "$description" | cut -c1)
+if echo "$first_char" | grep -q '[A-Z]'; then
+    print_color $RED "❌ Descrição deve começar com letra minúscula"
+    print_color $YELLOW "💡 Atual: $description"
+    print_color $YELLOW "💡 Sugestão: $(echo "$description" | sed 's/^./\L&/')"
+    exit 1
+fi
+
+# Verificar se a descrição termina com ponto
+if echo "$description" | grep -q '\.$'; then
+    print_color $RED "❌ Descrição não deve terminar com ponto"
+    print_color $YELLOW "💡 Atual: $description"
+    print_color $YELLOW "💡 Sugestão: $(echo "$description" | sed 's/\.$$//')"
+    exit 1
+fi
+
+# Verificar se usa imperativo (algumas verificações básicas)
+imperative_violations=(
+    "adicionado|removido|corrigido|atualizado|implementado"
+    "added|removed|fixed|updated|implemented"
+)
+
+for violation in "${imperative_violations[@]}"; do
+    if echo "$description" | grep -qiE "$violation"; then
+        print_color $YELLOW "⚠️  Possível uso de particípio passado detectado"
+        print_color $YELLOW "💡 Use o imperativo: 'adicionar' em vez de 'adicionado'"
+        print_color $YELLOW "💡 Descrição atual: $description"
+        break
+    fi
+done
+
+# Verificar escopos sugeridos para o projeto
+valid_scopes=(
+    "auth" "ui" "api" "db" "config" "deps" "mobile" "web" "tests" 
+    "docs" "deploy" "security" "perf" "a11y" "i18n" "freemium" "ios"
+)
+
+if [ ! -z "$scope" ]; then
+    scope_valid=false
+    for valid_scope in "${valid_scopes[@]}"; do
+        if [ "$scope" = "$valid_scope" ]; then
+            scope_valid=true
+            break
+        fi
+    done
+    
+    if [ "$scope_valid" = false ]; then
+        print_color $YELLOW "⚠️  Escopo '$scope' não está na lista de escopos sugeridos"
+        print_color $YELLOW "📋 Escopos sugeridos: ${valid_scopes[*]}"
+        print_color $YELLOW "💡 Você pode continuar, mas considere usar um escopo padrão"
+    fi
+fi
+
+# Verificar corpo da mensagem (se existir)
+body=$(echo "$commit_msg" | tail -n +3)
+if [ ! -z "$body" ]; then
+    # Verificar se há linha em branco entre título e corpo
+    second_line=$(echo "$commit_msg" | sed -n '2p')
+    if [ ! -z "$second_line" ]; then
+        print_color $RED "❌ Deve haver uma linha em branco entre título e corpo"
+        exit 1
+    fi
+    
+    # Verificar comprimento das linhas do corpo (máximo 72 caracteres)
+    echo "$body" | while IFS= read -r line; do
+        if [ ${#line} -gt 72 ]; then
+            print_color $YELLOW "⚠️  Linha do corpo muito longa (${#line} caracteres, máximo 72)"
+            print_color $YELLOW "💡 Linha: $line"
+        fi
+    done
+fi
+
+# Verificar breaking changes
+if echo "$commit_msg" | grep -q "BREAKING CHANGE:"; then
+    print_color $YELLOW "⚠️  Breaking change detectado!"
+    print_color $YELLOW "💡 Certifique-se de documentar adequadamente"
+fi
+
+# Verificar referências a issues
+if echo "$commit_msg" | grep -qE "(Closes|Fixes|Resolves) #[0-9]+"; then
+    print_color $GREEN "✅ Referência a issue encontrada"
+fi
+
+# Verificar palavras proibidas
+prohibited_words=("fuck" "shit" "damn" "crap" "stupid" "dumb" "wtf" "omg")
+for word in "${prohibited_words[@]}"; do
+    if echo "$commit_msg" | grep -qi "$word"; then
+        print_color $RED "❌ Linguagem inapropriada detectada: $word"
+        print_color $YELLOW "💡 Mantenha as mensagens de commit profissionais"
+        exit 1
+    fi
+done
+
+# Verificar se é um commit de WIP
+if echo "$title" | grep -qi "wip\|work in progress\|todo\|fixme"; then
+    print_color $YELLOW "⚠️  Commit WIP detectado"
+    print_color $YELLOW "💡 Lembre-se de fazer squash antes do merge"
+fi
+
+print_color $GREEN "✅ Mensagem de commit válida!"
+print_color $BLUE "📋 Tipo: $type"
+if [ ! -z "$scope" ]; then
+    print_color $BLUE "🏷️  Escopo: $scope"
+fi
+print_color $BLUE "📝 Descrição: $description"
+
+exit 0

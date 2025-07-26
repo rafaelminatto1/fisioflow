@@ -107,6 +107,10 @@ export const CompliancePage = lazy(() =>
   import(/* webpackChunkName: "admin" */ './CompliancePage')
 );
 
+export const LegalDocumentsPage = lazy(() => 
+  import(/* webpackChunkName: "documents" */ './documents/LegalDocumentManager')
+);
+
 export const SystemStatusPage = lazy(() => 
   import(/* webpackChunkName: "admin" */ './SystemStatusPage')
 );

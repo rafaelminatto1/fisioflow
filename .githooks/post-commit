@@ -1,0 +1,119 @@
+#!/bin/sh
+# Post-commit hook para FisioFlow
+# Executa ações após um commit bem-sucedido
+
+# Cores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Função para log
+log_info() {
+    echo "${BLUE}[POST-COMMIT]${NC} $1"
+}
+
+log_success() {
+    echo "${GREEN}[POST-COMMIT]${NC} $1"
+}
+
+log_warning() {
+    echo "${YELLOW}[POST-COMMIT]${NC} $1"
+}
+
+log_error() {
+    echo "${RED}[POST-COMMIT]${NC} $1"
+}
+
+# Verificar se estamos em um merge commit
+if git rev-parse --verify HEAD^2 >/dev/null 2>&1; then
+    log_info "Merge commit detectado, pulando verificações"
+    exit 0
+fi
+
+# Obter informações do commit
+COMMIT_HASH=$(git rev-parse --short HEAD)
+COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r HEAD | wc -l)
+LINES_ADDED=$(git diff HEAD~1 HEAD --numstat | awk '{added += $1} END {print added+0}')
+LINES_REMOVED=$(git diff HEAD~1 HEAD --numstat | awk '{removed += $2} END {print removed+0}')
+
+log_success "Commit $COMMIT_HASH realizado com sucesso!"
+log_info "Arquivos alterados: $FILES_CHANGED"
+log_info "Linhas adicionadas: $LINES_ADDED"
+log_info "Linhas removidas: $LINES_REMOVED"
+
+# Verificar se há arquivos grandes no commit
+LARGE_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD | xargs -I {} sh -c 'if [ -f "{}" ] && [ $(stat -f%z "{}" 2>/dev/null || stat -c%s "{}" 2>/dev/null || echo 0) -gt 1048576 ]; then echo "{}"; fi')
+
+if [ ! -z "$LARGE_FILES" ]; then
+    log_warning "Arquivos grandes detectados no commit:"
+    echo "$LARGE_FILES" | while read file; do
+        SIZE=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
+        SIZE_MB=$((SIZE / 1048576))
+        log_warning "  - $file (${SIZE_MB}MB)"
+    done
+    log_warning "Considere usar Git LFS para arquivos grandes"
+fi
+
+# Verificar se há TODOs ou FIXMEs adicionados
+TODO_FILES=$(git diff HEAD~1 HEAD --name-only --diff-filter=AM | grep -E '\.(ts|js|tsx|jsx|py|java|cpp|c|h)$' | xargs grep -l "TODO\|FIXME" 2>/dev/null || true)
+
+if [ ! -z "$TODO_FILES" ]; then
+    log_warning "Arquivos com TODO/FIXME detectados:"
+    echo "$TODO_FILES" | while read file; do
+        TODO_COUNT=$(grep -c "TODO\|FIXME" "$file" 2>/dev/null || echo 0)
+        log_warning "  - $file ($TODO_COUNT item(s))"
+    done
+fi
+
+# Verificar se package.json foi alterado sem package-lock.json
+if git diff HEAD~1 HEAD --name-only | grep -q "package.json"; then
+    if ! git diff HEAD~1 HEAD --name-only | grep -q "package-lock.json\|yarn.lock\|pnpm-lock.yaml"; then
+        log_warning "package.json foi alterado mas nenhum lock file foi atualizado"
+        log_warning "Considere executar 'npm install' ou equivalente"
+    fi
+fi
+
+# Verificar se há testes para novos arquivos
+NEW_CODE_FILES=$(git diff HEAD~1 HEAD --name-only --diff-filter=A | grep -E '\.(ts|js|tsx|jsx)$' | grep -v '\.test\.' | grep -v '\.spec\.' || true)
+
+if [ ! -z "$NEW_CODE_FILES" ]; then
+    MISSING_TESTS=""
+    echo "$NEW_CODE_FILES" | while read file; do
+        # Verificar se existe arquivo de teste correspondente
+        BASE_NAME=$(basename "$file" | sed 's/\.[^.]*$//')
+        DIR_NAME=$(dirname "$file")
+        
+        if ! find . -name "*${BASE_NAME}*.test.*" -o -name "*${BASE_NAME}*.spec.*" | grep -q .; then
+            log_warning "Arquivo sem teste detectado: $file"
+        fi
+    done
+fi
+
+# Estatísticas do repositório
+TOTAL_COMMITS=$(git rev-list --count HEAD)
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+log_info "Branch: $BRANCH_NAME"
+log_info "Total de commits: $TOTAL_COMMITS"
+
+# Verificar se estamos na branch main/master e sugerir push
+if [ "$BRANCH_NAME" = "main" ] || [ "$BRANCH_NAME" = "master" ]; then
+    # Verificar se há commits não enviados
+    UNPUSHED_COMMITS=$(git log @{u}..HEAD --oneline 2>/dev/null | wc -l || echo 0)
+    if [ "$UNPUSHED_COMMITS" -gt 0 ]; then
+        log_info "$UNPUSHED_COMMITS commit(s) não enviado(s) para o remote"
+        log_info "Execute 'git push' para enviar as alterações"
+    fi
+fi
+
+# Verificar se há stash entries
+STASH_COUNT=$(git stash list | wc -l)
+if [ "$STASH_COUNT" -gt 0 ]; then
+    log_info "$STASH_COUNT entrada(s) no stash"
+fi
+
+log_success "Post-commit hook concluído!"
+exit 0

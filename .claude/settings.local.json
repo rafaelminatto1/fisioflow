@@ -31,7 +31,8 @@
       "Bash(timeout 30 npm run build)",
       "Bash(node:*)",
       "Bash(del test-integration.js)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(npm run:*)"
     ],
     "deny": []
   }

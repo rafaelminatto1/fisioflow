@@ -13,6 +13,61 @@ import {
   Prescription,
 } from '../types';
 
+// Firebase Cloud Messaging Types
+export interface FCMConfig {
+  projectId: string;
+  apiKey: string;
+  authDomain: string;
+  messagingSenderId: string;
+  appId: string;
+  vapidKey: string; // For web push
+  serviceAccountKey?: string; // For server-side operations
+}
+
+export interface FCMDevice {
+  id: string;
+  userId: string;
+  fcmToken: string;
+  deviceType: 'web' | 'android' | 'ios';
+  deviceName: string;
+  isActive: boolean;
+  lastSeen: string;
+  subscriptions: string[]; // notification topics
+  tenantId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FCMNotificationTemplate {
+  id: string;
+  name: string;
+  type: 'appointment' | 'payment' | 'reminder' | 'alert' | 'message' | 'system';
+  title: string;
+  body: string;
+  icon?: string;
+  image?: string;
+  clickAction?: string;
+  color?: string;
+  sound?: string;
+  variables: string[]; // template variables like {{patientName}}
+  isActive: boolean;
+  tenantId: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FCMTopic {
+  id: string;
+  name: string;
+  displayName: string;
+  description: string;
+  isDefault: boolean;
+  subscriberCount: number;
+  tenantId: string;
+  createdAt: string;
+}
+
 export interface PushNotificationOptions {
   title: string;
   body: string;
@@ -66,10 +121,20 @@ class NotificationService {
   private reminderSettings: ReminderSettings[] = [];
   private deliveryLogs: NotificationDeliveryLog[] = [];
   private processingInterval: NodeJS.Timeout | null = null;
+  
+  // Firebase Cloud Messaging Properties
+  private fcmConfig: FCMConfig | null = null;
+  private fcmDevices: FCMDevice[] = [];
+  private fcmTemplates: FCMNotificationTemplate[] = [];
+  private fcmTopics: FCMTopic[] = [];
+  private messaging: any = null;
 
   constructor() {
     this.init();
     this.loadReminderData();
+    this.loadFCMData();
+    this.initializeDefaultFCMTemplates();
+    this.initializeDefaultTopics();
     this.startProcessingLoop();
   }
 
@@ -1089,6 +1154,668 @@ class NotificationService {
         }
       }, 60000); // A cada minuto para demonstração
     }
+  }
+
+  // =====================================
+  // FIREBASE CLOUD MESSAGING METHODS
+  // =====================================
+
+  private loadFCMData(): void {
+    try {
+      const storedConfig = localStorage.getItem('fcm_config');
+      if (storedConfig) {
+        this.fcmConfig = JSON.parse(storedConfig);
+      }
+
+      const storedDevices = localStorage.getItem('fcm_devices');
+      if (storedDevices) {
+        this.fcmDevices = JSON.parse(storedDevices);
+      }
+
+      const storedTemplates = localStorage.getItem('fcm_templates');
+      if (storedTemplates) {
+        this.fcmTemplates = JSON.parse(storedTemplates);
+      }
+
+      const storedTopics = localStorage.getItem('fcm_topics');
+      if (storedTopics) {
+        this.fcmTopics = JSON.parse(storedTopics);
+      }
+    } catch (error) {
+      console.error('Error loading FCM data:', error);
+    }
+  }
+
+  private saveFCMData(): void {
+    try {
+      if (this.fcmConfig) {
+        localStorage.setItem('fcm_config', JSON.stringify(this.fcmConfig));
+      }
+      localStorage.setItem('fcm_devices', JSON.stringify(this.fcmDevices));
+      localStorage.setItem('fcm_templates', JSON.stringify(this.fcmTemplates));
+      localStorage.setItem('fcm_topics', JSON.stringify(this.fcmTopics));
+    } catch (error) {
+      console.error('Error saving FCM data:', error);
+    }
+  }
+
+  private initializeDefaultFCMTemplates(): void {
+    if (this.fcmTemplates.length === 0) {
+      const defaultTemplates = [
+        {
+          name: 'Appointment Reminder',
+          type: 'appointment' as const,
+          title: 'Lembrete de Consulta - {{patientName}}',
+          body: 'Sua consulta com {{therapistName}} está agendada para {{appointmentTime}}',
+          icon: '/icons/appointment.png',
+          clickAction: '/appointments/{{appointmentId}}',
+          color: '#4F46E5',
+          variables: ['patientName', 'therapistName', 'appointmentTime', 'appointmentId'],
+          isActive: true
+        },
+        {
+          name: 'Payment Due',
+          type: 'payment' as const,
+          title: 'Pagamento Pendente - {{invoiceNumber}}',
+          body: 'Sua fatura de {{amount}} vence em {{dueDate}}. Clique para pagar.',
+          icon: '/icons/payment.png',
+          clickAction: '/payments/{{invoiceId}}',
+          color: '#EF4444',
+          variables: ['invoiceNumber', 'amount', 'dueDate', 'invoiceId'],
+          isActive: true
+        },
+        {
+          name: 'Exercise Reminder',
+          type: 'reminder' as const,
+          title: 'Hora dos Exercícios!',
+          body: 'Não esqueça de fazer seus exercícios prescritos. {{exerciseCount}} exercícios aguardando.',
+          icon: '/icons/exercise.png',
+          clickAction: '/exercises',
+          color: '#10B981',
+          variables: ['exerciseCount'],
+          isActive: true
+        }
+      ];
+
+      defaultTemplates.forEach(template => {
+        this.createFCMTemplate(template, 'default', 'system');
+      });
+    }
+  }
+
+  private initializeDefaultTopics(): void {
+    if (this.fcmTopics.length === 0) {
+      const defaultTopics = [
+        {
+          name: 'appointments',
+          displayName: 'Consultas',
+          description: 'Notificações sobre consultas e agendamentos',
+          isDefault: true
+        },
+        {
+          name: 'payments',
+          displayName: 'Pagamentos',
+          description: 'Lembretes de pagamento e faturas',
+          isDefault: true
+        },
+        {
+          name: 'exercises',
+          displayName: 'Exercícios',
+          description: 'Lembretes de exercícios e planos de tratamento',
+          isDefault: true
+        },
+        {
+          name: 'messages',
+          displayName: 'Mensagens',
+          description: 'Mensagens do chat e comunicações',
+          isDefault: false
+        }
+      ];
+
+      defaultTopics.forEach(topic => {
+        this.createFCMTopic(topic.name, topic.displayName, topic.description, topic.isDefault, 'default');
+      });
+    }
+  }
+
+  // FCM Configuration
+  async configureFCM(config: FCMConfig): Promise<void> {
+    this.fcmConfig = config;
+    this.saveFCMData();
+
+    // Initialize Firebase SDK if running in browser
+    if (typeof window !== 'undefined') {
+      try {
+        // Dynamically import Firebase SDK
+        const { initializeApp } = await import('firebase/app');
+        const { getMessaging, getToken, onMessage } = await import('firebase/messaging');
+
+        const firebaseConfig = {
+          apiKey: config.apiKey,
+          authDomain: config.authDomain,
+          projectId: config.projectId,
+          messagingSenderId: config.messagingSenderId,
+          appId: config.appId
+        };
+
+        const app = initializeApp(firebaseConfig);
+        this.messaging = getMessaging(app);
+
+        // Set up message listener
+        onMessage(this.messaging, (payload) => {
+          this.handleIncomingFCMMessage(payload);
+        });
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+          await Notification.requestPermission();
+        }
+
+      } catch (error) {
+        console.error('Error initializing FCM:', error);
+        throw error;
+      }
+    }
+  }
+
+  // Device Management
+  async registerFCMDevice(
+    userId: string,
+    deviceType: FCMDevice['deviceType'],
+    deviceName: string,
+    tenantId: string
+  ): Promise<FCMDevice> {
+    if (!this.fcmConfig) {
+      throw new Error('FCM not configured');
+    }
+
+    try {
+      let fcmToken = '';
+
+      if (typeof window !== 'undefined' && this.messaging) {
+        const { getToken } = await import('firebase/messaging');
+        
+        fcmToken = await getToken(this.messaging, {
+          vapidKey: this.fcmConfig.vapidKey
+        });
+      }
+
+      // Check if device already exists
+      const existingDevice = this.fcmDevices.find(d => 
+        d.userId === userId && 
+        d.deviceType === deviceType && 
+        d.tenantId === tenantId
+      );
+
+      if (existingDevice) {
+        existingDevice.fcmToken = fcmToken;
+        existingDevice.deviceName = deviceName;
+        existingDevice.isActive = true;
+        existingDevice.lastSeen = new Date().toISOString();
+        existingDevice.updatedAt = new Date().toISOString();
+        this.saveFCMData();
+        return existingDevice;
+      }
+
+      const device: FCMDevice = {
+        id: this.generateFCMId(),
+        userId,
+        fcmToken,
+        deviceType,
+        deviceName,
+        isActive: true,
+        lastSeen: new Date().toISOString(),
+        subscriptions: ['appointments', 'payments'], // Default subscriptions
+        tenantId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      this.fcmDevices.push(device);
+      this.saveFCMData();
+
+      // Subscribe to default topics
+      await this.subscribeToFCMTopics(device.id, device.subscriptions);
+
+      return device;
+
+    } catch (error) {
+      console.error('Error registering FCM device:', error);
+      throw error;
+    }
+  }
+
+  async unregisterFCMDevice(deviceId: string): Promise<boolean> {
+    const deviceIndex = this.fcmDevices.findIndex(d => d.id === deviceId);
+    if (deviceIndex === -1) return false;
+
+    const device = this.fcmDevices[deviceIndex];
+    
+    // Unsubscribe from all topics
+    if (device.subscriptions.length > 0) {
+      await this.unsubscribeFromFCMTopics(deviceId, device.subscriptions);
+    }
+
+    this.fcmDevices.splice(deviceIndex, 1);
+    this.saveFCMData();
+    return true;
+  }
+
+  // Topic Management
+  async createFCMTopic(
+    name: string,
+    displayName: string,
+    description: string,
+    isDefault: boolean,
+    tenantId: string
+  ): Promise<FCMTopic> {
+    const topic: FCMTopic = {
+      id: this.generateFCMId(),
+      name,
+      displayName,
+      description,
+      isDefault,
+      subscriberCount: 0,
+      tenantId,
+      createdAt: new Date().toISOString()
+    };
+
+    this.fcmTopics.push(topic);
+    this.saveFCMData();
+    return topic;
+  }
+
+  async subscribeToFCMTopics(deviceId: string, topicNames: string[]): Promise<void> {
+    const device = this.fcmDevices.find(d => d.id === deviceId);
+    if (!device) throw new Error('Device not found');
+
+    try {
+      // In a real implementation, this would call FCM REST API
+      // For simulation, we'll just update local state
+      const newSubscriptions = [...new Set([...device.subscriptions, ...topicNames])];
+      device.subscriptions = newSubscriptions;
+      device.updatedAt = new Date().toISOString();
+
+      // Update topic subscriber counts
+      topicNames.forEach(topicName => {
+        const topic = this.fcmTopics.find(t => t.name === topicName && t.tenantId === device.tenantId);
+        if (topic) {
+          topic.subscriberCount++;
+        }
+      });
+
+      this.saveFCMData();
+
+    } catch (error) {
+      console.error('Error subscribing to FCM topics:', error);
+      throw error;
+    }
+  }
+
+  async unsubscribeFromFCMTopics(deviceId: string, topicNames: string[]): Promise<void> {
+    const device = this.fcmDevices.find(d => d.id === deviceId);
+    if (!device) throw new Error('Device not found');
+
+    try {
+      device.subscriptions = device.subscriptions.filter(sub => !topicNames.includes(sub));
+      device.updatedAt = new Date().toISOString();
+
+      // Update topic subscriber counts
+      topicNames.forEach(topicName => {
+        const topic = this.fcmTopics.find(t => t.name === topicName && t.tenantId === device.tenantId);
+        if (topic && topic.subscriberCount > 0) {
+          topic.subscriberCount--;
+        }
+      });
+
+      this.saveFCMData();
+
+    } catch (error) {
+      console.error('Error unsubscribing from FCM topics:', error);
+      throw error;
+    }
+  }
+
+  // Template Management
+  async createFCMTemplate(
+    templateData: Omit<FCMNotificationTemplate, 'id' | 'tenantId' | 'createdBy' | 'createdAt' | 'updatedAt'>,
+    tenantId: string,
+    createdBy: string
+  ): Promise<FCMNotificationTemplate> {
+    const template: FCMNotificationTemplate = {
+      ...templateData,
+      id: this.generateFCMId(),
+      tenantId,
+      createdBy,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    this.fcmTemplates.push(template);
+    this.saveFCMData();
+    return template;
+  }
+
+  // Send FCM Notifications
+  async sendFCMNotification(
+    templateId: string,
+    recipients: {
+      type: 'user' | 'topic' | 'all';
+      values: string[];
+    },
+    variables: Record<string, string> = {},
+    tenantId: string
+  ): Promise<void> {
+    const template = this.fcmTemplates.find(t => t.id === templateId);
+    if (!template) throw new Error('FCM Template not found');
+
+    // Process template variables
+    let title = template.title;
+    let body = template.body;
+
+    Object.entries(variables).forEach(([key, value]) => {
+      const placeholder = `{{${key}}}`;
+      title = title.replace(new RegExp(placeholder, 'g'), value);
+      body = body.replace(new RegExp(placeholder, 'g'), value);
+    });
+
+    // Get target devices
+    const targetDevices = await this.getFCMTargetDevices(recipients, tenantId);
+
+    if (targetDevices.length === 0) {
+      console.warn('No target devices found for FCM notification');
+      return;
+    }
+
+    // Send to FCM
+    await this.sendToFCM({
+      title,
+      body,
+      icon: template.icon,
+      image: template.image,
+      clickAction: template.clickAction,
+      color: template.color,
+      sound: template.sound
+    }, targetDevices);
+  }
+
+  async sendDirectFCMNotification(
+    title: string,
+    body: string,
+    recipients: {
+      type: 'user' | 'topic' | 'all';
+      values: string[];
+    },
+    options: {
+      icon?: string;
+      image?: string;
+      clickAction?: string;
+      color?: string;
+      sound?: string;
+      data?: Record<string, any>;
+    } = {},
+    tenantId: string
+  ): Promise<void> {
+    const targetDevices = await this.getFCMTargetDevices(recipients, tenantId);
+
+    if (targetDevices.length === 0) {
+      console.warn('No target devices found for direct FCM notification');
+      return;
+    }
+
+    await this.sendToFCM({
+      title,
+      body,
+      ...options
+    }, targetDevices);
+  }
+
+  private async getFCMTargetDevices(
+    recipients: { type: string; values: string[] },
+    tenantId: string
+  ): Promise<FCMDevice[]> {
+    let targetDevices: FCMDevice[] = [];
+
+    switch (recipients.type) {
+      case 'user':
+        targetDevices = this.fcmDevices.filter(d => 
+          d.tenantId === tenantId && 
+          d.isActive && 
+          recipients.values.includes(d.userId)
+        );
+        break;
+
+      case 'topic':
+        targetDevices = this.fcmDevices.filter(d => 
+          d.tenantId === tenantId && 
+          d.isActive && 
+          d.subscriptions.some(sub => recipients.values.includes(sub))
+        );
+        break;
+
+      case 'all':
+        targetDevices = this.fcmDevices.filter(d => 
+          d.tenantId === tenantId && 
+          d.isActive
+        );
+        break;
+
+      default:
+        throw new Error(`Unsupported recipient type: ${recipients.type}`);
+    }
+
+    return targetDevices;
+  }
+
+  private async sendToFCM(
+    notification: {
+      title: string;
+      body: string;
+      icon?: string;
+      image?: string;
+      clickAction?: string;
+      color?: string;
+      sound?: string;
+      data?: Record<string, any>;
+    },
+    targetDevices: FCMDevice[]
+  ): Promise<void> {
+    if (!this.fcmConfig) {
+      console.warn('FCM not configured, notification will not be sent');
+      return;
+    }
+
+    try {
+      const fcmTokens = targetDevices.map(device => device.fcmToken).filter(Boolean);
+      
+      if (fcmTokens.length === 0) {
+        console.warn('No valid FCM tokens found');
+        return;
+      }
+
+      // In a real implementation, this would use Firebase Admin SDK
+      // For simulation, we'll simulate the sending process
+      await this.simulateFCMSending(notification, fcmTokens);
+
+      console.log(`FCM notification sent to ${fcmTokens.length} devices:`, {
+        title: notification.title,
+        body: notification.body
+      });
+
+    } catch (error) {
+      console.error('Error sending FCM notification:', error);
+    }
+  }
+
+  private async simulateFCMSending(
+    notification: any,
+    fcmTokens: string[]
+  ): Promise<void> {
+    // Simulate sending delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Simulate delivery to browser notifications
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        const browserNotification = new Notification(notification.title, {
+          body: notification.body,
+          icon: notification.icon,
+          image: notification.image,
+          data: notification.data
+        });
+
+        if (notification.clickAction) {
+          browserNotification.onclick = () => {
+            window.focus();
+            window.location.href = notification.clickAction!;
+            browserNotification.close();
+          };
+        }
+
+        // Auto-close after 10 seconds
+        setTimeout(() => {
+          browserNotification.close();
+        }, 10000);
+      }
+    }
+  }
+
+  private handleIncomingFCMMessage(payload: any): void {
+    console.log('Received FCM message:', payload);
+    
+    // Handle incoming FCM messages
+    if (payload.notification) {
+      // Show notification using existing notification system
+      this.sendNotification({
+        title: payload.notification.title,
+        body: payload.notification.body,
+        icon: payload.notification.icon,
+        data: payload.data
+      });
+    }
+  }
+
+  // Quick FCM notification methods for common use cases
+  async sendFCMAppointmentReminder(
+    patientId: string,
+    appointmentData: {
+      patientName: string;
+      therapistName: string;
+      appointmentTime: string;
+      appointmentId: string;
+    },
+    tenantId: string
+  ): Promise<void> {
+    const template = this.fcmTemplates.find(t => 
+      t.name === 'Appointment Reminder' && t.tenantId === tenantId
+    );
+
+    if (template) {
+      await this.sendFCMNotification(
+        template.id,
+        { type: 'user', values: [patientId] },
+        appointmentData,
+        tenantId
+      );
+    }
+  }
+
+  async sendFCMPaymentReminder(
+    patientId: string,
+    paymentData: {
+      invoiceNumber: string;
+      amount: string;
+      dueDate: string;
+      invoiceId: string;
+    },
+    tenantId: string
+  ): Promise<void> {
+    const template = this.fcmTemplates.find(t => 
+      t.name === 'Payment Due' && t.tenantId === tenantId
+    );
+
+    if (template) {
+      await this.sendFCMNotification(
+        template.id,
+        { type: 'user', values: [patientId] },
+        paymentData,
+        tenantId
+      );
+    }
+  }
+
+  async sendFCMExerciseReminder(
+    patientId: string,
+    exerciseData: {
+      exerciseCount: string;
+    },
+    tenantId: string
+  ): Promise<void> {
+    const template = this.fcmTemplates.find(t => 
+      t.name === 'Exercise Reminder' && t.tenantId === tenantId
+    );
+
+    if (template) {
+      await this.sendFCMNotification(
+        template.id,
+        { type: 'user', values: [patientId] },
+        exerciseData,
+        tenantId
+      );
+    }
+  }
+
+  private generateFCMId(): string {
+    return `FCM_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  // Public API Methods for FCM
+  getFCMDevices(tenantId: string): FCMDevice[] {
+    return this.fcmDevices.filter(d => d.tenantId === tenantId);
+  }
+
+  getUserFCMDevices(userId: string, tenantId: string): FCMDevice[] {
+    return this.fcmDevices.filter(d => d.userId === userId && d.tenantId === tenantId);
+  }
+
+  getFCMTemplates(tenantId: string): FCMNotificationTemplate[] {
+    return this.fcmTemplates.filter(t => t.tenantId === tenantId);
+  }
+
+  getFCMTopics(tenantId: string): FCMTopic[] {
+    return this.fcmTopics.filter(t => t.tenantId === tenantId);
+  }
+
+  getFCMConfig(): FCMConfig | null {
+    return this.fcmConfig;
+  }
+
+  async updateFCMTemplate(
+    templateId: string,
+    updates: Partial<FCMNotificationTemplate>
+  ): Promise<FCMNotificationTemplate | undefined> {
+    const templateIndex = this.fcmTemplates.findIndex(t => t.id === templateId);
+    if (templateIndex === -1) return undefined;
+
+    this.fcmTemplates[templateIndex] = {
+      ...this.fcmTemplates[templateIndex],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.saveFCMData();
+    return this.fcmTemplates[templateIndex];
+  }
+
+  async deleteFCMTemplate(templateId: string): Promise<boolean> {
+    const initialLength = this.fcmTemplates.length;
+    this.fcmTemplates = this.fcmTemplates.filter(t => t.id !== templateId);
+    
+    if (this.fcmTemplates.length < initialLength) {
+      this.saveFCMData();
+      return true;
+    }
+    return false;
   }
 }
 

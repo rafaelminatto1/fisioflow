@@ -1,0 +1,65 @@
+# <tipo>(<escopo>): <descrição>
+#
+# <corpo>
+#
+# <rodapé>
+
+# === TIPOS PERMITIDOS ===
+# feat:     Nova funcionalidade
+# fix:      Correção de bug
+# docs:     Documentação
+# style:    Formatação, ponto e vírgula, etc (sem mudança de código)
+# refactor: Refatoração de código
+# test:     Adição ou correção de testes
+# chore:    Tarefas de build, configuração, etc
+# perf:     Melhoria de performance
+# ci:       Mudanças na configuração de CI
+# build:    Mudanças no sistema de build
+# revert:   Reverter commit anterior
+
+# === ESCOPOS SUGERIDOS ===
+# auth:     Autenticação e autorização
+# ui:       Interface do usuário
+# api:      APIs e endpoints
+# db:       Banco de dados
+# config:   Configurações
+# deps:     Dependências
+# mobile:   Aplicativo móvel
+# web:      Aplicação web
+# tests:    Testes
+# docs:     Documentação
+# deploy:   Deploy e infraestrutura
+# security: Segurança
+# perf:     Performance
+# a11y:     Acessibilidade
+# i18n:     Internacionalização
+# freemium: Sistema freemium
+# ios:      Específico para iOS
+
+# === EXEMPLOS ===
+# feat(auth): adicionar login com Google
+# fix(ui): corrigir layout responsivo no mobile
+# docs(api): atualizar documentação dos endpoints
+# refactor(db): otimizar queries de pacientes
+# test(auth): adicionar testes de integração
+# chore(deps): atualizar dependências do React
+# perf(ui): implementar lazy loading nos componentes
+# ci(deploy): configurar pipeline do Vercel
+# feat(freemium): implementar limites de uso
+# fix(ios): corrigir build para TestFlight
+
+# === REGRAS ===
+# 1. Use o imperativo: "adicionar" não "adicionado"
+# 2. Primeira linha: máximo 50 caracteres
+# 3. Corpo: máximo 72 caracteres por linha
+# 4. Separe título do corpo com linha em branco
+# 5. Use o corpo para explicar "o que" e "por que"
+# 6. Use o rodapé para breaking changes e issues
+
+# === BREAKING CHANGES ===
+# BREAKING CHANGE: descrição da mudança que quebra compatibilidade
+
+# === ISSUES ===
+# Closes #123
+# Fixes #456
+# Refs #789
