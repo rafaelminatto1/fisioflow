@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Exercise, ExerciseVideo, ExerciseImage } from '../../types';
-import { useData } from '../../hooks/useData.minimal';
+import { useData } from '../../hooks/useData';
 import { qrCodeService, QRCodeData } from '../../services/qrCodeService';
 import { cacheService } from '../../services/cacheService';
 import LazyImage from '../ui/LazyImage';

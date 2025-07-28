@@ -15,7 +15,7 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
-import { useData } from '../../hooks/useData.minimal';
+import { useData } from '../../hooks/useData';
 import { useAppleIAP } from '../../hooks/useAppleIAP';
 import { SubscriptionPlan, User, Tenant, AuditLog } from '../../types';
 

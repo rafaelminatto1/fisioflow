@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useData } from '../hooks/useData.minimal';
+import { useData } from '../hooks/useData';
 import { ClinicalProtocol, PatientProtocol, ProtocolAnalytics } from '../types';
 import PageShell from './ui/PageShell';
 import {

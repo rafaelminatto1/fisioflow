@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../hooks/useData.minimal';
+import { useData } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { Patient } from '../types';
 import PatientModal from './PatientModal'; // Manteremos o modal para edição/criação

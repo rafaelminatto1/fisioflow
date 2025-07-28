@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useData } from '../hooks/useData.minimal';
+import { useData } from '../hooks/useData';
 import { BreadcrumbItem, UserRole } from '../types';
 import {
   IconChevronRight,

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useAuth } from './useAuth';
-import { useData } from './useData.minimal';
+import { useData } from './useData';
 import { SubscriptionPlan } from '../types';
 
 export interface PlanLimits {

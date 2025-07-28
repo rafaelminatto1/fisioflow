@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserRole } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData.minimal';
+import { useData } from '../../hooks/useData';
 import { cacheService, CachedExercise } from '../../services/cacheService';
 import BaseModal from '../ui/BaseModal';
 import { Button } from '../ui/Button';

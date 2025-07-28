@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useData } from '../hooks/useData.minimal';
+import { useData } from '../hooks/useData';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   IconX,

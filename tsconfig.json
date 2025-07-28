@@ -36,7 +36,13 @@
     "src/**/*",
     "components/**/*",
     "hooks/**/*",
+    "types/**/*",
+    "utils/**/*",
+    "contexts/**/*",
+    "services/**/*",
     "types.ts",
+    "*.ts",
+    "*.tsx",
     "vite.config.ts"
   ],
   "exclude": [

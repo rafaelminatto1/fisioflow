@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useData } from '../hooks/useData.minimal';
+import { useData } from '../hooks/useData';
 import { useAuth } from '../hooks/useAuth';
 import { Appointment, TimeBlock, UserRole } from '../types';
 import {

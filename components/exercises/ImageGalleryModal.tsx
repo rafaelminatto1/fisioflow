@@ -6,7 +6,7 @@ import {
   ImageAnnotation,
 } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData.minimal';
+import { useData } from '../../hooks/useData';
 import BaseModal from '../ui/BaseModal';
 import { Button } from '../ui/Button';
 import LazyImage from '../ui/LazyImage';

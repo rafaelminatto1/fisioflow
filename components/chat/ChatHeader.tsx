@@ -1,7 +1,7 @@
 import React from 'react';
 import { Chat, UserStatus } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData.minimal';
+import { useData } from '../../hooks/useData';
 
 interface ChatHeaderProps {
   chat: Chat;

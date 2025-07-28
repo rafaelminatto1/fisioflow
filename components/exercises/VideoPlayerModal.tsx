@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Exercise, ExerciseVideo } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData.minimal';
+import { useData } from '../../hooks/useData';
 import BaseModal from '../ui/BaseModal';
 import { Button } from '../ui/Button';
 

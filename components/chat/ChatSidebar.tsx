@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Chat, ChatMessage, UserStatus } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData.minimal';
+import { useData } from '../../hooks/useData';
 
 interface ChatSidebarProps {
   chats: Chat[];

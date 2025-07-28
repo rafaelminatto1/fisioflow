@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { useData } from './useData.minimal';
+import { useData } from './useData';
 import { useAuth } from './useAuth';
 import IntegrationAPI from '../services/integrationAPI';
 

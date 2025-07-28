@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useData } from './useData.minimal';
+import { useData } from './useData';
 import { useAuth } from './useAuth';
 import { useNotification } from './useNotification';
 import ReportGenerationService, { ReportData } from '../services/reportGenerationService';

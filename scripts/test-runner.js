@@ -1,14 +1,8 @@
 #!/usr/bin/env node
 
-/**
- * Script para executar testes com diferentes configurações
- * Suporte para Jest e Vitest com relatórios de cobertura
- */
-
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const chalk = require('chalk');
 
 // Configurações
 const CONFIG = {
@@ -23,13 +17,25 @@ const CONFIG = {
   outputDir: 'test-reports',
 };
 
+// Colors for console output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+};
+
 // Utilitários
 const log = {
-  info: (msg) => console.log(chalk.blue('ℹ'), msg),
-  success: (msg) => console.log(chalk.green('✓'), msg),
-  warning: (msg) => console.log(chalk.yellow('⚠'), msg),
-  error: (msg) => console.log(chalk.red('✗'), msg),
-  title: (msg) => console.log(chalk.bold.cyan(`\n${msg}`)),
+  info: (msg) => console.log(`${colors.blue}ℹ${colors.reset}`, msg),
+  success: (msg) => console.log(`${colors.green}✓${colors.reset}`, msg),
+  warning: (msg) => console.log(`${colors.yellow}⚠${colors.reset}`, msg),
+  error: (msg) => console.log(`${colors.red}✗${colors.reset}`, msg),
+  title: (msg) => console.log(`${colors.bright}${colors.cyan}\n${msg}${colors.reset}`),
 };
 
 const execCommand = (command, options = {}) => {
@@ -295,10 +301,10 @@ const generateCoverageReport = () => {
   Object.entries(percentages).forEach(([metric, percentage]) => {
     const threshold = CONFIG.coverageThreshold[metric];
     const status = percentage >= threshold ? '✓' : '✗';
-    const color = percentage >= threshold ? chalk.green : chalk.red;
+    const color = percentage >= threshold ? colors.green : colors.red;
     
     console.log(
-      `${status} ${metric.padEnd(12)}: ${color(`${percentage.toFixed(2)}%`)} (threshold: ${threshold}%)`
+      `${status} ${metric.padEnd(12)}: ${color}${percentage.toFixed(2)}%${colors.reset} (threshold: ${threshold}%)`
     );
   });
   
@@ -387,7 +393,7 @@ const runAllTests = (options = {}) => {
   // Resumo final
   log.title('Resumo dos Resultados');
   Object.entries(results).forEach(([test, passed]) => {
-    const status = passed ? chalk.green('✓ PASSOU') : chalk.red('✗ FALHOU');
+    const status = passed ? `${colors.green}✓ PASSOU${colors.reset}` : `${colors.red}✗ FALHOU${colors.reset}`;
     console.log(`${test.padEnd(20)}: ${status}`);
   });
   
@@ -468,7 +474,7 @@ const parseArgs = () => {
 
 const showHelp = () => {
   console.log(`
-${chalk.bold('Test Runner - FisioFlow')}
+${colors.bright}Test Runner - FisioFlow${colors.reset}
 
 Uso: node scripts/test-runner.js [opções]
 

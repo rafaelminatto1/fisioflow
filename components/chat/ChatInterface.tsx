@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useChat } from '../../hooks/useChat';
-import { useData } from '../../hooks/useData.minimal';
+import { useData } from '../../hooks/useData';
 import { ChatMessage, MessageType, User, UserRole } from '../../types';
 import ChatSidebar from './ChatSidebar';
 import ChatWindow from './ChatWindow';

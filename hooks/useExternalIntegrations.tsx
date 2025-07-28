@@ -6,7 +6,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { useAuth } from './useAuth';
-import { useData } from './useData.minimal';
+import { useData } from './useData';
 import { useNotification } from './useNotification';
 import { useFeatureFlags } from './useFeatureFlags';
 

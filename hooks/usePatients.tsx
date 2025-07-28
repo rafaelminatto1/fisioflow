@@ -1,6 +1,6 @@
 /**
  * Hook especializado para gerenciamento de pacientes com React Query
- * Substituí a lógica de pacientes do useData massivo para melhor performance
+ * Substitui a lógica de pacientes do useData massivo para melhor performance
  * Implementa cache inteligente, invalidação automática e operações otimizadas
  */
 
@@ -140,120 +140,178 @@ export const useDeletePatient = () => {
   });
 };
 
-  const deletePatient = React.useCallback((id: string) => {
-    try {
-      setLoading(true);
-      const patientToDelete = patients.find(p => p.id === id);
+// Hook para pacientes filtrados por status
+export const usePatientsFiltered = (filters: {
+  status?: string;
+  therapist?: string;
+  dateRange?: { start: string; end: string };
+}) => {
+  const { data: patients = [] } = usePatients();
+
+  return useMemo(() => {
+    return patients.filter(patient => {
+      if (filters.status && patient.status !== filters.status) return false;
+      if (filters.therapist && patient.assignedTherapist !== filters.therapist) return false;
       
-      setAllPatients(prev => prev.filter(patient => patient.id !== id));
+      if (filters.dateRange) {
+        const patientDate = new Date(patient.createdAt);
+        const startDate = new Date(filters.dateRange.start);
+        const endDate = new Date(filters.dateRange.end);
+        if (patientDate < startDate || patientDate > endDate) return false;
+      }
       
-      addNotification({
-        type: 'success',
-        message: `Paciente ${patientToDelete?.name || id} removido com sucesso`,
-      });
-
-      console.log(`👤 Paciente removido: ${id}`);
-      
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(errorMsg);
-      addNotification({
-        type: 'error',
-        message: `Erro ao remover paciente: ${errorMsg}`,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [patients, setAllPatients, addNotification]);
-
-  const getPatient = React.useCallback((id: string) => {
-    return patients.find(patient => patient.id === id);
-  }, [patients]);
-
-  const searchPatients = React.useCallback((query: string) => {
-    if (!query.trim()) return patients;
-    
-    const lowerQuery = query.toLowerCase();
-    return patients.filter(patient => 
-      patient.name.toLowerCase().includes(lowerQuery) ||
-      patient.email?.toLowerCase().includes(lowerQuery) ||
-      patient.phone?.toLowerCase().includes(lowerQuery) ||
-      patient.medicalHistory?.toLowerCase().includes(lowerQuery)
-    );
-  }, [patients]);
-
-  const getPatientsByStatus = React.useCallback((status: string) => {
-    return patients.filter(patient => patient.status === status);
-  }, [patients]);
-
-  // Limpa erros automaticamente
-  React.useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
-
-  const contextValue: PatientsContextType = React.useMemo(() => ({
-    patients,
-    addPatient,
-    updatePatient,
-    deletePatient,
-    getPatient,
-    searchPatients,
-    getPatientsByStatus,
-    loading,
-    error,
-  }), [
-    patients,
-    addPatient,
-    updatePatient,
-    deletePatient,
-    getPatient,
-    searchPatients,
-    getPatientsByStatus,
-    loading,
-    error,
-  ]);
-
-  return (
-    <PatientsContext.Provider value={contextValue}>
-      {children}
-    </PatientsContext.Provider>
-  );
+      return true;
+    });
+  }, [patients, filters]);
 };
 
-export const usePatients = (): PatientsContextType => {
-  const context = useContext(PatientsContext);
-  if (!context) {
-    throw new Error('usePatients must be used within PatientsProvider');
-  }
-  return context;
-};
-
-// Hook para estatísticas de pacientes
+// Hook para estatísticas otimizadas de pacientes
 export const usePatientsStats = () => {
-  const { patients } = usePatients();
+  const { data: patients = [] } = usePatients();
 
-  return React.useMemo(() => {
-    const total = patients.length;
-    const active = patients.filter(p => p.status === 'active').length;
-    const inactive = patients.filter(p => p.status === 'inactive').length;
+  return useMemo(() => {
+    const totalPatients = patients.length;
+    const activePatients = patients.filter(p => p.status === 'active').length;
     const newThisMonth = patients.filter(p => {
-      const created = new Date(p.createdAt);
+      const patientDate = new Date(p.createdAt);
       const now = new Date();
-      return created.getMonth() === now.getMonth() && 
-             created.getFullYear() === now.getFullYear();
+      return patientDate.getMonth() === now.getMonth() && 
+             patientDate.getFullYear() === now.getFullYear();
     }).length;
 
+    const statusBreakdown = patients.reduce((acc, patient) => {
+      acc[patient.status] = (acc[patient.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
     return {
-      total,
-      active,
-      inactive,
+      totalPatients,
+      activePatients,
       newThisMonth,
-      activePercentage: total > 0 ? Math.round((active / total) * 100) : 0,
+      statusBreakdown,
+      inactivePatients: totalPatients - activePatients,
+      growthRate: totalPatients > 0 ? (newThisMonth / totalPatients) * 100 : 0
     };
   }, [patients]);
 };
 
-export default usePatients;
+// Hook para prefetch de paciente (otimização)
+export const usePrefetchPatient = () => {
+  const queryClient = useQueryClient();
+  const { getSecurePatient } = useSecureData();
+  const { user, currentTenant } = useAuth();
+
+  return useCallback(
+    (patientId: string) => {
+      queryClient.prefetchQuery({
+        queryKey: patientKeys.detail(patientId),
+        queryFn: async () => {
+          if (!currentTenant) return null;
+          const masterKey = sessionStorage.getItem('masterKey') || 'temp_key';
+          return await getSecurePatient(patientId, masterKey, user);
+        },
+        staleTime: 2 * 60 * 1000,
+      });
+    },
+    [queryClient, getSecurePatient, user, currentTenant]
+  );
+};
+
+// Hook otimizado para listagem com paginação
+export const usePatientsWithPagination = (
+  page: number = 1, 
+  pageSize: number = 20,
+  filters?: any
+) => {
+  const { data: allPatients = [], isLoading, error } = usePatients();
+  
+  return useMemo(() => {
+    let filteredPatients = allPatients;
+    
+    // Aplicar filtros se fornecidos
+    if (filters) {
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        filteredPatients = filteredPatients.filter(patient =>
+          patient.name.toLowerCase().includes(searchTerm) ||
+          patient.email?.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      if (filters.status) {
+        filteredPatients = filteredPatients.filter(p => p.status === filters.status);
+      }
+    }
+
+    // Calcular paginação
+    const totalItems = filteredPatients.length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedPatients = filteredPatients.slice(startIndex, endIndex);
+
+    return {
+      patients: paginatedPatients,
+      pagination: {
+        currentPage: page,
+        pageSize,
+        totalItems,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrevious: page > 1,
+      },
+      isLoading,
+      error,
+    };
+  }, [allPatients, page, pageSize, filters, isLoading, error]);
+};
+
+// Hook para invalidar cache de pacientes
+export const useInvalidatePatients = () => {
+  const queryClient = useQueryClient();
+
+  return useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: patientKeys.all });
+  }, [queryClient]);
+};
+
+// Compatibilidade: Hook que simula a interface antiga para não quebrar componentes existentes
+export const usePatientsLegacy = () => {
+  const { data: patients = [], isLoading, error } = usePatients();
+  const savePatient = useSavePatient();
+  const deletePatient = useDeletePatient();
+
+  return {
+    patients,
+    addPatient: (patient: Omit<Patient, 'id'>) => {
+      const newPatient = {
+        ...patient,
+        id: `patient_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as Patient;
+      savePatient.mutate(newPatient);
+    },
+    updatePatient: (id: string, updates: Partial<Patient>) => {
+      // TODO: Implementar update mutation
+      console.log('Update patient not implemented yet');
+    },
+    deletePatient: (id: string) => {
+      deletePatient.mutate({ patientId: id, reason: 'Remoção solicitada pelo usuário' });
+    },
+    getPatient: (id: string) => patients.find(p => p.id === id),
+    searchPatients: (query: string) => {
+      if (!query.trim()) return patients;
+      const searchTerm = query.toLowerCase();
+      return patients.filter(patient => 
+        patient.name.toLowerCase().includes(searchTerm) ||
+        patient.email?.toLowerCase().includes(searchTerm)
+      );
+    },
+    getPatientsByStatus: (status: string) => patients.filter(p => p.status === status),
+    loading: isLoading,
+    error: error?.message || null,
+  };
+};
+
+export default usePatientsLegacy;
