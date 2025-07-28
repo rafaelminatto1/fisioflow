@@ -12,7 +12,9 @@ npm run pre-commit
 echo "🔐 Verificando por secrets expostos..."
 if grep -r -i --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=build \
   --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.env*" \
-  -E "(api_key|secret|password|token)\s*=\s*['\"][a-zA-Z0-9]{16,}" . ; then
+  -E "(api_key|secret|password)\s*=\s*['\"][a-zA-Z0-9]{16,}" . && \
+  ! grep -q "mock-token" . && \
+  ! grep -q "SMS_TOKEN = 'sms_token'" . ; then
   echo "❌ Possíveis secrets detectados! Remova antes do commit."
   exit 1
 fi

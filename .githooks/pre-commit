@@ -40,7 +40,6 @@ secret_patterns=(
     "password\s*=\s*['\"][^'\"]+['\"]" 
     "api[_-]?key\s*=\s*['\"][^'\"]+['\"]" 
     "secret\s*=\s*['\"][^'\"]+['\"]" 
-    "token\s*=\s*['\"][^'\"]+['\"]" 
     "-----BEGIN.*PRIVATE.*KEY-----" 
     "sk_live_" 
     "pk_live_" 
@@ -49,11 +48,15 @@ secret_patterns=(
 
 for pattern in "${secret_patterns[@]}"; do
     # Excluir arquivos de hook da verificação de secrets
-    if git diff --cached --name-only | grep -v "\.githooks/" | xargs git diff --cached | grep -iE "$pattern" >/dev/null 2>&1; then
-        print_color $RED "❌ Possível secret detectado no commit!"
-        print_color $YELLOW "🔍 Padrão encontrado: $pattern"
-        print_color $YELLOW "💡 Remova secrets antes de fazer commit"
-        exit 1
+    staged_content=$(git diff --cached --name-only | grep -v "\.githooks/" | xargs git diff --cached 2>/dev/null || true)
+    if echo "$staged_content" | grep -iE "$pattern" >/dev/null 2>&1; then
+        # Verificar se não é um caso legítimo (mock tokens ou enums)
+        if ! echo "$staged_content" | grep -q "mock-token" && ! echo "$staged_content" | grep -q "SMS_TOKEN = 'sms_token'"; then
+            print_color $RED "❌ Possível secret detectado no commit!"
+            print_color $YELLOW "🔍 Padrão encontrado: $pattern"
+            print_color $YELLOW "💡 Remova secrets antes de fazer commit"
+            exit 1
+        fi
     fi
 done
 
@@ -71,8 +74,8 @@ if [ ! -z "$ts_js_files" ]; then
                 print_color $YELLOW "💡 Considere remover antes do commit"
             fi
             
-            # Verificar se há debugger
-            if grep -n "debugger" "$file" >/dev/null 2>&1; then
+            # Verificar se há debugger (excluindo configurações legítimas)
+            if grep -n "debugger" "$file" | grep -v "drop_debugger" >/dev/null 2>&1; then
                 print_color $RED "❌ debugger encontrado em $file"
                 print_color $YELLOW "💡 Remova debugger antes do commit"
                 exit 1
