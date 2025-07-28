@@ -27,11 +27,11 @@ interface VirtualizedListProps<T> {
 }
 
 // Item wrapper para lista fixa
-const FixedListItem = memo(<T,>({ 
+const FixedListItem = memo(({ 
   index, 
   style, 
   data 
-}: ListChildComponentProps & { data: { items: T[]; renderItem: (item: T, index: number, style: React.CSSProperties) => React.ReactNode } }) => {
+}: ListChildComponentProps & { data: { items: any[]; renderItem: (item: any, index: number, style: React.CSSProperties) => React.ReactNode } }) => {
   const { items, renderItem } = data;
   const item = items[index];
   
@@ -47,11 +47,11 @@ const FixedListItem = memo(<T,>({
 FixedListItem.displayName = 'FixedListItem';
 
 // Item wrapper para lista variável
-const VariableListItem = memo(<T,>({ 
+const VariableListItem = memo(({ 
   index, 
   style, 
   data 
-}: ListChildComponentProps & { data: { items: T[]; renderItem: (item: T, index: number, style: React.CSSProperties) => React.ReactNode } }) => {
+}: ListChildComponentProps & { data: { items: any[]; renderItem: (item: any, index: number, style: React.CSSProperties) => React.ReactNode } }) => {
   const { items, renderItem } = data;
   const item = items[index];
   
@@ -67,7 +67,7 @@ const VariableListItem = memo(<T,>({
 VariableListItem.displayName = 'VariableListItem';
 
 // Hook para busca otimizada
-const useOptimizedSearch = <T>(items: T[], searchFields: (keyof T)[]) => {
+const useOptimizedSearch = (items: any[], searchFields: string[]) => {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useOptimizedDebounce(searchTerm, 300);
   

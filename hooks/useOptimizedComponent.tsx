@@ -34,9 +34,9 @@ export const useStableObject = <T extends Record<string, any>>(
 };
 
 // Hook otimizado para filtros e busca (evita re-computação desnecessária)
-export const useOptimizedFilter = <T>(
-  items: T[],
-  filterFn: (item: T) => boolean,
+export const useOptimizedFilter = (
+  items: any[],
+  filterFn: (item: any) => boolean,
   deps: any[] = []
 ) => {
   return useMemo(() => {

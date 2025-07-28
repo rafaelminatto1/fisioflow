@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 
 import { dataOptimizer } from '../services/dataOptimizer';
 
-export const useOptimizedStorage = <T,>(
+export const useOptimizedStorage = <T>(
   key: string,
   initialValue: T,
   searchFields: (keyof T)[] = [],

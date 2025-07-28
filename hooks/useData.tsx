@@ -113,7 +113,7 @@ import { useNotification, NotificationContext } from './useNotification';
 export const DataContext = createContext<any | undefined>(undefined);
 
 // Hook otimizado com índices e compressão
-const useOptimizedStorage = <T,>(
+const useOptimizedStorage = <T>(
   key: string,
   initialValue: T,
   searchFields: (keyof T)[] = [],
@@ -151,7 +151,7 @@ const useOptimizedStorage = <T,>(
 };
 
 // Hook legado para compatibilidade
-const useLocalStorage = <T,>(
+const useLocalStorage = <T>(
   key: string,
   initialValue: T,
   validator?: (data: any) => data is T

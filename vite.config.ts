@@ -76,6 +76,16 @@ export default defineConfig(({ mode }) => {
           safari10: true,
         },
       } : undefined,
+      
+      // Limite de tamanho de chunk
+      chunkSizeWarningLimit: isMinimal ? 2000 : 1000,
+    },
+    
+    // Configurações específicas por modo
+    esbuild: {
+      logLevel: isMinimal ? 'silent' : 'info',
+      jsx: 'automatic',
+      jsxDev: !isProduction,
     },
     
     // Configurações de desenvolvimento

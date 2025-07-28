@@ -33,7 +33,8 @@
       "Bash(del test-integration.js)",
       "Bash(touch:*)",
       "Bash(npm run:*)",
-      "Bash(npx vitest run:*)"
+      "Bash(npx vitest run:*)",
+      "Bash(ls -la)"
     ],
     "deny": []
   }

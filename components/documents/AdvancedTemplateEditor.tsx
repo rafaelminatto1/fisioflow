@@ -548,7 +548,7 @@ export function AdvancedTemplateEditor({ template, onSave, onClose }: TemplateEd
                     {currentTemplate.variables.map((variable, index) => (
                       <div key={index} className="p-3 bg-white border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
-                          <div className="font-medium text-sm">{{variable.name}}</div>
+                          <div className="font-medium text-sm">{`{${variable.name}}`}</div>
                           <div className="flex items-center space-x-1">
                             <button
                               onClick={() => insertVariable(variable.name)}
