@@ -103,7 +103,7 @@ import {
   INITIAL_EXERCISE_VIDEOS,
   INITIAL_EXERCISE_IMAGES,
 } from '../constants';
-import { useNotification } from './useNotification';
+import { useNotification, NotificationContext } from './useNotification';
 import { useAuth } from './useAuth';
 import { dataOptimizer } from '../services/dataOptimizer';
 
@@ -353,7 +353,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     any[]
   >('fisioflow-all-symptom-diary-entries', []);
 
-  const { addNotification } = useNotification();
+  // Hook de notificações - com verificação de contexto
+  const notificationContext = useContext(NotificationContext);
+  const addNotification = notificationContext?.addNotification || (() => {});
 
   // All setter functions remain here. They get 'actingUser' passed in, so they are independent.
   const logAction = (
@@ -1823,30 +1825,49 @@ export const useData = (): DataContextType => {
     setAllExecutiveReports,
     setAllExerciseFavorites,
     setAllExerciseRatings,
+    setAllExerciseVideos,
+    setAllExerciseImages,
+    allSymptomDiaryEntries,
+    setAllSymptomDiaryEntries,
+    currentUser,
+    saveAuditLog,
+    addNotification,
     ...rest
   } = context;
 
   const tenantId = useMemo(() => actingUser?.tenantId, [actingUser]);
 
   const users = useMemo(
-    () =>
-      tenantId
+    () => {
+      if (!allUsers || !Array.isArray(allUsers)) {
+        return actingUser ? [actingUser] : [];
+      }
+      return tenantId
         ? allUsers.filter((u: User) => u.tenantId === tenantId || !u.tenantId)
         : actingUser
           ? [actingUser]
-          : [],
+          : [];
+    },
     [allUsers, actingUser, tenantId]
   );
   const tasks = useMemo(
-    () =>
-      tenantId ? allTasks.filter((t: Task) => t.tenantId === tenantId) : [],
+    () => {
+      if (!allTasks || !Array.isArray(allTasks)) {
+        return [];
+      }
+      return tenantId ? allTasks.filter((t: Task) => t.tenantId === tenantId) : [];
+    },
     [allTasks, tenantId]
   );
   const patients = useMemo(
-    () =>
-      tenantId
+    () => {
+      if (!allPatients || !Array.isArray(allPatients)) {
+        return [];
+      }
+      return tenantId
         ? allPatients.filter((p: Patient) => p.tenantId === tenantId)
-        : [],
+        : [];
+    },
     [allPatients, tenantId]
   );
   const notebooks = useMemo(
@@ -2124,12 +2145,16 @@ export const useData = (): DataContextType => {
 
   // === SISTEMA DE FAVORITOS E AVALIAÇÕES - FILTERED ARRAYS ===
   const exerciseFavorites = useMemo(
-    () =>
-      tenantId
+    () => {
+      if (!allExerciseFavorites || !Array.isArray(allExerciseFavorites)) {
+        return [];
+      }
+      return tenantId
         ? allExerciseFavorites.filter(
             (ef: ExerciseFavorite) => ef.tenantId === tenantId
           )
-        : [],
+        : [];
+    },
     [allExerciseFavorites, tenantId]
   );
 
@@ -2154,19 +2179,21 @@ export const useData = (): DataContextType => {
     [allExerciseVideos, tenantId]
   );
   const exerciseImages = useMemo(
-    () =>
-      tenantId
-        ? allExerciseImages.filter(
-            (ei: ExerciseImage) => ei.tenantId === tenantId
-          )
-        : [],
+    () => {
+      if (!tenantId || !allExerciseImages || !Array.isArray(allExerciseImages)) {
+        return [];
+      }
+      return allExerciseImages.filter(
+        (ei: ExerciseImage) => ei.tenantId === tenantId
+      );
+    },
     [allExerciseImages, tenantId]
   );
 
   // === SISTEMA DE FAVORITOS E AVALIAÇÕES - FUNCTIONS ===
   const toggleExerciseFavorite = useCallback(
     (exerciseId: string, actingUser: User) => {
-      if (!tenantId) return;
+      if (!tenantId || !allExerciseFavorites || !Array.isArray(allExerciseFavorites)) return;
 
       const existingFavorite = allExerciseFavorites.find(
         (f) => f.userId === actingUser.id && f.exerciseId === exerciseId
@@ -2191,7 +2218,7 @@ export const useData = (): DataContextType => {
           createdAt: new Date().toISOString(),
           tenantId,
         };
-        setAllExerciseFavorites([...allExerciseFavorites, newFavorite]);
+        setAllExerciseFavorites([...(allExerciseFavorites || []), newFavorite]);
         addNotification({
           type: 'success',
           title: 'Favorito adicionado',
@@ -2213,7 +2240,7 @@ export const useData = (): DataContextType => {
         id: `rating-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       };
 
-      setAllExerciseRatings([...allExerciseRatings, newRating]);
+      setAllExerciseRatings([...(allExerciseRatings || []), newRating]);
       addNotification({
         type: 'success',
         title: 'Avaliação salva',
@@ -2306,7 +2333,7 @@ export const useData = (): DataContextType => {
         isActive: true,
       };
 
-      setAllExerciseVideos([...allExerciseVideos, newVideo]);
+      setAllExerciseVideos([...(allExerciseVideos || []), newVideo]);
 
       addNotification({
         type: 'success',
@@ -2314,11 +2341,13 @@ export const useData = (): DataContextType => {
         message: `O vídeo "${video.title}" foi adicionado ao exercício.`,
       });
     },
-    [allExerciseVideos, setAllExerciseVideos, addNotification]
+    [allExerciseVideos, setAllExerciseVideos]
   );
 
   const deleteExerciseVideo = useCallback(
     (videoId: string, actingUser: User) => {
+      if (!allExerciseVideos || !Array.isArray(allExerciseVideos)) return;
+      
       const videoToDelete = allExerciseVideos.find((v) => v.id === videoId);
       if (!videoToDelete) return;
 
@@ -2335,6 +2364,10 @@ export const useData = (): DataContextType => {
 
   const getExerciseVideos = useCallback(
     (exerciseId: string): ExerciseVideo[] => {
+      if (!allExerciseVideos || !Array.isArray(allExerciseVideos)) {
+        return [];
+      }
+      
       return allExerciseVideos
         .filter(
           (v) =>
@@ -2373,7 +2406,7 @@ export const useData = (): DataContextType => {
         isActive: true,
       };
 
-      setAllExerciseImages([...allExerciseImages, newImage]);
+      setAllExerciseImages([...(allExerciseImages || []), newImage]);
 
       addNotification({
         type: 'success',
@@ -2381,12 +2414,12 @@ export const useData = (): DataContextType => {
         message: `A imagem "${image.title}" foi adicionada ao exercício.`,
       });
     },
-    [allExerciseImages, setAllExerciseImages, addNotification]
+    [allExerciseImages, setAllExerciseImages]
   );
 
   const updateExerciseImage = useCallback(
     (imageId: string, updates: Partial<ExerciseImage>, actingUser: User) => {
-      const updatedImages = allExerciseImages.map((img) =>
+      const updatedImages = (allExerciseImages || []).map((img) =>
         img.id === imageId ? { ...img, ...updates } : img
       );
 
@@ -2398,16 +2431,16 @@ export const useData = (): DataContextType => {
         message: 'As anotações da imagem foram atualizadas com sucesso.',
       });
     },
-    [allExerciseImages, setAllExerciseImages, addNotification]
+    [allExerciseImages, setAllExerciseImages]
   );
 
   const deleteExerciseImage = useCallback(
     (imageId: string, actingUser: User) => {
-      const imageToDelete = allExerciseImages.find((img) => img.id === imageId);
+      const imageToDelete = (allExerciseImages || []).find((img) => img.id === imageId);
       if (!imageToDelete) return;
 
       setAllExerciseImages(
-        allExerciseImages.filter((img) => img.id !== imageId)
+        (allExerciseImages || []).filter((img) => img.id !== imageId)
       );
 
       addNotification({
@@ -2416,11 +2449,14 @@ export const useData = (): DataContextType => {
         message: `A imagem "${imageToDelete.title}" foi removida.`,
       });
     },
-    [allExerciseImages, setAllExerciseImages, addNotification]
+    [allExerciseImages, setAllExerciseImages]
   );
 
   const getExerciseImages = useCallback(
     (exerciseId: string): ExerciseImage[] => {
+      if (!allExerciseImages || !Array.isArray(allExerciseImages)) {
+        return [];
+      }
       return allExerciseImages
         .filter(
           (img) =>
@@ -2435,6 +2471,9 @@ export const useData = (): DataContextType => {
 
   const getExerciseImagesByCategory = useCallback(
     (exerciseId: string, category: ImageCategory): ExerciseImage[] => {
+      if (!allExerciseImages || !Array.isArray(allExerciseImages)) {
+        return [];
+      }
       return allExerciseImages
         .filter(
           (img) =>
@@ -2989,10 +3028,14 @@ export const useData = (): DataContextType => {
 
   // === FUNÇÕES DO DIÁRIO DE SINTOMAS ===
   const symptomDiaryEntries = useMemo(
-    () =>
-      allSymptomDiaryEntries.filter(
+    () => {
+      if (!allSymptomDiaryEntries || !Array.isArray(allSymptomDiaryEntries)) {
+        return [];
+      }
+      return allSymptomDiaryEntries.filter(
         (entry) => entry.tenantId === currentUser?.tenantId
-      ),
+      );
+    },
     [allSymptomDiaryEntries, currentUser?.tenantId]
   );
 
@@ -3196,5 +3239,7 @@ export const useData = (): DataContextType => {
     updateSymptomDiaryEntry,
     deleteSymptomDiaryEntry,
     getSymptomDiaryEntriesForPatient,
+    // Notificações
+    addNotification,
   } as DataContextType;
 };

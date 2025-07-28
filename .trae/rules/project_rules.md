@@ -35,3 +35,6 @@ Evite escrever scripts em arquivos, se possível, especialmente se o script é p
 Evite ter arquivos com mais de 200-300 linhas de código. Refatore nesse ponto.
 Os dados simulados são necessários apenas para testes, nunca simule dados para dev ou prod.
 Nunca sobrescreva meu arquivo .env sem primeiro perguntar e confirmar.
+
+Escopo do Sistema Freemium
+O sistema freemium não será lançado publicamente por enquanto. O sistema será utilizado apenas na clínica própria do desenvolvedor para testes e validação antes de um eventual lançamento público futuro. Todas as funcionalidades freemium devem ser desenvolvidas considerando este contexto de uso restrito e controlado.

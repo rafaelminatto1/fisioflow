@@ -17,6 +17,8 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined
 );
 
+export { NotificationContext };
+
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {

@@ -20,7 +20,7 @@ O FisioFlow é um sistema completo e integrado para gestão de clínicas de fisi
 - **IA Integrada**: Assistente proativo com RAG otimizado
 - **Performance Otimizada**: Code splitting, virtualização e lazy loading
 - **Busca Global**: Sistema de busca avançado em todos os módulos
-- **Sistema Freemium**: Modelo escalável com tiers gratuito, premium e enterprise
+- **Sistema Freemium**: Modelo escalável com tiers gratuito, premium e enterprise (uso interno para testes)
 - **Módulo de Mentoria**: Sistema completo de ensino e acompanhamento de estagiários
 - **Otimizado para iOS**: Interface responsiva com suporte offline e notificações push
 - **Integridade de Dados**: Validações rigorosas e auditoria completa
@@ -518,7 +518,7 @@ POST /api/mentorship/study-plans
    - Centro de recursos educacionais com rating
    - Sessões de mentoria com agendamento
    - Planos de estudo personalizados
-   - Sistema freemium com 3 tiers
+   - Sistema freemium com 3 tiers (uso interno para testes)
    - Análise de progresso e relatórios
    - Integração com IA para recomendações
 
@@ -548,6 +548,8 @@ POST /api/mentorship/study-plans
 O módulo de mentoria é um sistema completo para gestão educacional em fisioterapia, desenvolvido com foco em escalabilidade, integridade de dados e modelo freemium otimizado para iOS.
 
 ### 💎 Sistema Freemium
+
+> **⚠️ Escopo Atual**: O sistema freemium não será lançado publicamente por enquanto. Será utilizado apenas na clínica própria do desenvolvedor para testes e validação antes de um eventual lançamento público futuro.
 
 | Tier | Estagiários | Casos/Mês | Recursos | Sessões/Mês | Armazenamento |
 |------|-------------|-----------|----------|-------------|---------------|

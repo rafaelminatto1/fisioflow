@@ -1,509 +1,326 @@
-/**
- * Gerenciador de Documentos Legais
- * Interface principal para criação, assinatura e gestão de documentos
- */
-
 import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
+  Download, 
+  Eye, 
   Plus, 
   Search, 
   Filter, 
-  Download, 
-  Send, 
   CheckCircle, 
-  AlertTriangle,
-  Clock,
-  Users,
-  Shield,
-  Eye,
-  Edit3,
-  Archive,
-  BarChart3,
-  Settings,
+  AlertCircle, 
+  Clock, 
+  User, 
+  Calendar,
   Workflow,
   Bell,
-  Share,
-  History,
-  Zap
+  Settings,
+  PenTool
 } from 'lucide-react';
-
-import type { 
+import { useData } from '../../hooks/useData';
+import { 
   BaseDocument, 
   DocumentType, 
   DocumentStatus,
-  DocumentGenerationRequest,
-  ComplianceValidationResult 
+  DocumentGenerationRequest
 } from '../../types/legalDocuments';
-
-import { documentService } from '../../services/documentService';
-import { digitalSignatureService } from '../../services/digitalSignatureService';
-import { complianceService } from '../../services/complianceService';
-import { documentWorkflowService, startDocumentWorkflow } from '../../services/documentWorkflowService';
-import { documentNotificationService, notifyDocumentCreated } from '../../services/documentNotificationService';
-import { useData } from '../../hooks/useData';
-import { useAuth } from '../../hooks/useAuth';
-import { useNotification } from '../../hooks/useNotification';
-
-import DocumentAnalyticsDashboard from './DocumentAnalyticsDashboard';
-import AdvancedTemplateEditor from './AdvancedTemplateEditor';
+import type { ComplianceValidationResult } from '../../services/complianceService';
+import { documentWorkflowService } from '../../services/documentWorkflowService';
+import { documentNotificationService } from '../../services/documentNotificationService';
+import { AdvancedTemplateEditor } from './AdvancedTemplateEditor';
 
 interface LegalDocumentManagerProps {
   patientId?: string;
-  onDocumentCreated?: (document: BaseDocument) => void;
 }
 
-export function LegalDocumentManager({ patientId, onDocumentCreated }: LegalDocumentManagerProps) {
-  const { currentUser, currentTenant } = useAuth();
-  const { patients, therapists } = useData();
-  const { showNotification } = useNotification();
+type ViewType = 'documents' | 'workflows' | 'notifications' | 'templates';
 
-  const [documents, setDocuments] = useState<BaseDocument[]>([]);
-  const [loading, setLoading] = useState(true);
+export function LegalDocumentManager({ patientId }: LegalDocumentManagerProps) {
+  const { documents, patients } = useData();
+  const [selectedDocument, setSelectedDocument] = useState<BaseDocument | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<DocumentStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<DocumentType | 'all'>('all');
-  const [selectedDocument, setSelectedDocument] = useState<BaseDocument | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [activeView, setActiveView] = useState<ViewType>('documents');
   const [complianceData, setComplianceData] = useState<Record<string, ComplianceValidationResult>>({});
-  const [activeView, setActiveView] = useState<'documents' | 'analytics' | 'templates' | 'workflows' | 'notifications'>('documents');
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
 
-  useEffect(() => {
-    loadDocuments();
-  }, [patientId, currentTenant]);
+  // Filtrar documentos
+  const filteredDocuments = documents.filter(doc => {
+    if (patientId && doc.patientId !== patientId) return false;
+    if (searchTerm && !doc.title.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (statusFilter !== 'all' && doc.status !== statusFilter) return false;
+    if (typeFilter !== 'all' && doc.type !== typeFilter) return false;
+    return true;
+  });
 
-  const loadDocuments = async () => {
-    setLoading(true);
-    try {
-      // Em produção, seria uma chamada à API
-      const savedDocs = localStorage.getItem('fisioflow_legal_documents');
-      let docs: BaseDocument[] = savedDocs ? JSON.parse(savedDocs) : [];
-      
-      // Filtrar por tenant
-      docs = docs.filter(doc => doc.tenantId === currentTenant?.id);
-      
-      // Filtrar por paciente se especificado
-      if (patientId) {
-        docs = docs.filter(doc => doc.patientId === patientId);
-      }
-
-      setDocuments(docs);
-
-      // Carregar dados de compliance para cada documento
-      const compliancePromises = docs.map(async (doc) => ({
-        id: doc.id,
-        compliance: await complianceService.validateDocumentCompliance(doc)
-      }));
-
-      const complianceResults = await Promise.all(compliancePromises);
-      const complianceMap = {};
-      complianceResults.forEach(result => {
-        complianceMap[result.id] = result.compliance;
-      });
-      setComplianceData(complianceMap);
-
-    } catch (error) {
-      console.error('Erro ao carregar documentos:', error);
-      showNotification('Erro ao carregar documentos', 'error');
-    } finally {
-      setLoading(false);
-    }
+  const handleCreateDocument = (request: Partial<DocumentGenerationRequest>) => {
+    console.log('Criando documento:', request);
+    setShowCreateModal(false);
   };
 
-  const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || doc.status === statusFilter;
-    const matchesType = typeFilter === 'all' || doc.type === typeFilter;
-    
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  const handleDownload = (document: BaseDocument) => {
+    console.log('Download do documento:', document.id);
+  };
+
+  const handleSign = (document: BaseDocument) => {
+    console.log('Assinando documento:', document.id);
+  };
 
   const getStatusIcon = (status: DocumentStatus) => {
     switch (status) {
-      case DocumentStatus.SIGNED:
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case DocumentStatus.PENDING_SIGNATURE:
-        return <Clock className="h-4 w-4 text-yellow-600" />;
-      case DocumentStatus.EXPIRED:
-        return <AlertTriangle className="h-4 w-4 text-red-600" />;
       case DocumentStatus.DRAFT:
-        return <Edit3 className="h-4 w-4 text-gray-600" />;
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case DocumentStatus.PENDING_SIGNATURE:
+        return <PenTool className="h-4 w-4 text-blue-500" />;
+      case DocumentStatus.SIGNED:
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case DocumentStatus.EXPIRED:
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <FileText className="h-4 w-4 text-blue-600" />;
+        return <FileText className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const getStatusColor = (status: DocumentStatus) => {
+  const getStatusText = (status: DocumentStatus) => {
     switch (status) {
-      case DocumentStatus.SIGNED:
-        return 'bg-green-100 text-green-800';
-      case DocumentStatus.PENDING_SIGNATURE:
-        return 'bg-yellow-100 text-yellow-800';
-      case DocumentStatus.EXPIRED:
-        return 'bg-red-100 text-red-800';
       case DocumentStatus.DRAFT:
-        return 'bg-gray-100 text-gray-800';
-      case DocumentStatus.ARCHIVED:
-        return 'bg-purple-100 text-purple-800';
+        return 'Rascunho';
+      case DocumentStatus.PENDING_SIGNATURE:
+        return 'Pendente Assinatura';
+      case DocumentStatus.SIGNED:
+        return 'Assinado';
+      case DocumentStatus.EXPIRED:
+        return 'Expirado';
       default:
-        return 'bg-blue-100 text-blue-800';
+        return 'Desconhecido';
     }
   };
 
-  const getComplianceColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 70) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const handleCreateDocument = async (request: Partial<DocumentGenerationRequest>) => {
-    try {
-      const document = await documentService.generateDocument({
-        templateId: request.templateId!,
-        patientId: request.patientId || patientId!,
-        therapistId: currentUser!.id,
-        data: request.data || {},
-        options: {
-          format: 'html',
-          includeSignature: true,
-          deliveryMethod: 'download',
-          recipients: [],
-          customization: {}
-        }
-      });
-
-      // Salvar documento
-      const updatedDocs = [...documents, document];
-      setDocuments(updatedDocs);
-      localStorage.setItem('fisioflow_legal_documents', JSON.stringify(updatedDocs));
-
-      // Iniciar workflow se aplicável
-      try {
-        await startDocumentWorkflow(document);
-      } catch (error) {
-        console.warn('Erro ao iniciar workflow:', error);
-      }
-
-      // Enviar notificações
-      try {
-        await notifyDocumentCreated(document);
-      } catch (error) {
-        console.warn('Erro ao enviar notificações:', error);
-      }
-
-      showNotification('Documento criado com sucesso', 'success');
-      setShowCreateModal(false);
-      
-      if (onDocumentCreated) {
-        onDocumentCreated(document);
-      }
-
-      // Recarregar compliance
-      loadDocuments();
-
-    } catch (error) {
-      console.error('Erro ao criar documento:', error);
-      showNotification('Erro ao criar documento', 'error');
+  const getTypeText = (type: DocumentType) => {
+    switch (type) {
+      case DocumentType.CONSENT_TREATMENT:
+        return 'Termo de Consentimento';
+      case DocumentType.ATTENDANCE_DECLARATION:
+        return 'Declaração de Comparecimento';
+      case DocumentType.EXERCISE_PRESCRIPTION:
+        return 'Prescrição de Exercícios';
+      case DocumentType.PAYMENT_RECEIPT:
+        return 'Recibo de Pagamento';
+      default:
+        return 'Documento';
     }
   };
-
-  const handleSignDocument = async (documentId: string) => {
-    try {
-      const signature = await digitalSignatureService.signByEmail(
-        documentId,
-        currentUser!.id,
-        currentUser!.email
-      );
-
-      // Atualizar status do documento
-      const updatedDocs = documents.map(doc => 
-        doc.id === documentId 
-          ? { 
-              ...doc, 
-              status: DocumentStatus.SIGNED,
-              signatures: [...doc.signatures, signature]
-            }
-          : doc
-      );
-
-      setDocuments(updatedDocs);
-      localStorage.setItem('fisioflow_legal_documents', JSON.stringify(updatedDocs));
-
-      showNotification('Documento assinado com sucesso', 'success');
-      loadDocuments();
-
-    } catch (error) {
-      console.error('Erro ao assinar documento:', error);
-      showNotification('Erro ao assinar documento', 'error');
-    }
-  };
-
-  const handleDownloadDocument = (document: BaseDocument) => {
-    // Simular download
-    const blob = new Blob([document.content], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${document.title}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    showNotification('Download iniciado', 'success');
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Shield className="h-6 w-6 text-blue-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Documentação Legal Avançada
-            </h2>
-            <p className="text-sm text-gray-600">
-              Sistema completo de gestão documental com IA e compliance
-            </p>
-          </div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {patientId ? 'Documentos do Paciente' : 'Gerenciamento de Documentos Legais'}
+          </h2>
+          <p className="text-gray-600">
+            Gerencie documentos legais, termos de consentimento e declarações
+          </p>
         </div>
-
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowTemplateEditor(true)}
-            className="flex items-center space-x-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-          >
-            <Edit3 className="h-4 w-4" />
-            <span>Templates</span>
-          </button>
-          
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Novo Documento</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Novo Documento</span>
+        </button>
       </div>
 
       {/* Navigation Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           {[
-            { id: 'documents', label: 'Documentos', icon: <FileText className="h-4 w-4" />, count: documents.length },
-            { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="h-4 w-4" /> },
-            { id: 'workflows', label: 'Workflows', icon: <Workflow className="h-4 w-4" /> },
-            { id: 'notifications', label: 'Notificações', icon: <Bell className="h-4 w-4" /> },
-            { id: 'templates', label: 'Templates', icon: <Settings className="h-4 w-4" /> }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveView(tab.id as any)}
-              className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                activeView === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-              {tab.count !== undefined && (
-                <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
-                  activeView === tab.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
-                }`}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
+            { id: 'documents', label: 'Documentos', icon: FileText },
+            { id: 'workflows', label: 'Workflows', icon: Workflow },
+            { id: 'notifications', label: 'Notificações', icon: Bell },
+            { id: 'templates', label: 'Templates', icon: Settings }
+          ].map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveView(tab.id as ViewType)}
+                className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeView === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </nav>
       </div>
 
-      {/* Content based on active view */}
-      {activeView === 'analytics' && <DocumentAnalyticsDashboard />}
-      
+      {/* Documents View */}
       {activeView === 'documents' && (
-        <>
-          {/* Filtros */}
-          <div className="bg-white border rounded-lg p-4 space-y-4">
-            <div className="flex items-center space-x-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar documentos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+        <div className="space-y-6">
+          {/* Filters */}
+          <div className="bg-white border rounded-lg p-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar documentos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as DocumentStatus | 'all')}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos os Status</option>
+                <option value={DocumentStatus.DRAFT}>Rascunho</option>
+                <option value={DocumentStatus.PENDING_SIGNATURE}>Pendente Assinatura</option>
+                <option value={DocumentStatus.SIGNED}>Assinado</option>
+                <option value={DocumentStatus.EXPIRED}>Expirado</option>
+              </select>
+              
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as DocumentType | 'all')}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos os Tipos</option>
+                <option value={DocumentType.CONSENT_TREATMENT}>Termo de Consentimento</option>
+                <option value={DocumentType.ATTENDANCE_DECLARATION}>Declaração de Comparecimento</option>
+                <option value={DocumentType.EXERCISE_PRESCRIPTION}>Prescrição de Exercícios</option>
+                <option value={DocumentType.PAYMENT_RECEIPT}>Recibo de Pagamento</option>
+              </select>
+              
+              <button className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <Filter className="h-4 w-4" />
+                <span>Filtros Avançados</span>
+              </button>
             </div>
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as DocumentStatus | 'all')}
-            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">Todos os Status</option>
-            <option value={DocumentStatus.DRAFT}>Rascunho</option>
-            <option value={DocumentStatus.PENDING_SIGNATURE}>Pendente Assinatura</option>
-            <option value={DocumentStatus.SIGNED}>Assinado</option>
-            <option value={DocumentStatus.EXPIRED}>Expirado</option>
-            <option value={DocumentStatus.ARCHIVED}>Arquivado</option>
-          </select>
-
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as DocumentType | 'all')}
-            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">Todos os Tipos</option>
-            <option value={DocumentType.CONSENT_TREATMENT}>Termo de Consentimento</option>
-            <option value={DocumentType.ATTENDANCE_DECLARATION}>Declaração de Comparecimento</option>
-            <option value={DocumentType.PAYMENT_RECEIPT}>Recibo de Pagamento</option>
-            <option value={DocumentType.EXERCISE_PRESCRIPTION}>Prescrição de Exercícios</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Lista de Documentos */}
-      <div className="bg-white border rounded-lg overflow-hidden">
-        {filteredDocuments.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Nenhum documento encontrado
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {documents.length === 0 
-                ? "Comece criando seu primeiro documento legal"
-                : "Tente ajustar os filtros de busca"
-              }
-            </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Criar Documento
-            </button>
-          </div>
-        ) : (
-          <div className="divide-y">
-            {filteredDocuments.map((document) => {
-              const compliance = complianceData[document.id];
-              const patient = patients.find(p => p.id === document.patientId);
-              const therapist = therapists.find(t => t.id === document.therapistId);
-
-              return (
-                <div key={document.id} className="p-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start space-x-4 flex-1">
-                      <div className="p-2 bg-gray-100 rounded-lg">
-                        <FileText className="h-5 w-5 text-gray-600" />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-medium text-gray-900 truncate">
-                            {document.title}
-                          </h3>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
-                            {getStatusIcon(document.status)}
-                            <span className="ml-1 capitalize">
-                              {document.status.replace('_', ' ')}
+          {/* Documents List */}
+          {filteredDocuments.length === 0 ? (
+            <div className="text-center py-12 bg-white border rounded-lg">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum documento encontrado</h3>
+              <p className="text-gray-600 mb-4">Não há documentos que correspondam aos filtros selecionados.</p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Criar Primeiro Documento
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white border rounded-lg overflow-hidden">
+              <div className="divide-y divide-gray-200">
+                {filteredDocuments.map(document => {
+                  const patient = patients.find(p => p.id === document.patientId);
+                  const compliance = complianceData[document.id];
+                  
+                  return (
+                    <div key={document.id} className="p-6 hover:bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h3 className="text-lg font-medium text-gray-900">{document.title}</h3>
+                            <div className="flex items-center space-x-1">
+                              {getStatusIcon(document.status)}
+                              <span className="text-sm text-gray-600">{getStatusText(document.status)}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-4 text-sm text-gray-600">
+                            {patient && (
+                              <div className="flex items-center space-x-1">
+                                <User className="h-4 w-4" />
+                                <span>{patient.name}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="h-4 w-4" />
+                              <span>{new Date(document.createdAt).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <span className="px-2 py-1 bg-gray-100 rounded-full text-xs">
+                              {getTypeText(document.type)}
                             </span>
-                          </span>
-                        </div>
-
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
-                          <div className="flex items-center space-x-1">
-                            <Users className="h-4 w-4" />
-                            <span>{patient?.name || 'Paciente não encontrado'}</span>
                           </div>
-                          <div>
-                            Criado em {new Date(document.createdAt).toLocaleDateString('pt-BR')}
-                          </div>
+                          
                           {compliance && (
-                            <div className={`flex items-center space-x-1 ${getComplianceColor(compliance.score)}`}>
-                              <Shield className="h-4 w-4" />
-                              <span>Compliance: {compliance.score.toFixed(0)}%</span>
+                            <div className="mt-2">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm text-gray-600">Compliance:</span>
+                                <div className={`px-2 py-1 rounded-full text-xs ${
+                                  compliance.score >= 90 ? 'bg-green-100 text-green-800' :
+                                  compliance.score >= 70 ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {compliance.score.toFixed(0)}%
+                                </div>
+                              </div>
+                              {compliance.violations.length > 0 && (
+                                <div className="mt-1">
+                                  <span className="text-xs text-red-600">
+                                    {compliance.violations.length} violação(ões) encontrada(s)
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {document.signatures && document.signatures.length > 0 && (
+                            <div className="mt-2">
+                              <span className="text-sm text-gray-600">
+                                Assinaturas: {document.signatures.length}
+                              </span>
                             </div>
                           )}
                         </div>
-
-                        {document.signatures.length > 0 && (
-                          <div className="mt-2 text-xs text-green-600">
-                            Assinado por {document.signatures.length} pessoa(s)
-                          </div>
-                        )}
+                        
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setSelectedDocument(document)}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                            title="Visualizar"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDownload(document)}
+                            className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </button>
+                          {document.status === DocumentStatus.PENDING_SIGNATURE && (
+                            <button
+                              onClick={() => handleSign(document)}
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                            >
+                              Assinar
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => setSelectedDocument(document)}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-                        title="Visualizar"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-
-                      <button
-                        onClick={() => handleDownloadDocument(document)}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-                        title="Download"
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
-
-                      {document.status === DocumentStatus.PENDING_SIGNATURE && (
-                        <button
-                          onClick={() => handleSignDocument(document.id)}
-                          className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
-                          title="Assinar"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {compliance && compliance.violations.length > 0 && (
-                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <div className="flex items-center space-x-2 text-sm">
-                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                        <span className="font-medium text-yellow-800">
-                          {compliance.violations.length} questão(s) de compliance detectada(s)
-                        </span>
-                      </div>
-                      <div className="mt-1 text-xs text-yellow-700">
-                        {compliance.violations.slice(0, 2).map(v => v.description).join(', ')}
-                        {compliance.violations.length > 2 && '...'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-        </>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Other Views */}
@@ -641,15 +458,17 @@ export function LegalDocumentManager({ patientId, onDocumentCreated }: LegalDocu
 }
 
 // Modal de Visualização (simplificado)
+interface DocumentViewModalProps {
+  document: BaseDocument;
+  compliance?: ComplianceValidationResult;
+  onClose: () => void;
+}
+
 function DocumentViewModal({ 
   document, 
   compliance, 
   onClose 
-}: { 
-  document: BaseDocument;
-  compliance?: ComplianceValidationResult;
-  onClose: () => void;
-}) {
+}: DocumentViewModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
@@ -691,15 +510,17 @@ function DocumentViewModal({
 }
 
 // Modal de Criação (simplificado)
+interface CreateDocumentModalProps {
+  patientId?: string;
+  onClose: () => void;
+  onCreate: (request: Partial<DocumentGenerationRequest>) => void;
+}
+
 function CreateDocumentModal({
   patientId,
   onClose,
   onCreate
-}: {
-  patientId?: string;
-  onClose: () => void;
-  onCreate: (request: Partial<DocumentGenerationRequest>) => void;
-}) {
+}: CreateDocumentModalProps) {
   const [templateId, setTemplateId] = useState('');
   const [selectedPatientId, setSelectedPatientId] = useState(patientId || '');
   

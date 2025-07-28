@@ -1287,24 +1287,27 @@ class NotificationService {
     if (typeof window !== 'undefined') {
       try {
         // Dynamically import Firebase SDK
-        const { initializeApp } = await import('firebase/app');
-        const { getMessaging, getToken, onMessage } = await import('firebase/messaging');
+        // const { initializeApp } = await import('firebase/app');
+        // const { getMessaging, getToken, onMessage } = await import('firebase/messaging');
+        
+        // Firebase temporarily disabled - uncomment when Firebase is installed
+        console.warn('Firebase FCM is disabled - install firebase package to enable');
 
-        const firebaseConfig = {
-          apiKey: config.apiKey,
-          authDomain: config.authDomain,
-          projectId: config.projectId,
-          messagingSenderId: config.messagingSenderId,
-          appId: config.appId
-        };
+        // const firebaseConfig = {
+        //   apiKey: config.apiKey,
+        //   authDomain: config.authDomain,
+        //   projectId: config.projectId,
+        //   messagingSenderId: config.messagingSenderId,
+        //   appId: config.appId
+        // };
 
-        const app = initializeApp(firebaseConfig);
-        this.messaging = getMessaging(app);
+        // const app = initializeApp(firebaseConfig);
+        // this.messaging = getMessaging(app);
 
-        // Set up message listener
-        onMessage(this.messaging, (payload) => {
-          this.handleIncomingFCMMessage(payload);
-        });
+        // // Set up message listener
+        // onMessage(this.messaging, (payload) => {
+        //   this.handleIncomingFCMMessage(payload);
+        // });
 
         // Request notification permission
         if ('Notification' in window && Notification.permission === 'default') {
@@ -1333,11 +1336,13 @@ class NotificationService {
       let fcmToken = '';
 
       if (typeof window !== 'undefined' && this.messaging) {
-        const { getToken } = await import('firebase/messaging');
+        // const { getToken } = await import('firebase/messaging');
+        // Firebase temporarily disabled
         
-        fcmToken = await getToken(this.messaging, {
-          vapidKey: this.fcmConfig.vapidKey
-        });
+        // fcmToken = await getToken(this.messaging, {
+        //   vapidKey: this.fcmConfig.vapidKey
+        // });
+        fcmToken = 'mock-token-' + Date.now(); // Mock token for development
       }
 
       // Check if device already exists

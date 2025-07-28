@@ -278,21 +278,21 @@ import Toaster from './components/ui/Toaster';
 
 const App: React.FC = () => {
   return (
-    <NotificationProvider>
-      <SystemEventsProvider>
-        <DataProvider>
-          <AuthProvider>
-            <ChatProvider>
-              <ErrorBoundary>
+    <ErrorBoundary>
+      <NotificationProvider>
+        <AuthProvider>
+          <SystemEventsProvider>
+            <DataProvider>
+              <ChatProvider>
                 <AppContent />
                 <Toaster />
-              </ErrorBoundary>
-            </ChatProvider>
-          </AuthProvider>
-        </DataProvider>
-      </SystemEventsProvider>
-      <NotificationContainer />
-    </NotificationProvider>
+              </ChatProvider>
+            </DataProvider>
+          </SystemEventsProvider>
+        </AuthProvider>
+        <NotificationContainer />
+      </NotificationProvider>
+    </ErrorBoundary>
   );
 };
 

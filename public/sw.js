@@ -3,10 +3,12 @@
  * Implementa estratégias de cache inteligentes para melhor performance
  */
 
-const CACHE_NAME = 'fisioflow-v1.0.0';
-const STATIC_CACHE = 'fisioflow-static-v1.0.0';
-const DYNAMIC_CACHE = 'fisioflow-dynamic-v1.0.0';
-const API_CACHE = 'fisioflow-api-v1.0.0';
+// Versão baseada em timestamp para garantir atualizações
+const CACHE_VERSION = '1.0.1';
+const CACHE_NAME = `fisioflow-v${CACHE_VERSION}`;
+const STATIC_CACHE = `fisioflow-static-v${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `fisioflow-dynamic-v${CACHE_VERSION}`;
+const API_CACHE = `fisioflow-api-v${CACHE_VERSION}`;
 
 // Assets estáticos para cache (sempre disponíveis offline)
 const STATIC_ASSETS = [
@@ -18,22 +20,26 @@ const STATIC_ASSETS = [
 
 // Padrões de URL para diferentes estratégias de cache
 const CACHE_STRATEGIES = {
-  // Cache first - assets estáticos
+  // Cache first - assets estáticos (com hash do Vite)
   CACHE_FIRST: [
     /\.(?:js|css|png|jpg|jpeg|svg|gif|ico|woff|woff2|ttf)$/,
     /\/assets\//,
+    /chunk-[a-zA-Z0-9]+\.js$/,
+    /index-[a-zA-Z0-9]+\.(js|css)$/,
   ],
   
   // Network first - dados dinâmicos
   NETWORK_FIRST: [
     /\/api\//,
     /gemini/,
+    /\/auth\//,
   ],
   
   // Stale while revalidate - conteúdo que pode ser atualizado
   STALE_WHILE_REVALIDATE: [
     /\.(?:html)$/,
     /\/$/,
+    /\/manifest\.json$/,
   ],
 };
 
@@ -149,14 +155,38 @@ async function cacheFirst(request) {
     console.log(`🌐 Cache miss, buscando: ${request.url}`);
     const networkResponse = await fetch(request);
     
-    if (networkResponse.ok) {
+    if (networkResponse.ok && networkResponse.status < 400) {
+      // Só cacheia respostas válidas
       const responseToCache = networkResponse.clone();
-      await cache.put(request, responseToCache);
+      
+      // Adiciona headers de cache
+      const response = new Response(responseToCache.body, {
+        status: responseToCache.status,
+        statusText: responseToCache.statusText,
+        headers: {
+          ...Object.fromEntries(responseToCache.headers.entries()),
+          'sw-cached-at': Date.now().toString(),
+          'sw-cache-version': CACHE_VERSION,
+        },
+      });
+      
+      await cache.put(request, response.clone());
+      return response;
     }
     
     return networkResponse;
   } catch (error) {
     console.error(`❌ Erro em cache-first: ${error}`);
+    
+    // Tenta buscar no cache mesmo com erro
+    const cache = await caches.open(STATIC_CACHE);
+    const cachedResponse = await cache.match(request);
+    
+    if (cachedResponse) {
+      console.log(`💾 Fallback cache hit: ${request.url}`);
+      return cachedResponse;
+    }
+    
     return new Response('Offline - recurso não disponível', { 
       status: 503,
       headers: { 'Content-Type': 'text/plain' }

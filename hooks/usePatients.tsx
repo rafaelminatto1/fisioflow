@@ -1,112 +1,144 @@
 /**
- * usePatients - Hook especializado para gerenciamento de pacientes
- * Extraído do useData.tsx monolítico para melhor manutenibilidade
+ * Hook especializado para gerenciamento de pacientes com React Query
+ * Substituí a lógica de pacientes do useData massivo para melhor performance
+ * Implementa cache inteligente, invalidação automática e operações otimizadas
  */
 
-import React, { createContext, useContext, ReactNode } from 'react';
-import { Patient, UserRole } from '../types';
-import { INITIAL_PATIENTS } from '../constants';
-import { useOptimizedStorage } from './useOptimizedStorage';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
+import { Patient, User } from '../types';
 import { useAuth } from './useAuth';
-import { useNotification } from './useNotification';
+import { useSecureData } from './useSecureData';
+import { auditLogger, AuditAction, LegalBasis } from '../services/auditLogger';
 
-interface PatientsContextType {
-  patients: Patient[];
-  addPatient: (patient: Omit<Patient, 'id'>) => void;
-  updatePatient: (id: string, updates: Partial<Patient>) => void;
-  deletePatient: (id: string) => void;
-  getPatient: (id: string) => Patient | undefined;
-  searchPatients: (query: string) => Patient[];
-  getPatientsByStatus: (status: string) => Patient[];
-  loading: boolean;
-  error: string | null;
-}
+// Chaves de cache organizadas para React Query
+export const patientKeys = {
+  all: ['patients'] as const,
+  lists: () => [...patientKeys.all, 'list'] as const,
+  list: (tenantId: string) => [...patientKeys.lists(), tenantId] as const,
+  details: () => [...patientKeys.all, 'detail'] as const,
+  detail: (id: string) => [...patientKeys.details(), id] as const,
+  search: (query: string) => [...patientKeys.all, 'search', query] as const,
+  filtered: (filters: any) => [...patientKeys.all, 'filtered', filters] as const,
+};
 
-const PatientsContext = createContext<PatientsContextType | undefined>(undefined);
+// Hook principal para listar pacientes com cache inteligente
+export const usePatients = () => {
+  const { currentTenant } = useAuth();
+  const { getAllSecurePatients } = useSecureData();
 
-export const PatientsProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
-  const { user } = useAuth();
-  const { addNotification } = useNotification();
-  
-  const [allPatients, setAllPatients] = useOptimizedStorage<Patient[]>(
-    'fisioflow-all-patients',
-    INITIAL_PATIENTS,
-    ['name', 'email', 'phone', 'medicalHistory'], // campos de busca otimizada
-    'tenantId'
-  );
-
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  // Filtra pacientes por tenant
-  const patients = React.useMemo(() => {
-    if (!user?.tenantId) return [];
-    return allPatients.filter(patient => patient.tenantId === user.tenantId);
-  }, [allPatients, user?.tenantId]);
-
-  const addPatient = React.useCallback((patientData: Omit<Patient, 'id'>) => {
-    try {
-      setLoading(true);
-      const newPatient: Patient = {
-        ...patientData,
-        id: `patient_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        tenantId: user?.tenantId || 't1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      setAllPatients(prev => [...prev, newPatient]);
+  return useQuery({
+    queryKey: patientKeys.list(currentTenant?.id || ''),
+    queryFn: async () => {
+      if (!currentTenant) return [];
       
-      addNotification({
-        type: 'success',
-        message: `Paciente ${newPatient.name} adicionado com sucesso`,
-      });
+      // TODO: Implementar masterKey management seguro
+      const masterKey = sessionStorage.getItem('masterKey') || 'temp_key';
+      return await getAllSecurePatients(currentTenant.id, masterKey);
+    },
+    enabled: !!currentTenant,
+    staleTime: 5 * 60 * 1000, // 5 minutos - dados ficam "fresh"
+    gcTime: 10 * 60 * 1000, // 10 minutos - dados permanecem no cache
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // backoff exponencial
+  });
+};
 
-      console.log(`👤 Novo paciente adicionado: ${newPatient.name} (${newPatient.id})`);
+// Hook para paciente específico com cache individual
+export const usePatient = (patientId: string) => {
+  const { user, currentTenant } = useAuth();
+  const { getSecurePatient } = useSecureData();
+
+  return useQuery({
+    queryKey: patientKeys.detail(patientId),
+    queryFn: async () => {
+      if (!currentTenant || !patientId) return null;
       
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(errorMsg);
-      addNotification({
-        type: 'error',
-        message: `Erro ao adicionar paciente: ${errorMsg}`,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.tenantId, setAllPatients, addNotification]);
+      const masterKey = sessionStorage.getItem('masterKey') || 'temp_key';
+      return await getSecurePatient(patientId, masterKey, user);
+    },
+    enabled: !!currentTenant && !!patientId,
+    staleTime: 2 * 60 * 1000, // 2 minutos para dados específicos
+    gcTime: 5 * 60 * 1000, // 5 minutos
+  });
+};
 
-  const updatePatient = React.useCallback((id: string, updates: Partial<Patient>) => {
-    try {
-      setLoading(true);
-      setAllPatients(prev => 
-        prev.map(patient => 
-          patient.id === id 
-            ? { ...patient, ...updates, updatedAt: new Date().toISOString() }
-            : patient
-        )
-      );
+// Hook para busca de pacientes com memoização
+export const usePatientsSearch = (query: string) => {
+  const { data: patients = [] } = usePatients();
 
-      addNotification({
-        type: 'success', 
-        message: 'Paciente atualizado com sucesso',
-      });
+  return useMemo(() => {
+    if (!query.trim()) return patients;
+    
+    const searchTerm = query.toLowerCase();
+    return patients.filter(patient => 
+      patient.name.toLowerCase().includes(searchTerm) ||
+      patient.email?.toLowerCase().includes(searchTerm) ||
+      patient.phone?.includes(searchTerm)
+    );
+  }, [patients, query]);
+};
 
-      console.log(`👤 Paciente atualizado: ${id}`);
+// Mutation para salvar paciente com invalidação automática de cache
+export const useSavePatient = () => {
+  const queryClient = useQueryClient();
+  const { user, currentTenant } = useAuth();
+  const { saveSecurePatient } = useSecureData();
+
+  return useMutation({
+    mutationFn: async (patient: Patient) => {
+      if (!user || !currentTenant) {
+        throw new Error('Usuário ou tenant não autenticado');
+      }
+
+      const masterKey = sessionStorage.getItem('masterKey') || 'temp_key';
+      await saveSecurePatient(patient, user, masterKey);
+      return patient;
+    },
+    onSuccess: (patient) => {
+      // Invalidar cache de lista para recarregar dados
+      queryClient.invalidateQueries({ queryKey: patientKeys.lists() });
       
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(errorMsg);
-      addNotification({
-        type: 'error',
-        message: `Erro ao atualizar paciente: ${errorMsg}`,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [setAllPatients, addNotification]);
+      // Atualizar cache específico do paciente
+      queryClient.setQueryData(patientKeys.detail(patient.id), patient);
+      
+      console.log('✅ Paciente salvo e cache atualizado');
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao salvar paciente:', error);
+    },
+  });
+};
+
+// Mutation para deletar paciente
+export const useDeletePatient = () => {
+  const queryClient = useQueryClient();
+  const { user, currentTenant } = useAuth();
+  const { deleteSecurePatient } = useSecureData();
+
+  return useMutation({
+    mutationFn: async ({ patientId, reason }: { patientId: string; reason: string }) => {
+      if (!user || !currentTenant) {
+        throw new Error('Usuário ou tenant não autenticado');
+      }
+
+      await deleteSecurePatient(patientId, user, reason);
+      return patientId;
+    },
+    onSuccess: (patientId) => {
+      // Remover do cache específico
+      queryClient.removeQueries({ queryKey: patientKeys.detail(patientId) });
+      
+      // Invalidar lista para atualizar
+      queryClient.invalidateQueries({ queryKey: patientKeys.lists() });
+      
+      console.log('✅ Paciente removido e cache atualizado');
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao deletar paciente:', error);
+    },
+  });
+};
 
   const deletePatient = React.useCallback((id: string) => {
     try {
