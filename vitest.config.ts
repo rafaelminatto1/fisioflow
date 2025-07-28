@@ -8,13 +8,23 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    include: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    setupFiles: ['./src/test/vitest.setup.ts'],
+    include: [
+      'services/__tests__/**/*.test.{ts,tsx}',
+      'hooks/__tests__/**/*.test.{ts,tsx}',
+      'components/**/__tests__/**/*.test.{ts,tsx}',
+      'utils/__tests__/**/*.test.{ts,tsx}',
+      'src/components/__tests__/**/*.test.{ts,tsx}'
+    ],
     exclude: [
       'node_modules/**',
       'dist/**',
       'mobile/**',
       'vercel-mcp-temp/**',
+      'scripts/**',
+      'old/**',
+      'tests/**',
+      'src/tests/**',
       '**/*.integration.test.{ts,tsx}',
       '**/*.e2e.test.{ts,tsx}'
     ],

@@ -410,4 +410,7 @@ export interface LGPDAuditLog {
 // Instância singleton
 export const encryption = new EncryptionManager();
 
+// Export da classe para testes
+export { EncryptionManager };
+
 export default encryption;

@@ -8,13 +8,12 @@ import { useAuth } from './hooks/useAuth';
 import './index.css';
 
 // Lazy loading dos componentes principais
-const Dashboard = React.lazy(() => import('./components/Dashboard'));
-const Login = React.lazy(() => import('./components/Login'));
-const Patients = React.lazy(() => import('./components/Patients'));
-const Appointments = React.lazy(() => import('./components/Appointments'));
-const Reports = React.lazy(() => import('./components/Reports'));
-const Settings = React.lazy(() => import('./components/Settings'));
-const Subscription = React.lazy(() => import('./components/Subscription'));
+const Dashboard = React.lazy(() => import('../components/Dashboard'));
+const LoginPage = React.lazy(() => import('../components/LoginPage'));
+const PatientPage = React.lazy(() => import('../components/PatientPage'));
+const CalendarPage = React.lazy(() => import('../components/CalendarPage'));
+const ReportsPage = React.lazy(() => import('../components/ReportsPage'));
+const SubscriptionManager = React.lazy(() => import('../components/SubscriptionManager'));
 
 // Configuração do React Query
 const queryClient = new QueryClient({
@@ -76,7 +75,7 @@ const App: React.FC = () => {
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 {/* Rota pública */}
-                <Route path="/login" element={<Login />} />
+                <Route path="/login" element={<LoginPage />} />
                 
                 {/* Rotas protegidas - Free tier */}
                 <Route 
@@ -99,7 +98,7 @@ const App: React.FC = () => {
                   path="/patients" 
                   element={
                     <ProtectedRoute>
-                      <Patients />
+                      <PatientPage />
                     </ProtectedRoute>
                   } 
                 />
@@ -107,7 +106,7 @@ const App: React.FC = () => {
                   path="/appointments" 
                   element={
                     <ProtectedRoute>
-                      <Appointments />
+                      <CalendarPage />
                     </ProtectedRoute>
                   } 
                 />
@@ -117,7 +116,7 @@ const App: React.FC = () => {
                   path="/reports" 
                   element={
                     <ProtectedRoute requiredTier="premium">
-                      <Reports />
+                      <ReportsPage />
                     </ProtectedRoute>
                   } 
                 />
@@ -127,7 +126,7 @@ const App: React.FC = () => {
                   path="/settings" 
                   element={
                     <ProtectedRoute>
-                      <Settings />
+                      <SubscriptionManager />
                     </ProtectedRoute>
                   } 
                 />
@@ -135,7 +134,7 @@ const App: React.FC = () => {
                   path="/subscription" 
                   element={
                     <ProtectedRoute>
-                      <Subscription />
+                      <SubscriptionManager />
                     </ProtectedRoute>
                   } 
                 />

@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           'joao.silva@demo.com': 'paciente123',
         };
         
-        const expectedPassword = defaultPasswords[credentials.email] || 'demo123';
+        const expectedPassword = defaultPasswords[credentials.email] || 'defaultpass';
         
         if (credentials.password !== expectedPassword) {
           return { success: false, error: 'Senha incorreta' };

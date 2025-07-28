@@ -336,17 +336,20 @@ export const useErrorHandler = () => {
 export const useAsyncErrorHandler = () => {
   const handleError = useErrorHandler();
   
-  return React.useCallback(async <T>(
-    asyncFn: () => Promise<T>,
-    fallbackValue?: T
-  ): Promise<T | undefined> => {
-    try {
-      return await asyncFn();
-    } catch (error) {
-      handleError(error as Error, { context: 'async operation' });
-      return fallbackValue;
-    }
-  }, [handleError]);
+  return React.useCallback(
+    async function<T>(
+      asyncFn: () => Promise<T>,
+      fallbackValue?: T
+    ): Promise<T | undefined> {
+      try {
+        return await asyncFn();
+      } catch (error) {
+        handleError(error as Error, { context: 'async operation' });
+        return fallbackValue;
+      }
+    },
+    [handleError]
+  );
 };
 
 export default ErrorBoundary;

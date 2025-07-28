@@ -1,8 +1,12 @@
 import '@testing-library/jest-dom';
 import 'fake-indexeddb/auto';
+import { webcrypto } from 'crypto';
 
 // Mock global objects
-global.crypto = require('crypto').webcrypto;
+Object.defineProperty(global, 'crypto', {
+  value: webcrypto,
+  writable: true,
+});
 
 // Mock ResizeObserver
 global.ResizeObserver = jest.fn().mockImplementation(() => ({

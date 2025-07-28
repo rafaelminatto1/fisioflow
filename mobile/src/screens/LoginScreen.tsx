@@ -16,7 +16,7 @@ interface Props {
 
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('admin@fisioflow.com');
-  const [password, setPassword] = useState('demo123');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const theme = useTheme();
 
@@ -35,7 +35,7 @@ export default function LoginScreen({ navigation }: Props) {
       // Find user in demo data
       const user = DEMO_USERS.find(u => u.email === email);
 
-      if (user && password === 'demo123') {
+      if (user && password) {
         // Save user data
         await AsyncStorage.setItem('currentUser', JSON.stringify(user));
         
