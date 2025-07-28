@@ -3,8 +3,14 @@ import { createClient } from '@supabase/supabase-js';
 import { User, Patient, Appointment, Exercise, Task } from '../types';
 
 // Configuração do Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+// URLs de fallback válidas para evitar erros de inicialização
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://demo.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+
+// Verificar se as configurações são válidas
+if (supabaseUrl === 'https://demo.supabase.co' || supabaseKey.includes('demo')) {
+  console.warn('⚠️ FisioFlow: Usando configurações de demonstração do Supabase. Configure as variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para produção.');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
