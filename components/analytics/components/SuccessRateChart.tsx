@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+
 import type { PathologySuccessRate } from '../../../types/analytics';
 
 interface SuccessRateChartProps {

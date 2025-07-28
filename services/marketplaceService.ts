@@ -3,8 +3,8 @@
  * Plataforma para compartilhamento, compra e venda de conteúdo clínico
  */
 
-import { encryption } from './encryption';
 import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
+import { encryption } from './encryption';
 import { intelligentNotificationService } from './intelligentNotificationService';
 
 // === INTERFACES ===

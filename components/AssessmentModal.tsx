@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+
+import { useAuth } from '../hooks/useAuth';
+import { generateTreatmentPlan } from '../services/geminiService';
 import {
   AssessmentModalProps,
   Assessment,
@@ -7,7 +10,7 @@ import {
   FunctionalTestEntry,
   UserRole,
 } from '../types';
-import { useAuth } from '../hooks/useAuth';
+
 import {
   IconX,
   IconTrash,
@@ -15,7 +18,7 @@ import {
   IconPencil,
   IconSparkles,
 } from './icons/IconComponents';
-import { generateTreatmentPlan } from '../services/geminiService';
+
 
 type AssessmentErrors = {
   mainComplaint?: string;

@@ -1,5 +1,7 @@
 import React from 'react';
+
 import { useNotifications } from '../hooks/useNotification';
+
 import NotificationToast from './NotificationToast';
 
 const NotificationContainer: React.FC = () => {

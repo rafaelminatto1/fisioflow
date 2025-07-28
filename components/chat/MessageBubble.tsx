@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import { ChatMessage, Exercise } from '../../types';
 
 interface MessageBubbleProps {

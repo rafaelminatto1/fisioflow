@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
+
 import { User } from '../../types';
 
 // Simulação de API - substituir por chamadas reais

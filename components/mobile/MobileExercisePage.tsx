@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Exercise, ExerciseVideo, ExerciseImage } from '../../types';
+
 import { useData } from '../../hooks/useData';
-import { qrCodeService, QRCodeData } from '../../services/qrCodeService';
 import { cacheService } from '../../services/cacheService';
+import { qrCodeService, QRCodeData } from '../../services/qrCodeService';
+import { Exercise, ExerciseVideo, ExerciseImage } from '../../types';
 import LazyImage from '../ui/LazyImage';
 
 interface MobileExercisePageProps {

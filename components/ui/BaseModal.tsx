@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+
 import { IconX } from '../icons/IconComponents';
 
 interface BaseModalProps {

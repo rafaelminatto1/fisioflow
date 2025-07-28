@@ -300,7 +300,7 @@ class AccessControlService {
   ): Promise<{ success: boolean; sessionId?: string; requireMFA?: boolean; error?: string }> {
     
     const attemptId = this.generateAttemptId();
-    let attempt: AccessAttempt = {
+    const attempt: AccessAttempt = {
       id: attemptId,
       timestamp: new Date().toISOString(),
       userId,

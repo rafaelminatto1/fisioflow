@@ -7,8 +7,9 @@ import React, {
   useMemo,
   useEffect,
 } from 'react';
-import { User, UserRole, Tenant } from '../types';
+
 import { INITIAL_USERS, INITIAL_TENANTS } from '../constants';
+import { User, UserRole, Tenant } from '../types';
 
 interface LoginCredentials {
   email: string;

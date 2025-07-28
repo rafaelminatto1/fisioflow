@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
+
 import { useData } from '../hooks/useData';
 import { ClinicalProtocol, PatientProtocol, ProtocolAnalytics } from '../types';
-import PageShell from './ui/PageShell';
+
 import {
   IconTrendingUp,
   IconUsers,
@@ -14,6 +15,7 @@ import {
   IconTrendingDown,
   IconEqual,
 } from './icons/IconComponents';
+import PageShell from './ui/PageShell';
 
 const ProtocolAnalyticsPage: React.FC = () => {
   const {

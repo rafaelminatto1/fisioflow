@@ -1,5 +1,7 @@
 import React from 'react';
+
 import { ExerciseHistoryModalProps } from '../types';
+
 import { IconX } from './icons/IconComponents';
 
 const ExerciseHistoryModal: React.FC<ExerciseHistoryModalProps> = ({

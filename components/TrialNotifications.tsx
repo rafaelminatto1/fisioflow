@@ -1,5 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { useTrialManager, TrialNotification } from '../hooks/useTrialManager';
 import {
   Clock,
   AlertTriangle,
@@ -10,6 +8,9 @@ import {
   Calendar,
   Gift,
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import { useTrialManager, TrialNotification } from '../hooks/useTrialManager';
 
 interface TrialNotificationsProps {
   className?: string;

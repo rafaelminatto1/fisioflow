@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
 import { Settings, Save, Plus, Trash2, Edit3, TestTube, Key, MessageSquare, Bot, Zap, AlertTriangle, CheckCircle, X } from 'lucide-react';
-import { useWhatsApp, ChatbotRule, MessageTemplate } from '../services/whatsappService';
+import React, { useState, useEffect } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
+import { useWhatsApp, ChatbotRule, MessageTemplate } from '../services/whatsappService';
 
 interface WhatsAppSettingsProps {
   onClose?: () => void;

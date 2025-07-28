@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useMemo } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -15,8 +14,10 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
-import { useData } from '../../hooks/useData';
+import React, { useState, useEffect, useMemo } from 'react';
+
 import { useAppleIAP } from '../../hooks/useAppleIAP';
+import { useData } from '../../hooks/useData';
 import { SubscriptionPlan, User, Tenant, AuditLog } from '../../types';
 
 interface MetricCard {

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Patient } from '../types';
+
 import { patientService, realtimeService } from '../services/supabase';
+import { Patient } from '../types';
+
 import { useAuth } from './useAuth';
 import { useNotification } from './useNotification';
 

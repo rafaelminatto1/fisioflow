@@ -1,4 +1,14 @@
-import React, { useState } from 'react';
+import {
+  Visibility,
+  VisibilityOff,
+  Security,
+  Person,
+  Email,
+  Lock,
+  AdminPanelSettings,
+  LocalHospital,
+  School,
+} from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -14,17 +24,8 @@ import {
   Chip,
   Stack,
 } from '@mui/material';
-import {
-  Visibility,
-  VisibilityOff,
-  Security,
-  Person,
-  Email,
-  Lock,
-  AdminPanelSettings,
-  LocalHospital,
-  School,
-} from '@mui/icons-material';
+import React, { useState } from 'react';
+
 import { useAuth } from '../../hooks/useAuthImproved';
 import { UserRole } from '../../types';
 

@@ -1,7 +1,8 @@
+import { Lock, Warning } from '@mui/icons-material';
+import { Card, CardContent, Typography, Box, Alert } from '@mui/material';
 import React, { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Card, CardContent, Typography, Box, Alert } from '@mui/material';
-import { Lock, Warning } from '@mui/icons-material';
+
 import { useAuth } from '../../hooks/useAuth';
 import { usePermissions, Permission } from '../../hooks/usePermissions';
 import { UserRole } from '../../types';

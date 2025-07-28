@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import 'fake-indexeddb/auto';
 import { webcrypto } from 'crypto';
+
 import { vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 
 // Mock crypto with all necessary methods

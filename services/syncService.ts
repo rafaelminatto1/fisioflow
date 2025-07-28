@@ -3,9 +3,9 @@
  * Permite sincronização de dados entre diferentes dispositivos do mesmo usuário
  */
 
+import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
 import { encryption } from './encryption';
 import { secureStorage } from './secureStorage';
-import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
 
 interface SyncConfig {
   userId: string;

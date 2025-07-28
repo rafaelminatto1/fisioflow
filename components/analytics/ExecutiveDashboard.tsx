@@ -3,7 +3,6 @@
  * Visualizações interativas usando D3.js e componentes customizados
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -25,8 +24,10 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { useData } from '../../hooks/useData';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+
 import { useAuth } from '../../hooks/useAuth';
+import { useData } from '../../hooks/useData';
 import { useNotification } from '../../hooks/useNotification';
 import { analyticsService, generateDashboard } from '../../services/analyticsService';
 import { mlService } from '../../services/mlService';
@@ -37,12 +38,12 @@ import type {
 } from '../../types/analytics';
 
 // Componentes de visualização
+import { ClinicalInsightsPanel } from './components/ClinicalInsightsPanel';
 import { KPICard } from './components/KPICard';
-import { TrendChart } from './components/TrendChart';
+import { PatientPredictions } from './components/PatientPredictions';
 import { SuccessRateChart } from './components/SuccessRateChart';
 import { TherapistPerformanceTable } from './components/TherapistPerformanceTable';
-import { PatientPredictions } from './components/PatientPredictions';
-import { ClinicalInsightsPanel } from './components/ClinicalInsightsPanel';
+import { TrendChart } from './components/TrendChart';
 
 interface ExecutiveDashboardProps {
   isOpen?: boolean;

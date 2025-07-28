@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   X,
   Crown,
@@ -10,8 +9,10 @@ import {
   Database,
   Bot,
 } from 'lucide-react';
-import { SubscriptionPlan } from '../types';
+import React from 'react';
+
 import { PlanLimits } from '../hooks/useSubscriptionLimits';
+import { SubscriptionPlan } from '../types';
 
 interface PaywallModalProps {
   isOpen: boolean;

@@ -3,10 +3,12 @@
  * Sistema completo de verificação, auditoria e conformidade automática com LGPD, regulamentações médicas
  */
 
-import { encryption } from './encryption';
-import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
-import { intelligentNotificationService } from './intelligentNotificationService';
 import React from 'react';
+
+import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
+import { encryption } from './encryption';
+import { intelligentNotificationService } from './intelligentNotificationService';
+
 
 // === INTERFACES ===
 interface ComplianceRule {

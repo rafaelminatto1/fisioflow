@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+
 import { Patient } from '../types';
+
 import { SymptomDiary } from './SymptomDiary';
 
 interface SymptomDiaryIntegrationProps {

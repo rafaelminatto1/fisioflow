@@ -2,8 +2,8 @@
  * Componente de Card para KPIs
  */
 
-import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import React from 'react';
 
 interface KPICardProps {
   title: string;

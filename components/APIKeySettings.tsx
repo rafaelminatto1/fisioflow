@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { Key, Save, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
 import { useNotification } from '../hooks/useNotification';
 
 interface APIKeySettingsProps {

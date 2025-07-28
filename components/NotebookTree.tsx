@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+
 import { NOTEBOOKS } from '../constants';
 import { Notebook, Page } from '../types';
+
 import { IconChevronRight } from './icons/IconComponents';
 
 interface PageItemProps {

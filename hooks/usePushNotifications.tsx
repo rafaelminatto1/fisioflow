@@ -5,10 +5,11 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
+
 import { useAuth } from './useAuth';
 import { useData } from './useData';
-import { useNotification } from './useNotification';
 import { useFeatureFlags } from './useFeatureFlags';
+import { useNotification } from './useNotification';
 
 interface PushNotification {
   id: string;

@@ -3,8 +3,8 @@
  * Implementa backup incremental, compressão e verificação de integridade
  */
 
-import { secureStorage } from './secureStorage';
 import { encryption } from './encryption';
+import { secureStorage } from './secureStorage';
 
 export interface BackupMetadata {
   id: string;

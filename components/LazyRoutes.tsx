@@ -5,7 +5,9 @@
  */
 
 import React, { Suspense, useEffect } from 'react';
+
 import { createLazyComponent, useIntelligentPreload, bundleUtils } from '../utils/codeSplitting';
+
 import PageLoader from './ui/PageLoader';
 
 // === CORE COMPONENTS (sempre carregados) ===

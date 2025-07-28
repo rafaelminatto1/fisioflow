@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { aiCache } from './aiCache';
+
 import type { Patient, Assessment } from '../types';
+
+import { aiCache } from './aiCache';
 
 const getGeminiInstance = () => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 

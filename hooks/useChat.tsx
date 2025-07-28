@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+
+import { chatService } from '../services/chatService';
+import { notificationService } from '../services/notificationService';
 import { 
   Chat, 
   ChatMessage, 
@@ -8,8 +11,7 @@ import {
   User,
   UserRole 
 } from '../types';
-import { chatService } from '../services/chatService';
-import { notificationService } from '../services/notificationService';
+
 import { useAuth } from './useAuth';
 import { useNotification } from './useNotification';
 

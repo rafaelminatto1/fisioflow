@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
+
+import { useAuth } from '../../hooks/useAuth';
+import { useData } from '../../hooks/useData';
 import {
   Exercise,
   ExerciseImage,
   ImageCategory,
   ImageAnnotation,
 } from '../../types';
-import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
 import BaseModal from '../ui/BaseModal';
 import { Button } from '../ui/Button';
 import LazyImage from '../ui/LazyImage';
+
 import InteractiveImageAnnotation from './InteractiveImageAnnotation';
 
 interface ImageGalleryModalProps {

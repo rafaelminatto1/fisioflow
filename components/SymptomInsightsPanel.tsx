@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+
+import { SymptomAnalysisService } from '../services/symptomAnalysisService';
 import {
   SymptomDiaryEntry,
   SymptomAnalysis,
@@ -7,7 +9,6 @@ import {
   SymptomTrend,
   Patient,
 } from '../types';
-import { SymptomAnalysisService } from '../services/symptomAnalysisService';
 
 interface SymptomInsightsPanelProps {
   entries: SymptomDiaryEntry[];

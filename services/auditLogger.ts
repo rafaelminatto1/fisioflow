@@ -3,8 +3,8 @@
  * Logs conformes com LGPD para dados médicos sensíveis
  */
 
-import { secureStorage } from './secureStorage';
 import { encryption } from './encryption';
+import { secureStorage } from './secureStorage';
 
 export interface AuditLogEntry {
   id: string;

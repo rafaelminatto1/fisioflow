@@ -1,11 +1,13 @@
+import { Send, Phone, Video, Mail, MessageSquare, Clock, Check, CheckCheck } from 'lucide-react';
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Send, Phone, Video, Mail, MessageSquare, Clock, Check, CheckCheck } from 'lucide-react';
 import { Patient } from '@/types/patient';
 
 interface PatientMessagesTabProps {

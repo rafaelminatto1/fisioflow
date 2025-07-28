@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { UserRole } from '../../types';
+
 import { useAuth } from '../../hooks/useAuth';
 import { qrCodeService } from '../../services/qrCodeService';
+import { UserRole } from '../../types';
 import BaseModal from '../ui/BaseModal';
 import { Button } from '../ui/Button';
 

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+
 import { useBackupSync } from '../hooks/useBackupSync';
-import { useFeatureFlags } from '../hooks/useFeatureFlags';
-import PaywallModal from './PaywallModal';
 import type {
   BackupConfig,
   BackupDestination,
   BackupData,
 } from '../hooks/useBackupSync';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
+
+import PaywallModal from './PaywallModal';
 
 interface BackupManagerProps {
   className?: string;

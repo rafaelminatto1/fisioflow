@@ -1,11 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { ClinicalProtocol, UserRole } from '../types';
-import PageShell from './ui/PageShell';
-import { Button } from './ui/Button';
-import FormField from './ui/FormField';
-import NewProtocolModal from './NewProtocolModal';
+
 import {
   IconPlus,
   IconSearch,
@@ -22,6 +20,10 @@ import {
   IconAward,
   IconEye,
 } from './icons/IconComponents';
+import NewProtocolModal from './NewProtocolModal';
+import { Button } from './ui/Button';
+import FormField from './ui/FormField';
+import PageShell from './ui/PageShell';
 
 interface ClinicalProtocolsLibraryPageProps {
   onSelectProtocol?: (protocolId: string) => void;

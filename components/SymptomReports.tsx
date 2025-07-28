@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
+
+import { SymptomAnalysisService } from '../services/symptomAnalysisService';
 import {
   SymptomDiaryEntry,
   SymptomReport,
   Patient,
   SymptomAnalysis,
 } from '../types';
-import { SymptomAnalysisService } from '../services/symptomAnalysisService';
 
 interface SymptomReportsProps {
   entries: SymptomDiaryEntry[];

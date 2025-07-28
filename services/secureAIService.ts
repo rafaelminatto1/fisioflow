@@ -3,13 +3,14 @@
  * Implementa proxy seguro para chamadas de IA
  */
 
-import { aiCache } from './aiCache';
 import type {
   Patient,
   Task,
   Assessment,
   AbandonmentRiskPrediction,
 } from '../types';
+
+import { aiCache } from './aiCache';
 
 // Interface para configuração do serviço
 interface AIServiceConfig {

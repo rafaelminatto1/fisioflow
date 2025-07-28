@@ -2,8 +2,9 @@
  * Panel de Insights Clínicos
  */
 
-import React, { useState } from 'react';
 import { Lightbulb, TrendingUp, Users, Activity, Eye, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+
 import type { ClinicalInsight } from '../../../types/analytics';
 
 interface ClinicalInsightsPanelProps {

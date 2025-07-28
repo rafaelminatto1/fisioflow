@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { StaffModalProps, User, UserRole } from '../types';
+
 import { useAuth } from '../hooks/useAuth';
+import { StaffModalProps, User, UserRole } from '../types';
+
 import { IconTrash } from './icons/IconComponents';
 import BaseModal from './ui/BaseModal';
-import FormField from './ui/FormField';
 import { Button } from './ui/Button';
+import FormField from './ui/FormField';
 
 type UserErrors = {
   name?: string;

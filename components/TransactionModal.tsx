@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+
 import { Transaction, TransactionModalProps } from '../types';
+
 import { IconX, IconTrash } from './icons/IconComponents';
 
 type TransactionErrors = {

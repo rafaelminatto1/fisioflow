@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../hooks/useData';
 import {
   ResponsiveContainer,
   BarChart,
@@ -15,6 +14,9 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
+
+import { useData } from '../hooks/useData';
+
 import {
   IconFilter,
   IconUsers,

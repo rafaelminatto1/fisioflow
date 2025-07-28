@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+
 import type { TrendData } from '../../../types/analytics';
 
 interface TrendChartProps {

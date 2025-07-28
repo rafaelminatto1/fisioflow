@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Exercise, UserRole } from '../../types';
+
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData';
 import { pdfService } from '../../services/pdfService';
 import { qrCodeService } from '../../services/qrCodeService';
+import { Exercise, UserRole } from '../../types';
 import BaseModal from '../ui/BaseModal';
 import { Button } from '../ui/Button';
 

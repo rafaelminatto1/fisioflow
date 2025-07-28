@@ -3,7 +3,7 @@
  * Implementa análise preditiva e insights acionáveis
  */
 
-import { multiAI } from './multiProviderAIService';
+import type { Patient, Assessment, Appointment, Prescription, Exercise, User } from '../types';
 import type {
   ClinicalInsight,
   ExerciseEffectiveness,
@@ -21,7 +21,8 @@ import type {
   AnalyticsResult,
   TrendData
 } from '../types/analytics';
-import type { Patient, Assessment, Appointment, Prescription, Exercise, User } from '../types';
+
+import { multiAI } from './multiProviderAIService';
 
 class AnalyticsService {
   private dataWarehouse: AnalyticsDataPoint[] = [];

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+
 import { PrescriptionModalProps, Prescription } from '../types';
+
 import { IconX, IconTrash } from './icons/IconComponents';
 
 type PrescriptionErrors = {

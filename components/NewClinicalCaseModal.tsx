@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import {
   ClinicalCase,
   CaseExamination,
   CaseIntervention,
   CaseEvolution,
 } from '../types';
+
+import { IconPlus, IconTrash, IconUpload } from './icons/IconComponents';
 import BaseModal from './ui/BaseModal';
 import { Button } from './ui/Button';
 import FormField from './ui/FormField';
-import { IconPlus, IconTrash, IconUpload } from './icons/IconComponents';
 
 interface NewClinicalCaseModalProps {
   isOpen: boolean;

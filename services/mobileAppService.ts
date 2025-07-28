@@ -3,9 +3,9 @@
  * Funcionalidades específicas para dispositivos móveis, notificações push, câmera, geolocalização
  */
 
+import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
 import { intelligentNotificationService } from './intelligentNotificationService';
 import { syncService } from './syncService';
-import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
 
 // === INTERFACES ===
 interface DeviceInfo {

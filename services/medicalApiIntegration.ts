@@ -3,8 +3,8 @@
  * Suporte para FHIR R4, ePrescription, ICD-10, SNOMED-CT e outras APIs médicas
  */
 
-import { encryption } from './encryption';
 import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
+import { encryption } from './encryption';
 
 // === INTERFACES FHIR R4 ===
 interface FHIRResource {

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+
 import { User, Patient, Appointment, Exercise, Task } from '../types';
 
 // Configuração do Supabase

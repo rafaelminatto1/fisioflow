@@ -5,7 +5,9 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
+
 import { Exercise, ExerciseLog, Prescription } from '../types';
+
 import { useAuth } from './useAuth';
 
 // Chaves de cache organizadas para exercícios

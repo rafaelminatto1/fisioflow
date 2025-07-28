@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+
+import { useNotification } from '../hooks/useNotification';
 import { PaymentModalProps } from '../types';
+
 import {
   IconX,
   IconQrCode,
@@ -7,7 +10,6 @@ import {
   IconCheckCircle,
   IconCreditCard,
 } from './icons/IconComponents';
-import { useNotification } from '../hooks/useNotification';
 
 const formatCurrency = (value: number) =>
   `R$ ${value.toFixed(2).replace('.', ',')}`;

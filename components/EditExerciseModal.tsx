@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+
 import { EditExerciseModalProps, Exercise } from '../types';
+
 import { IconX, IconTrash } from './icons/IconComponents';
 
 type ExerciseErrors = {

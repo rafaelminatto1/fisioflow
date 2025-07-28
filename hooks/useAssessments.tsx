@@ -5,10 +5,12 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
+
+import { auditLogger, AuditAction, LegalBasis } from '../services/auditLogger';
 import { Assessment, User } from '../types';
+
 import { useAuth } from './useAuth';
 import { useSecureData } from './useSecureData';
-import { auditLogger, AuditAction, LegalBasis } from '../services/auditLogger';
 
 // Chaves de cache organizadas para avaliações
 export const assessmentKeys = {

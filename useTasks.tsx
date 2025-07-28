@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+
+import { getValidatedTasksFromStorage } from '../services/storageService';
 import { Task } from '../types';
+
 import { useAuth } from './useAuth';
 
 // Supõe-se que uma função similar a esta exista no seu storageService
 // para carregar e validar as tarefas do localStorage.
-import { getValidatedTasksFromStorage } from '../services/storageService';
 
 export const useTasks = () => {
   const { tenantId } = useAuth();

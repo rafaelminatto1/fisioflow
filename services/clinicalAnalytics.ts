@@ -3,8 +3,8 @@
  * Análise de dados, KPIs, tendências e insights para gestão clínica
  */
 
-import { secureAIService } from './secureAIService';
 import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
+import { secureAIService } from './secureAIService';
 
 // === INTERFACES PRINCIPAIS ===
 interface AnalyticsMetric {
@@ -852,7 +852,7 @@ class ClinicalAnalytics {
 
   private calculateNextGeneration(schedule: any): string {
     const now = new Date();
-    let next = new Date(now);
+    const next = new Date(now);
 
     switch (schedule.frequency) {
       case 'daily':

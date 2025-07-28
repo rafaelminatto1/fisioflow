@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { ExerciseImage, ImageAnnotation, UserRole } from '../../types';
+
 import { useAuth } from '../../hooks/useAuth';
+import { ExerciseImage, ImageAnnotation, UserRole } from '../../types';
 
 interface InteractiveImageAnnotationProps {
   image: ExerciseImage;

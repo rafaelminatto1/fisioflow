@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+
 import { Prescription, Exercise, Patient } from '../types';
 
 export interface QRCodeData {

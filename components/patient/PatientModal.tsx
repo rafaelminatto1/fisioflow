@@ -3,15 +3,17 @@
  * Refatorado de 1323 linhas para componentes menores e especializados
  */
 
+import { Save, X } from 'lucide-react';
 import React, { useState, useCallback } from 'react';
+
+import { useNotification } from '../../hooks/useNotification';
+import { usePatients } from '../../hooks/usePatients';
+import { Patient } from '../../types';
 import BaseModal from '../ui/BaseModal';
 import { Button } from '../ui/Button';
+
 import PatientBasicInfo from './PatientBasicInfo';
 import PatientMedicalInfo from './PatientMedicalInfo';
-import { Patient } from '../../types';
-import { usePatients } from '../../hooks/usePatients';
-import { useNotification } from '../../hooks/useNotification';
-import { Save, X } from 'lucide-react';
 
 interface PatientModalProps {
   isOpen: boolean;

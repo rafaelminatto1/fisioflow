@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode, useState } from 'react';
 import { AlertTriangle, RefreshCw, Bug, X } from 'lucide-react';
+import React, { Component, ErrorInfo, ReactNode, useState } from 'react';
 
 // Interface para props do ErrorBoundary
 interface Props {
@@ -352,4 +352,5 @@ export const useAsyncErrorHandler = () => {
   );
 };
 
+export { ErrorBoundary };
 export default ErrorBoundary;

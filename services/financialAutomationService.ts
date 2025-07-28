@@ -1,5 +1,6 @@
-import { PaymentTransaction, PaymentInvoice, PaymentPlan, InvoiceItem } from './paymentService';
 import { Patient, Appointment } from '../types';
+
+import { PaymentTransaction, PaymentInvoice, PaymentPlan, InvoiceItem } from './paymentService';
 import { whatsappService } from './whatsappService';
 
 // Financial Automation Types

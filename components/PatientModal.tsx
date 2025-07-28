@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+
+import { TASK_STATUS_COLORS, TASK_STATUSES } from '../constants';
+import { useAuth } from '../hooks/useAuth';
+import { generatePatientReport } from '../services/geminiService';
 import {
   PatientModalProps,
   Patient,
@@ -13,12 +17,13 @@ import {
   User,
   Document,
 } from '../types';
-import { useAuth } from '../hooks/useAuth';
 // import { useAssessments } from '../hooks/useAssessments'; // Hook removido
 // import { useDocuments } from '../hooks/useDocuments'; // Hook removido
 // import { usePrescriptions } from '../hooks/usePrescriptions'; // Hook removido
 // import { useUsers } from '../hooks/useUsers'; // Hook removido
-import { TASK_STATUS_COLORS, TASK_STATUSES } from '../constants';
+
+import AssessmentModal from './AssessmentModal';
+import ExerciseHistoryModal from './ExerciseHistoryModal';
 import {
   IconX,
   IconTrash,
@@ -37,10 +42,7 @@ import {
   IconUpload,
   IconFile,
 } from './icons/IconComponents';
-import { generatePatientReport } from '../services/geminiService';
-import ExerciseHistoryModal from './ExerciseHistoryModal';
 import PrescriptionModal from './PrescriptionModal';
-import AssessmentModal from './AssessmentModal';
 import { SymptomDiaryIntegration } from './SymptomDiaryIntegration';
 
 // --- SUB-COMPONENTS TO MODULARIZE THE MODAL ---

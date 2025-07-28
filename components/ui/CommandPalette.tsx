@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { Command } from 'cmdk';
 import { File, Home, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
 interface CommandPaletteProps {
   isOpen: boolean;

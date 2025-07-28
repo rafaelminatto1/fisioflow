@@ -3,7 +3,6 @@
  * Coleta métricas de performance, identifica gargalos e otimiza automaticamente
  */
 
-import React from 'react';
 import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
 
 // === INTERFACES ===
@@ -703,68 +702,24 @@ class PerformanceMonitor {
 // === INSTÂNCIA SINGLETON ===
 export const performanceMonitor = new PerformanceMonitor();
 
-// === HOOKS REACT ===
-export const usePerformanceMonitor = () => {
-  const recordMetric = React.useCallback((
-    name: string,
-    value: number,
-    options?: Parameters<typeof performanceMonitor.recordMetric>[2]
-  ) => {
-    performanceMonitor.recordMetric(name, value, options);
-  }, []);
-
-  const startTiming = React.useCallback((name: string) => {
-    return performanceMonitor.startTiming(name);
-  }, []);
-
-  const measureFunction = React.useCallback(<T extends (...args: any[]) => any>(
-    fn: T,
-    name?: string
-  ) => {
-    return performanceMonitor.measureFunction(fn, name);
-  }, []);
-
-  return {
-    recordMetric,
-    startTiming,
-    measureFunction,
-    getMetrics: performanceMonitor.getMetrics.bind(performanceMonitor),
-    generateReport: performanceMonitor.generateReport.bind(performanceMonitor),
-    getAlerts: performanceMonitor.getAlerts.bind(performanceMonitor),
-  };
+// === UTILITY FUNCTIONS ===
+export const createPerformanceTimer = (name: string) => {
+  return performanceMonitor.startTiming(name);
 };
 
-// === PROFILER COMPONENT ===
-export const PerformanceProfiler: React.FC<{
-  id: string;
-  children: React.ReactNode;
-}> = ({ id, children }) => {
-  const onRenderCallback = React.useCallback((
-    profileId: string,
-    phase: 'mount' | 'update',
-    actualDuration: number,
-    baseDuration: number,
-    startTime: number,
-    commitTime: number
-  ) => {
-    performanceMonitor.recordMetric(`component_${profileId}_${phase}`, actualDuration, {
-      type: 'custom',
-      category: 'react_profiler',
-      component: profileId,
-      metadata: {
-        phase,
-        baseDuration,
-        startTime,
-        commitTime,
-      },
-    });
-  }, []);
-
-  return (
-    <React.Profiler id={id} onRender={onRenderCallback}>
-      {children}
-    </React.Profiler>
-  );
+export const measureAsyncFunction = async <T>(
+  fn: () => Promise<T>,
+  name?: string
+): Promise<T> => {
+  const timer = performanceMonitor.startTiming(name || 'async_function');
+  try {
+    const result = await fn();
+    timer.end();
+    return result;
+  } catch (error) {
+    timer.end();
+    throw error;
+  }
 };
 
 export default performanceMonitor;

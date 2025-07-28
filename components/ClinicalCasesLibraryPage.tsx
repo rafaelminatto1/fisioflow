@@ -1,11 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { ClinicalCase, UserRole } from '../types';
-import PageShell from './ui/PageShell';
-import { Button } from './ui/Button';
-import FormField from './ui/FormField';
-import NewClinicalCaseModal from './NewClinicalCaseModal';
+
 import {
   IconPlus,
   IconSearch,
@@ -17,6 +15,10 @@ import {
   IconUser,
   IconClock,
 } from './icons/IconComponents';
+import NewClinicalCaseModal from './NewClinicalCaseModal';
+import { Button } from './ui/Button';
+import FormField from './ui/FormField';
+import PageShell from './ui/PageShell';
 
 const ClinicalCasesLibraryPage: React.FC = () => {
   const { clinicalCases, caseFavorites, caseViews, caseRatings } = useData();

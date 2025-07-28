@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
+
+import { useAppConfig } from '../../contexts/AppConfigContext';
+import { useUIState } from '../../contexts/UIStateContext';
 import { useErrorHandler } from '../../services/errorTracker';
 import { usePerformanceMonitor } from '../../services/performanceMonitor';
 import { useSyncService } from '../../services/syncService';
-import { useAppConfig } from '../../contexts/AppConfigContext';
-import { useUIState } from '../../contexts/UIStateContext';
 
 // === INTERFACES ===
 interface SystemHealth {

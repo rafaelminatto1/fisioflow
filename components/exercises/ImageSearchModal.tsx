@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Exercise, ExerciseImage, ImageCategory, UserRole } from '../../types';
+
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData';
 import {
@@ -8,6 +8,7 @@ import {
   ImageSearchResult,
   SearchSuggestion,
 } from '../../services/imageSearchService';
+import { Exercise, ExerciseImage, ImageCategory, UserRole } from '../../types';
 import BaseModal from '../ui/BaseModal';
 import { Button } from '../ui/Button';
 import LazyImage from '../ui/LazyImage';

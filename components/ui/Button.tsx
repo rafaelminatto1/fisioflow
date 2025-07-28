@@ -1,5 +1,5 @@
-import React from 'react';
 import { Loader2 } from 'lucide-react';
+import React from 'react';
 
 // Define a base de estilos para reutilização e variantes
 const baseStyles =

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { 
   useStableCallback, 
@@ -11,32 +11,32 @@ import {
 // Mock performance API
 Object.defineProperty(global, 'performance', {
   value: {
-    now: jest.fn(() => Date.now()),
-    mark: jest.fn(),
-    measure: jest.fn(),
-    getEntriesByName: jest.fn(() => []),
-    getEntriesByType: jest.fn(() => []),
+    now: vi.fn(() => Date.now()),
+    mark: vi.fn(),
+    measure: vi.fn(),
+    getEntriesByName: vi.fn(() => []),
+    getEntriesByType: vi.fn(() => []),
   },
   writable: true,
 });
 
 // Mock IntersectionObserver
-global.IntersectionObserver = jest.fn().mockImplementation((callback) => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+global.IntersectionObserver = vi.fn().mockImplementation((callback) => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
   callback,
 }));
 
 describe('useOptimizedComponent', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.clearAllTimers();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.clearAllTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('useStableCallback', () => {
@@ -102,7 +102,7 @@ describe('useOptimizedComponent', () => {
     });
 
     it('should preserve callback functionality', () => {
-      const mockCallback = jest.fn((a: number, b: number) => a + b);
+      const mockCallback = vi.fn((a: number, b: number) => a + b);
 
       const { result } = renderHook(() => 
         useStableCallback(mockCallback, [])
@@ -142,7 +142,7 @@ describe('useOptimizedComponent', () => {
 
       // Fast-forward time
       act(() => {
-        jest.advanceTimersByTime(300);
+        vi.advanceTimersByTime(300);
       });
 
       expect(result.current).toBe('final'); // Should update to final value
@@ -173,7 +173,7 @@ describe('useOptimizedComponent', () => {
       rerender({ value: 'first', delay: 100 });
       
       act(() => {
-        jest.advanceTimersByTime(50); // Half the delay
+        vi.advanceTimersByTime(50); // Half the delay
       });
       
       expect(result.current).toBe('initial'); // Should not update yet
@@ -182,20 +182,20 @@ describe('useOptimizedComponent', () => {
       rerender({ value: 'second', delay: 200 });
       
       act(() => {
-        jest.advanceTimersByTime(100); // Original delay would have passed
+        vi.advanceTimersByTime(100); // Original delay would have passed
       });
       
       expect(result.current).toBe('initial'); // Should not update with new delay
 
       act(() => {
-        jest.advanceTimersByTime(200); // New delay passes
+        vi.advanceTimersByTime(200); // New delay passes
       });
       
       expect(result.current).toBe('second'); // Should update now
     });
 
     it('should cleanup timeout on unmount', () => {
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
       const { unmount } = renderHook(() => 
         useOptimizedDebounce('value', 300)
@@ -450,7 +450,7 @@ describe('useOptimizedComponent', () => {
     });
 
     it('should measure render time', () => {
-      const mockNow = jest.mocked(performance.now);
+      const mockNow = vi.mocked(performance.now);
       mockNow
         .mockReturnValueOnce(100) // Mount start
         .mockReturnValueOnce(110) // Mount end
@@ -468,7 +468,7 @@ describe('useOptimizedComponent', () => {
     });
 
     it('should provide average render time', () => {
-      const mockNow = jest.mocked(performance.now);
+      const mockNow = vi.mocked(performance.now);
       mockNow
         .mockReturnValueOnce(100)
         .mockReturnValueOnce(110) // 10ms
@@ -540,7 +540,7 @@ describe('useOptimizedComponent', () => {
     });
 
     it('should provide performance warnings', () => {
-      const mockNow = jest.mocked(performance.now);
+      const mockNow = vi.mocked(performance.now);
       // Simulate slow render (> 16ms threshold)
       mockNow
         .mockReturnValueOnce(100)

@@ -1,4 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import {
+  WhatsApp,
+  QrCode,
+  CheckCircle,
+  Error,
+  Refresh,
+  Send,
+  Settings,
+  Info,
+  ConnectedTv,
+  PhoneAndroid,
+} from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -22,20 +33,10 @@ import {
   Tooltip,
   Paper,
 } from '@mui/material';
-import {
-  WhatsApp,
-  QrCode,
-  CheckCircle,
-  Error,
-  Refresh,
-  Send,
-  Settings,
-  Info,
-  ConnectedTv,
-  PhoneAndroid,
-} from '@mui/icons-material';
-import { useEvolutionWhatsApp } from '../../services/evolutionWhatsAppService';
+import React, { useState, useEffect } from 'react';
+
 import { useNotification } from '../../hooks/useNotification';
+import { useEvolutionWhatsApp } from '../../services/evolutionWhatsAppService';
 
 interface ConnectionStatus {
   status: 'disconnected' | 'connecting' | 'connected' | 'error';

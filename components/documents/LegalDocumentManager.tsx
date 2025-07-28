@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   Download, 
@@ -16,16 +15,19 @@ import {
   Settings,
   PenTool
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
 import { useData } from '../../hooks/useData';
+import type { ComplianceValidationResult } from '../../services/complianceService';
+import { documentNotificationService } from '../../services/documentNotificationService';
+import { documentWorkflowService } from '../../services/documentWorkflowService';
 import { 
   BaseDocument, 
   DocumentType, 
   DocumentStatus,
   DocumentGenerationRequest
 } from '../../types/legalDocuments';
-import type { ComplianceValidationResult } from '../../services/complianceService';
-import { documentWorkflowService } from '../../services/documentWorkflowService';
-import { documentNotificationService } from '../../services/documentNotificationService';
+
 import { AdvancedTemplateEditor } from './AdvancedTemplateEditor';
 
 interface LegalDocumentManagerProps {

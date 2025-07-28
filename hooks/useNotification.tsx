@@ -5,6 +5,7 @@ import React, {
   ReactNode,
   useCallback,
 } from 'react';
+
 import { Notification } from '../types';
 
 type NotificationContextType = {

@@ -3,15 +3,16 @@
  * Monitora dados e gera alertas automáticos baseados em IA
  */
 
-import { multiAI } from './multiProviderAIService';
-import { mlService } from './mlService';
+import type { Patient, Assessment, Appointment, User } from '../types';
 import type {
   SmartAlert,
   AlertType,
   SuggestedAction,
   TreatmentPrediction
 } from '../types/analytics';
-import type { Patient, Assessment, Appointment, User } from '../types';
+
+import { mlService } from './mlService';
+import { multiAI } from './multiProviderAIService';
 
 class AlertsService {
   private alerts: SmartAlert[] = [];

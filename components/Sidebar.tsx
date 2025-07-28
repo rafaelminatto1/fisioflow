@@ -1,7 +1,3 @@
-import React from 'react';
-import NotebookTree from './NotebookTree';
-import { useAuth } from '../hooks/useAuth';
-import { UserRole } from '../types';
 import {
   Home,
   BarChart3,
@@ -31,6 +27,12 @@ import {
   FileText,
   X as IconX,
 } from 'lucide-react';
+import React from 'react';
+
+import { useAuth } from '../hooks/useAuth';
+import { UserRole } from '../types';
+
+import NotebookTree from './NotebookTree';
 
 interface NavItemProps {
   icon: React.ReactNode;

@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+
+import { notificationService } from '../services/notificationService';
 import {
   ReminderRule,
   ScheduledReminder,
@@ -11,7 +13,7 @@ import {
   Appointment,
   Prescription,
 } from '../types';
-import { notificationService } from '../services/notificationService';
+
 import { useAuth } from './useAuth';
 // import { useData } from './useData.minimal';
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Task, TaskModalProps, UserRole } from '../types';
+
+import { TASK_STATUS_LABELS, TASK_PRIORITY_STYLES } from '../constants';
 import { useAuth } from '../hooks/useAuth';
 import { getTaskSummary } from '../services/geminiService';
-import { TASK_STATUS_LABELS, TASK_PRIORITY_STYLES } from '../constants';
+import { Task, TaskModalProps, UserRole } from '../types';
+
 import { IconSparkles, IconTrash } from './icons/IconComponents';
 import BaseModal from './ui/BaseModal';
 import { Button } from './ui/Button';

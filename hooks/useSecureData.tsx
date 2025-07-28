@@ -7,6 +7,10 @@ import React, {
   useCallback,
   useMemo,
 } from 'react';
+
+import { auditLogger, AuditAction, LegalBasis, logPatientAccess } from '../services/auditLogger';
+import { encryption, EncryptedData, LGPDAuditLog, SecurePatientData } from '../services/encryption';
+import { secureStorage } from '../services/secureStorage';
 import {
   Patient,
   Assessment,
@@ -17,9 +21,7 @@ import {
   Tenant,
   DataContextType,
 } from '../types';
-import { secureStorage } from '../services/secureStorage';
-import { encryption, EncryptedData, LGPDAuditLog, SecurePatientData } from '../services/encryption';
-import { auditLogger, AuditAction, LegalBasis, logPatientAccess } from '../services/auditLogger';
+
 import { useAuth } from './useAuth';
 
 // Contexto para dados seguros

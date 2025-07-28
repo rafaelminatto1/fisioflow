@@ -1,17 +1,19 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../hooks/useData';
-import { useAuth } from '../hooks/useAuth';
-import { Patient } from '../types';
-import PatientModal from './PatientModal'; // Manteremos o modal para edição/criação
-import { IconPlus, IconArrowLeft } from './icons/IconComponents';
 import { Brain } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+
+import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
+import { Patient } from '../types';
+
 import { AIDocumentationAssistant } from './AIDocumentationAssistant';
+import { IconPlus, IconArrowLeft } from './icons/IconComponents';
+import PatientModal from './PatientModal'; // Manteremos o modal para edição/criação
+import { Button } from './ui/Button';
 import PageLoader from './ui/PageLoader';
 import PageShell from './ui/PageShell';
-import { Button } from './ui/Button';
 import SearchInput from './ui/SearchInput';
-import VirtualizedPatientList from './ui/VirtualizedPatientList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/Tabs';
+import VirtualizedPatientList from './ui/VirtualizedPatientList';
 
 // Componente para os detalhes do paciente com abas
 const PatientDetails: React.FC<{ patient: Patient; onBack: () => void }> = ({

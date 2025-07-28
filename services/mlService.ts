@@ -3,7 +3,7 @@
  * Implementa modelos preditivos usando suas assinaturas de IA existentes
  */
 
-import { multiAI } from './multiProviderAIService';
+import type { Patient, Assessment, Appointment, Prescription } from '../types';
 import type {
   TreatmentPrediction,
   MLModel,
@@ -11,7 +11,8 @@ import type {
   PredictionFactor,
   AnalyticsDataPoint
 } from '../types/analytics';
-import type { Patient, Assessment, Appointment, Prescription } from '../types';
+
+import { multiAI } from './multiProviderAIService';
 
 class MLPredictionService {
   private models: Map<string, MLModel> = new Map();

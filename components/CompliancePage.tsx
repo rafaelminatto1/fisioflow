@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
+
 import { useData } from '../hooks/useData';
 import { AuditLog } from '../types';
+
 import {
   IconSearch,
   IconUserShield,

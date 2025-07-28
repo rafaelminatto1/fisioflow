@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+
 import { dataOptimizer } from '../services/dataOptimizer';
 
 export const useOptimizedStorage = <T,>(

@@ -2,8 +2,9 @@
  * Tabela de Performance dos Fisioterapeutas
  */
 
-import React, { useState } from 'react';
 import { Star, TrendingUp, Users, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+
 import type { TherapistMetrics } from '../../../types/analytics';
 
 interface TherapistPerformanceTableProps {

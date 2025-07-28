@@ -1,12 +1,14 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { aiCache } from './aiCache';
+
+import { TASK_STATUS_LABELS } from '../constants';
 import type {
   Patient,
   Task,
   Assessment,
   AbandonmentRiskPrediction,
 } from '../types';
-import { TASK_STATUS_LABELS } from '../constants';
+
+import { aiCache } from './aiCache';
 
 // This implementation now uses the real Gemini API.
 // The API key should be configured in the environment or passed from backend

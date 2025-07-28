@@ -1,4 +1,3 @@
-import React, { useState, useRef, useEffect } from 'react';
 import { 
   Mic, 
   MicOff, 
@@ -14,14 +13,14 @@ import {
   Volume2,
   VolumeX
 } from 'lucide-react';
-import { useData } from '../hooks/useData';
+import React, { useState, useRef, useEffect } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { useNotification } from '../hooks/useNotification';
-import type { Patient, Assessment } from '../types';
 
 // Import AI services - Usando suas assinaturas sem custos extras!
 import { multiAI } from '../services/multiProviderAIService';
-
 import {
   generateIntelligentTemplate,
   autoFillTemplate,
@@ -31,7 +30,6 @@ import {
   type DocumentTemplate,
   type TemplateInstance
 } from '../services/templateService';
-
 import {
   analyzeClinicalText,
   extractRelevantInformation,
@@ -39,7 +37,6 @@ import {
   checkInconsistencies,
   analyzeFeedbackSentiment
 } from '../services/textAnalysisService';
-
 import {
   startVoiceRecordingSession,
   addVoiceRecording,
@@ -48,6 +45,7 @@ import {
   initializeWebSpeechAPI,
   type VoiceRecordingSession
 } from '../services/voiceService';
+import type { Patient, Assessment } from '../types';
 
 import { YourSubscriptionsConfig } from './YourSubscriptionsConfig';
 

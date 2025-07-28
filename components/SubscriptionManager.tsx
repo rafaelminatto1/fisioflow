@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import {
   Check,
   X,
@@ -7,11 +6,13 @@ import {
   AlertCircle,
   Crown,
 } from 'lucide-react';
-import { SubscriptionPlan } from '../types';
+import React, { useState, useEffect } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
 import { useData } from '../hooks/useData';
 import { useNotification } from '../hooks/useNotification';
 import useSubscriptionLimits from '../hooks/useSubscriptionLimits';
+import { SubscriptionPlan } from '../types';
 
 interface SubscriptionManagerProps {
   isOpen: boolean;

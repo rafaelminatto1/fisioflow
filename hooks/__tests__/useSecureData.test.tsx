@@ -1,30 +1,30 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { useSecureData } from '../useSecureData';
 
 // Mock the services
-jest.mock('../../services/secureStorage', () => ({
-  SecureStorageManager: jest.fn().mockImplementation(() => ({
-    storePatient: jest.fn(),
-    getPatient: jest.fn(),
-    getAllPatients: jest.fn(),
-    deletePatient: jest.fn(),
+vi.mock('../../services/secureStorage', () => ({
+  SecureStorageManager: vi.fn().mockImplementation(() => ({
+    storePatient: vi.fn(),
+    getPatient: vi.fn(),
+    getAllPatients: vi.fn(),
+    deletePatient: vi.fn(),
   })),
 }));
 
-jest.mock('../../services/encryption', () => ({
-  EncryptionManager: jest.fn().mockImplementation(() => ({
-    encryptPatientData: jest.fn(),
-    decryptPatientData: jest.fn(),
-    verifyDataIntegrity: jest.fn(),
+vi.mock('../../services/encryption', () => ({
+  EncryptionManager: vi.fn().mockImplementation(() => ({
+    encryptPatientData: vi.fn(),
+    decryptPatientData: vi.fn(),
+    verifyDataIntegrity: vi.fn(),
   })),
 }));
 
-jest.mock('../../services/auditLogger', () => ({
-  AuditLogger: jest.fn().mockImplementation(() => ({
-    log: jest.fn(),
+vi.mock('../../services/auditLogger', () => ({
+  AuditLogger: vi.fn().mockImplementation(() => ({
+    log: vi.fn(),
   })),
   AuditAction: {
     VIEW_PATIENT: 'VIEW_PATIENT',
@@ -48,7 +48,7 @@ const mockAuthContext = {
   },
 };
 
-jest.mock('../useAuth', () => ({
+vi.mock('../useAuth', () => ({
   useAuth: () => mockAuthContext,
 }));
 
@@ -70,7 +70,7 @@ describe('useSecureData', () => {
   let wrapper: ({ children }: { children: React.ReactNode }) => JSX.Element;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     wrapper = createWrapper();
   });
 

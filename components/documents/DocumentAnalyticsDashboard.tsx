@@ -3,7 +3,6 @@
  * Métricas detalhadas, insights e relatórios em tempo real
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -26,18 +25,19 @@ import {
   ArrowDownRight,
   Minus
 } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
 
-import { InteractiveChart } from '../analytics/components/InteractiveChart';
+import { useAuth } from '../../hooks/useAuth';
+import { useData } from '../../hooks/useData';
+import { complianceService } from '../../services/complianceService';
 import type { 
   BaseDocument, 
   DocumentType, 
   DocumentStatus,
   ComplianceValidationResult 
 } from '../../types/legalDocuments';
+import { InteractiveChart } from '../analytics/components/InteractiveChart';
 
-import { complianceService } from '../../services/complianceService';
-import { useData } from '../../hooks/useData';
-import { useAuth } from '../../hooks/useAuth';
 
 interface DocumentMetrics {
   totalDocuments: number;

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import {
   ClinicalProtocol,
   Patient,
@@ -8,9 +9,7 @@ import {
   ProtocolPhase,
   ProtocolExercise,
 } from '../types';
-import BaseModal from './ui/BaseModal';
-import { Button } from './ui/Button';
-import FormField from './ui/FormField';
+
 import {
   IconUser,
   IconCalendar,
@@ -21,6 +20,9 @@ import {
   IconSave,
   IconX,
 } from './icons/IconComponents';
+import BaseModal from './ui/BaseModal';
+import { Button } from './ui/Button';
+import FormField from './ui/FormField';
 
 interface ProtocolPrescriptionModalProps {
   isOpen: boolean;

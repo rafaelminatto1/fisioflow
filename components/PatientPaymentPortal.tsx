@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, 
   Smartphone, 
@@ -19,9 +18,11 @@ import {
   TrendingUp,
   Calculator
 } from 'lucide-react';
-import { usePayments, PaymentTransaction, PaymentInvoice } from '../services/paymentService';
-import { useFinancialAutomation, PatientSubscription } from '../services/financialAutomationService';
+import React, { useState, useEffect } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
+import { useFinancialAutomation, PatientSubscription } from '../services/financialAutomationService';
+import { usePayments, PaymentTransaction, PaymentInvoice } from '../services/paymentService';
 
 interface PatientPaymentPortalProps {
   patientId: string;

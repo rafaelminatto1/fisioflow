@@ -1,16 +1,18 @@
 import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { Exercise, UserRole } from '../types';
+
 import {
   IconSearch,
   IconPlus,
   IconPencil,
   IconTrash,
 } from './icons/IconComponents';
-import PageShell from './ui/PageShell';
-import PageLoader from './ui/PageLoader';
 import { Button } from './ui/Button';
+import PageLoader from './ui/PageLoader';
+import PageShell from './ui/PageShell';
 
 // Lazy load modais para reduzir bundle inicial
 const ExerciseModal = lazy(() => import('./ExerciseModal'));

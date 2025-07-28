@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+
+import { useNotification } from '../hooks/useNotification';
 import {
   SymptomDiaryEntry,
   PainLocation,
@@ -11,7 +13,6 @@ import {
   SleepQuality,
   Patient,
 } from '../types';
-import { useNotification } from '../hooks/useNotification';
 
 interface SymptomDiaryEntryModalProps {
   isOpen: boolean;

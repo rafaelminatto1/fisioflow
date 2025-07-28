@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+
 import { Equipment, User } from '../types';
+
 import { IconX, IconTrash } from './icons/IconComponents';
 import BaseModal from './ui/BaseModal';
 

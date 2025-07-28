@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
@@ -6,13 +6,13 @@ import { usePatients } from '../usePatients';
 
 // Mock useSecureData
 const mockUseSecureData = {
-  getAllSecurePatients: jest.fn(),
-  getSecurePatient: jest.fn(),
-  saveSecurePatient: jest.fn(),
-  deleteSecurePatient: jest.fn(),
+  getAllSecurePatients: vi.fn(),
+  getSecurePatient: vi.fn(),
+  saveSecurePatient: vi.fn(),
+  deleteSecurePatient: vi.fn(),
 };
 
-jest.mock('../useSecureData', () => ({
+vi.mock('../useSecureData', () => ({
   useSecureData: () => mockUseSecureData,
 }));
 
@@ -30,7 +30,7 @@ const mockAuthContext = {
   },
 };
 
-jest.mock('../useAuth', () => ({
+vi.mock('../useAuth', () => ({
   useAuth: () => mockAuthContext,
 }));
 
@@ -41,8 +41,8 @@ Object.defineProperty(global, 'sessionStorage', {
       if (key === 'masterKey') return 'test-master-key-123';
       return null;
     }),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
   },
   writable: true,
 });
@@ -65,7 +65,7 @@ describe('usePatients', () => {
   let wrapper: ({ children }: { children: React.ReactNode }) => JSX.Element;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     wrapper = createWrapper();
   });
 
@@ -135,7 +135,7 @@ describe('usePatients', () => {
 
     it('should handle missing master key', async () => {
       // Mock missing master key
-      jest.mocked(global.sessionStorage.getItem).mockReturnValue(null);
+      vi.mocked(global.sessionStorage.getItem).mockReturnValue(null);
 
       const { result } = renderHook(() => usePatients(), { wrapper });
 

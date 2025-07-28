@@ -1,6 +1,7 @@
 import React from 'react';
-import { Task, User } from '../types';
+
 import { TASK_PRIORITY_STYLES } from '../constants';
+import { Task, User } from '../types';
 
 interface TaskCardProps {
   task: Task;

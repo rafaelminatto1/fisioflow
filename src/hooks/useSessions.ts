@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
+
+import { useErrorHandler } from '../components/ErrorBoundary';
 import {
   validateAndMigrateLocalStorageData,
   saveValidatedData,
 } from '../utils/dataValidator';
+
 import { useAuth } from './useAuth';
-import { useErrorHandler } from '../components/ErrorBoundary';
 
 // Schema para Session
 const SessionSchema = z.object({

@@ -1,13 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import MetricCard from './MetricCard';
-import {
-  IconClock,
-  IconUsers,
-  IconCheckCircle,
-  IconTrendingUp,
-  IconSparkles,
-  IconAlertTriangle,
-} from './icons/IconComponents';
 import {
   BarChart,
   Bar,
@@ -18,13 +9,24 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { predictAbandonmentRisk } from '../services/geminiService';
 import type { AbandonmentRiskPrediction } from '../types';
+
+import {
+  IconClock,
+  IconUsers,
+  IconCheckCircle,
+  IconTrendingUp,
+  IconSparkles,
+  IconAlertTriangle,
+} from './icons/IconComponents';
+import MetricCard from './MetricCard';
+import OnboardingChecklist from './OnboardingChecklist';
 import { Button } from './ui/Button';
 import PageLoader from './ui/PageLoader';
-import OnboardingChecklist from './OnboardingChecklist';
 
 const productivityData = [
   { name: 'Dr. Ana', produtividade: 85 },

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { VirtualizedList } from '../VirtualizedList';
 
 // Mock react-window
-jest.mock('react-window', () => ({
+vi.mock('react-window', () => ({
   FixedSizeList: jest.fn(({ children, itemCount, itemSize, height, onScroll, itemData }) => {
     const items = [];
     const visibleStart = 0;
@@ -30,12 +30,12 @@ jest.mock('react-window', () => ({
 }));
 
 // Mock useVirtualScrolling hook
-jest.mock('../../../hooks/useOptimizedComponent', () => ({
+vi.mock('../../../hooks/useOptimizedComponent', () => ({
   useVirtualScrolling: jest.fn(({ items, itemHeight, containerHeight }) => ({
     visibleItems: items.slice(0, Math.ceil(containerHeight / itemHeight)),
     totalHeight: items.length * itemHeight,
     scrollTop: 0,
-    onScroll: jest.fn(),
+    onScroll: vi.fn(),
   })),
 }));
 
@@ -56,7 +56,7 @@ describe('VirtualizedList', () => {
   ));
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('basic rendering', () => {
@@ -243,7 +243,7 @@ describe('VirtualizedList', () => {
     });
 
     it('should handle infinite scroll', async () => {
-      const onLoadMore = jest.fn();
+      const onLoadMore = vi.fn();
       
       render(
         <VirtualizedList
@@ -274,7 +274,7 @@ describe('VirtualizedList', () => {
     });
 
     it('should not load more when hasNextPage is false', async () => {
-      const onLoadMore = jest.fn();
+      const onLoadMore = vi.fn();
       
       render(
         <VirtualizedList
@@ -306,7 +306,7 @@ describe('VirtualizedList', () => {
 
   describe('selection functionality', () => {
     it('should handle single selection', () => {
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       
       render(
         <VirtualizedList
@@ -327,7 +327,7 @@ describe('VirtualizedList', () => {
     });
 
     it('should handle multiple selection', () => {
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       
       render(
         <VirtualizedList
@@ -355,7 +355,7 @@ describe('VirtualizedList', () => {
     });
 
     it('should provide select all functionality', () => {
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       
       render(
         <VirtualizedList
@@ -379,7 +379,7 @@ describe('VirtualizedList', () => {
 
   describe('sorting functionality', () => {
     it('should handle sorting when sortable is true', () => {
-      const onSortChange = jest.fn();
+      const onSortChange = vi.fn();
       
       render(
         <VirtualizedList
@@ -403,7 +403,7 @@ describe('VirtualizedList', () => {
     });
 
     it('should toggle sort direction on repeated clicks', () => {
-      const onSortChange = jest.fn();
+      const onSortChange = vi.fn();
       
       render(
         <VirtualizedList
@@ -525,7 +525,7 @@ describe('VirtualizedList', () => {
     });
 
     it('should handle rapid scroll events efficiently', () => {
-      const onScroll = jest.fn();
+      const onScroll = vi.fn();
       
       render(
         <VirtualizedList
@@ -566,7 +566,7 @@ describe('VirtualizedList', () => {
     });
 
     it('should support keyboard navigation', () => {
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       
       render(
         <VirtualizedList

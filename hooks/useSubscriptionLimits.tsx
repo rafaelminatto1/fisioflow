@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
+
+import { SubscriptionPlan } from '../types';
+
 import { useAuth } from './useAuth';
 import { useData } from './useData';
-import { SubscriptionPlan } from '../types';
 
 export interface PlanLimits {
   therapists: number;

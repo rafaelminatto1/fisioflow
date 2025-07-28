@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
+import { getTaskSummary } from '../services/geminiService';
 import {
   Task,
   User,
@@ -10,6 +12,7 @@ import {
   StudentProgress,
   MentorshipSession,
 } from '../types';
+
 import {
   IconSparkles,
   IconCheckCircle,
@@ -25,7 +28,7 @@ import {
   IconClock,
   IconStar,
 } from './icons/IconComponents';
-import { getTaskSummary } from '../services/geminiService';
+
 
 const MentorshipPage: React.FC = () => {
   const { user: actingUser } = useAuth();

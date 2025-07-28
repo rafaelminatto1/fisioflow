@@ -1,26 +1,26 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SecureStorageManager } from '../secureStorage';
 
 // Mock IDB
 const mockDB = {
-  transaction: jest.fn(),
-  close: jest.fn(),
+  transaction: vi.fn(),
+  close: vi.fn(),
 };
 
 const mockTransaction = {
-  objectStore: jest.fn(),
+  objectStore: vi.fn(),
   oncomplete: null,
   onerror: null,
 };
 
 const mockObjectStore = {
-  add: jest.fn(),
-  put: jest.fn(),
-  get: jest.fn(),
-  delete: jest.fn(),
-  getAll: jest.fn(),
-  count: jest.fn(),
-  clear: jest.fn(),
+  add: vi.fn(),
+  put: vi.fn(),
+  get: vi.fn(),
+  delete: vi.fn(),
+  getAll: vi.fn(),
+  count: vi.fn(),
+  clear: vi.fn(),
 };
 
 const mockRequest = {
@@ -33,7 +33,7 @@ const mockRequest = {
 // Mock IndexedDB
 Object.defineProperty(global, 'indexedDB', {
   value: {
-    open: jest.fn().mockImplementation(() => {
+    open: vi.fn().mockImplementation(() => {
       const request = { ...mockRequest };
       setTimeout(() => {
         request.result = mockDB;
@@ -41,7 +41,7 @@ Object.defineProperty(global, 'indexedDB', {
       }, 0);
       return request;
     }),
-    deleteDatabase: jest.fn(),
+    deleteDatabase: vi.fn(),
   },
   writable: true,
 });
@@ -50,7 +50,7 @@ describe('SecureStorageManager', () => {
   let secureStorage: SecureStorageManager;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     secureStorage = new SecureStorageManager();
     
     // Reset mock implementations
@@ -66,7 +66,7 @@ describe('SecureStorageManager', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('initialization', () => {
@@ -398,9 +398,9 @@ describe('SecureStorageManager', () => {
       Object.defineProperty(global, 'localStorage', {
         value: {
           getItem: jest.fn((key) => legacyData[key] || null),
-          removeItem: jest.fn(),
-          setItem: jest.fn(),
-          clear: jest.fn(),
+          removeItem: vi.fn(),
+          setItem: vi.fn(),
+          clear: vi.fn(),
         },
         writable: true,
       });

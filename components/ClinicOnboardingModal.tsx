@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+
 import { ClinicOnboardingModalProps, SubscriptionPlan } from '../types';
+
 import { IconBuilding, IconSparkles } from './icons/IconComponents';
-import FormField from './ui/FormField';
 import { Button } from './ui/Button';
+import FormField from './ui/FormField';
 
 const PlanCard: React.FC<{
   id: SubscriptionPlan;

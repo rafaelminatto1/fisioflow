@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { Appointment, TimeBlock, UserRole } from '../types';
+
+import AppointmentModal from './AppointmentModal';
 import {
   IconChevronRight,
   IconPlus,
@@ -9,7 +12,6 @@ import {
   IconList,
   IconClock,
 } from './icons/IconComponents';
-import AppointmentModal from './AppointmentModal';
 import TimeBlockModal from './TimeBlockModal';
 
 const CalendarPage: React.FC = () => {

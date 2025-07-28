@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+
 import {
   useExternalIntegrations,
   Integration,
 } from '../hooks/useExternalIntegrations';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { useNotification } from '../hooks/useNotification';
+
 import PaywallModal from './PaywallModal';
 
 interface IntegrationCardProps {

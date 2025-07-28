@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { useData } from './useData';
-import { useAuth } from './useAuth';
+
 import IntegrationAPI from '../services/integrationAPI';
+
+import { useAuth } from './useAuth';
+import { useData } from './useData';
 
 export interface SearchResult {
   id: string;

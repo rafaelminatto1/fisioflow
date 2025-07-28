@@ -3,6 +3,7 @@
  * Sistema completo inspirado no Lumi Dashboard para fisioterapia
  */
 
+import type { Patient, User } from '../types';
 import type {
   BaseDocument,
   DocumentType,
@@ -18,7 +19,7 @@ import type {
   DocumentLog,
   ComplianceInfo
 } from '../types/legalDocuments';
-import type { Patient, User } from '../types';
+
 import { multiAI } from './multiProviderAIService';
 
 class DocumentService {

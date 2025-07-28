@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
+
 import { ChatMessage, Exercise, User } from '../../types';
-import MessageBubble from './MessageBubble';
+
 import DateSeparator from './DateSeparator';
+import MessageBubble from './MessageBubble';
 
 interface ChatWindowProps {
   messages: ChatMessage[];

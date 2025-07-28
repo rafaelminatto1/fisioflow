@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { ClinicalProtocol } from '../types';
+
+import { IconSave, IconPlus, IconX } from './icons/IconComponents';
 import BaseModal from './ui/BaseModal';
 import { Button } from './ui/Button';
 import FormField from './ui/FormField';
-import { IconSave, IconPlus, IconX } from './icons/IconComponents';
 
 interface NewProtocolModalProps {
   isOpen: boolean;

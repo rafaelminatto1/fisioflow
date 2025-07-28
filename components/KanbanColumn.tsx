@@ -1,7 +1,9 @@
 import React from 'react';
-import { Task, User } from '../types';
-import TaskCard from './TaskCard';
+
 import { TASK_STATUS_LABELS, TASK_STATUS_COLORS } from '../constants';
+import { Task, User } from '../types';
+
+import TaskCard from './TaskCard';
 
 interface KanbanColumnProps {
   status: Task['status'];

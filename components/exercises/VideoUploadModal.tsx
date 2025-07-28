@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+
+import { useAuth } from '../../hooks/useAuth';
+import { useData } from '../../hooks/useData';
 import {
   Exercise,
   ExerciseVideo,
@@ -6,8 +9,6 @@ import {
   VideoQuality,
   UserRole,
 } from '../../types';
-import { useAuth } from '../../hooks/useAuth';
-import { useData } from '../../hooks/useData';
 import BaseModal from '../ui/BaseModal';
 import { Button } from '../ui/Button';
 

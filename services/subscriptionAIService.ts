@@ -448,7 +448,7 @@ class SubscriptionAIService {
 
   private updateMonthlyUsage(): void {
     const currentMonth = new Date().toISOString().substr(0, 7); // YYYY-MM
-    let monthlyTotal: UsageData = {
+    const monthlyTotal: UsageData = {
       date: currentMonth,
       reports: 0,
       voiceMinutes: 0,

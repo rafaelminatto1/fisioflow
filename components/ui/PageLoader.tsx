@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { IconSparkles } from '../icons/IconComponents';
 
 const PageLoader: React.FC<{ message?: string }> = ({

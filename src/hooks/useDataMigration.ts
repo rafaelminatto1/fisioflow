@@ -9,12 +9,13 @@
  * @since 2024-01-20
  */
 
+import { Patient, Session, Task, User, Subscription } from '../types';
+
+import { useAuth } from './useAuth';
 import { usePatients } from './usePatients';
 import { useSessions } from './useSessions';
-import { useTasks } from './useTasks';
 import { useSubscription } from './useSubscription';
-import { useAuth } from './useAuth';
-import { Patient, Session, Task, User, Subscription } from '../types';
+import { useTasks } from './useTasks';
 
 /**
  * Interface que mantém compatibilidade com useData antigo

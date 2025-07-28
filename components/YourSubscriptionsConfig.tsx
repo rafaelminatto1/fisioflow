@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import { 
   Key, 
   Save, 
@@ -12,8 +11,10 @@ import {
   DollarSign,
   BarChart3
 } from 'lucide-react';
-import { multiAI } from '../services/multiProviderAIService';
+import React, { useState, useEffect } from 'react';
+
 import { useNotification } from '../hooks/useNotification';
+import { multiAI } from '../services/multiProviderAIService';
 
 interface YourSubscriptionsConfigProps {
   isOpen: boolean;

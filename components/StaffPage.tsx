@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { User, UserRole } from '../types';
+
 import { IconPlus, IconPencil, IconSearch } from './icons/IconComponents';
 import StaffModal from './StaffModal';
-import PageShell from './ui/PageShell';
-import PageLoader from './ui/PageLoader';
 import { Button } from './ui/Button';
+import PageLoader from './ui/PageLoader';
+import PageShell from './ui/PageShell';
 
 const StaffPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);

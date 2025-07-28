@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
 import { MessageCircle, Send, Clock, CheckCircle, AlertCircle, Settings, BarChart3, Users, Zap, Bot } from 'lucide-react';
-import { useWhatsApp, MessageAnalytics, ScheduledMessage, IncomingMessage, ChatbotRule } from '../services/whatsappService';
+import React, { useState, useEffect } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
+import { useWhatsApp, MessageAnalytics, ScheduledMessage, IncomingMessage, ChatbotRule } from '../services/whatsappService';
 import { Patient, Appointment, Exercise } from '../types';
 
 interface WhatsAppIntegrationProps {

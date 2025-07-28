@@ -4,8 +4,9 @@
  */
 
 import React from 'react';
-import FormField from '../ui/FormField';
+
 import { Patient } from '../../types';
+import FormField from '../ui/FormField';
 
 interface PatientBasicInfoProps {
   formData: Partial<Patient>;

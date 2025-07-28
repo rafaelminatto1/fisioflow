@@ -3,8 +3,8 @@
  * Videochamadas, consultas remotas, monitoramento e prescrição digital
  */
 
-import { encryption } from './encryption';
 import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
+import { encryption } from './encryption';
 import { intelligentNotificationService } from './intelligentNotificationService';
 import { mobileAppService } from './mobileAppService';
 

@@ -1,15 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
+
 import { useAuth } from '../../hooks/useAuth';
 import { useChat } from '../../hooks/useChat';
 import { useData } from '../../hooks/useData';
 import { ChatMessage, MessageType, User, UserRole } from '../../types';
+
+import CallInterface from './CallInterface';
+import ChatHeader from './ChatHeader';
+import ChatInput from './ChatInput';
 import ChatSidebar from './ChatSidebar';
 import ChatWindow from './ChatWindow';
-import ChatInput from './ChatInput';
-import ChatHeader from './ChatHeader';
 import NewChatModal from './NewChatModal';
 import TemplatesModal from './TemplatesModal';
-import CallInterface from './CallInterface';
 
 interface ChatInterfaceProps {
   isMinimized?: boolean;

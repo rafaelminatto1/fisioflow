@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Chat } from '../../types';
+
 import { useAuth } from '../../hooks/useAuth';
 import { useData } from '../../hooks/useData';
+import { Chat } from '../../types';
 import BaseModal from '../ui/BaseModal';
 
 interface CallInterfaceProps {

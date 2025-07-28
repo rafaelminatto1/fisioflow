@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
 import { useData } from '../hooks/useData';
 import { Chat, ChatMessage, User, UserRole } from '../types';
+
+import ChatInterface from './chat/ChatInterface';
 import { IconSend, IconPlus, IconMessageCircle } from './icons/IconComponents';
 import PageLoader from './ui/PageLoader';
-import ChatInterface from './chat/ChatInterface';
 
 const ChatListItem: React.FC<{
   chat: Chat;

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+
 import { User } from '../../types';
 import BaseModal from '../ui/BaseModal';
 

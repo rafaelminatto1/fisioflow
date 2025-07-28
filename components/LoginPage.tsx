@@ -1,15 +1,17 @@
+import { Stethoscope } from 'lucide-react';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
+
 import { useAuth } from '../hooks/useAuth';
 import { UserRole } from '../types';
-import { toast } from 'sonner';
-import { Button } from './ui/Button'; // Importando o novo botão
+
 import {
   IconUsers,
   IconUserShield,
   IconUser,
   IconBuilding,
 } from './icons/IconComponents';
-import { Stethoscope } from 'lucide-react';
+import { Button } from './ui/Button'; // Importando o novo botão
 
 const RoleButton: React.FC<{
   role?: UserRole | 'new_clinic';

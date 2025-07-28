@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { UserOptions } from 'jspdf-autotable';
+
 import { Exercise, ExerciseVideo, ExerciseImage, Prescription, Patient } from '../types';
 
 // Extend jsPDF with autoTable

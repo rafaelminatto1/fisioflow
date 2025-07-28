@@ -4,7 +4,6 @@
  * exportação de relatórios e interface customizável
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -28,12 +27,14 @@ import {
   Clock,
   PieChart
 } from 'lucide-react';
-import { useData } from '../../hooks/useData';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+
 import { useAuth } from '../../hooks/useAuth';
+import { useData } from '../../hooks/useData';
 import { useNotification } from '../../hooks/useNotification';
+import { alertsService } from '../../services/alertsService';
 import { analyticsService, generateDashboard } from '../../services/analyticsService';
 import { mlService } from '../../services/mlService';
-import { alertsService } from '../../services/alertsService';
 import type { 
   ExecutiveDashboard as DashboardData, 
   TreatmentPrediction,
@@ -42,12 +43,12 @@ import type {
 } from '../../types/analytics';
 
 // Componentes de visualização
+import { ClinicalInsightsPanel } from './components/ClinicalInsightsPanel';
 import { KPICard } from './components/KPICard';
-import { TrendChart } from './components/TrendChart';
+import { PatientPredictions } from './components/PatientPredictions';
 import { SuccessRateChart } from './components/SuccessRateChart';
 import { TherapistPerformanceTable } from './components/TherapistPerformanceTable';
-import { PatientPredictions } from './components/PatientPredictions';
-import { ClinicalInsightsPanel } from './components/ClinicalInsightsPanel';
+import { TrendChart } from './components/TrendChart';
 
 // Interfaces para configurações e filtros
 interface DashboardConfig {

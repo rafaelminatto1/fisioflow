@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+
+import { useReportGeneration, ReportGenerationOptions } from '../hooks/useReportGeneration';
+
 import {
   IconX,
   IconFileText,
@@ -11,7 +14,6 @@ import {
   IconTool,
   IconTrendingUp,
 } from './icons/IconComponents';
-import { useReportGeneration, ReportGenerationOptions } from '../hooks/useReportGeneration';
 
 interface ReportGenerationModalProps {
   isOpen: boolean;

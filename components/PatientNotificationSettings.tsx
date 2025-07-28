@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
+
+import { useNotification } from '../hooks/useNotification';
+import { notificationService } from '../services/notificationService';
 import {
   ReminderSettings,
   NotificationChannel,
   ReminderType,
   Patient,
 } from '../types';
-import { notificationService } from '../services/notificationService';
-import { useNotification } from '../hooks/useNotification';
 
 interface PatientNotificationSettingsProps {
   isOpen: boolean;

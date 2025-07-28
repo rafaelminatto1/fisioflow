@@ -3,8 +3,8 @@
  * Suporte para múltiplos tipos de gráficos com interatividade
  */
 
-import React, { useState, useMemo } from 'react';
 import { TrendingUp, TrendingDown, Minus, BarChart3, PieChart, LineChart } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
 
 interface ChartDataPoint {
   label: string;

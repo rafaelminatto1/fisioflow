@@ -1,11 +1,12 @@
+import { Stethoscope } from 'lucide-react';
 import React from 'react';
-import { useAuth } from '../hooks/useAuth';
+
 import {
   IconClipboardList,
   IconUsers,
   IconChartPie,
 } from '../components/icons/IconComponents';
-import { Stethoscope } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 const FeatureCard: React.FC<{
   icon: React.ReactNode;

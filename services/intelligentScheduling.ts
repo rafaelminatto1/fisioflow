@@ -3,9 +3,9 @@
  * Otimização automática de agenda, prevenção de conflitos e sugestões inteligentes
  */
 
-import { secureAIService } from './secureAIService';
-import { intelligentNotificationService } from './intelligentNotificationService';
 import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
+import { intelligentNotificationService } from './intelligentNotificationService';
+import { secureAIService } from './secureAIService';
 
 // === INTERFACES ===
 interface SchedulingPreference {

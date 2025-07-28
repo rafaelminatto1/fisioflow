@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
+import { useNotification } from '../hooks/useNotification';
 import {
   usePushNotifications,
   NotificationSettings as Settings,
   NotificationTemplate,
 } from '../hooks/usePushNotifications';
-import { useFeatureFlags } from '../hooks/useFeatureFlags';
-import { useNotification } from '../hooks/useNotification';
+
 import PaywallModal from './PaywallModal';
 
 interface NotificationSettingsProps {

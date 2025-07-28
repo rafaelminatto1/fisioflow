@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { ClinicalProtocol, UserRole, ProtocolPhase } from '../types';
-import PageShell from './ui/PageShell';
-import Button from './ui/Button';
-import ProtocolPrescriptionModal from './ProtocolPrescriptionModal';
+
 import {
   IconBook,
   IconScience,
@@ -23,6 +22,9 @@ import {
   IconPlay,
   IconArrowLeft,
 } from './icons/IconComponents';
+import ProtocolPrescriptionModal from './ProtocolPrescriptionModal';
+import Button from './ui/Button';
+import PageShell from './ui/PageShell';
 
 interface ClinicalProtocolViewerPageProps {
   protocolId: string;

@@ -2,10 +2,11 @@
  * Componente de Predições de Pacientes usando IA
  */
 
-import React, { useState } from 'react';
 import { Brain, AlertTriangle, Clock, TrendingUp, Eye } from 'lucide-react';
-import type { TreatmentPrediction } from '../../../types/analytics';
+import React, { useState } from 'react';
+
 import type { Patient } from '../../../types';
+import type { TreatmentPrediction } from '../../../types/analytics';
 
 interface PatientPredictionsProps {
   predictions: TreatmentPrediction[];

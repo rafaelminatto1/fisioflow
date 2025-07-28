@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { ClinicalCase, CaseComment, UserRole } from '../types';
-import PageShell from './ui/PageShell';
-import { Button } from './ui/Button';
-import FormField from './ui/FormField';
+
 import {
   IconStar,
   IconHeart,
@@ -18,6 +17,9 @@ import {
   IconEdit,
   IconTrash,
 } from './icons/IconComponents';
+import { Button } from './ui/Button';
+import FormField from './ui/FormField';
+import PageShell from './ui/PageShell';
 
 interface ClinicalCaseViewerPageProps {
   caseId: string;

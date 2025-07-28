@@ -1,8 +1,11 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
 import { useData } from '../hooks/useData';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { AIAssistantProps } from '../types';
+
 import {
   IconX,
   IconSparkles,
@@ -10,7 +13,7 @@ import {
   IconBot,
   IconSend,
 } from './icons/IconComponents';
-import { AIAssistantProps } from '../types';
+
 
 interface SuggestedAction {
   label: string;

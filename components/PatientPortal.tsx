@@ -1,4 +1,15 @@
+import { Stethoscope } from 'lucide-react';
 import React, { useState, useMemo, useCallback } from 'react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from 'recharts';
+
 import { useAuth } from '../hooks/useAuth';
 import { useData } from '../hooks/useData';
 import {
@@ -11,10 +22,11 @@ import {
   User,
   Transaction,
 } from '../types';
-import PatientFeedbackModal from './PatientFeedbackModal';
-import ExerciseModal from './ExerciseModal';
+
+import AIAssistant from './AIAssistant';
+import ChatInterface from './chat/ChatInterface';
 import ExerciseFeedbackModal from './ExerciseFeedbackModal';
-import { SymptomDiaryIntegration } from './SymptomDiaryIntegration';
+import ExerciseModal from './ExerciseModal';
 import {
   IconLogout,
   IconClipboardList,
@@ -27,19 +39,9 @@ import {
   IconWallet,
   IconSparkles,
 } from './icons/IconComponents';
-import { Stethoscope } from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from 'recharts';
+import PatientFeedbackModal from './PatientFeedbackModal';
 import PaymentModal from './PaymentModal';
-import AIAssistant from './AIAssistant';
-import ChatInterface from './chat/ChatInterface';
+import { SymptomDiaryIntegration } from './SymptomDiaryIntegration';
 
 // --- Re-usable sub-components for the new dashboard ---
 

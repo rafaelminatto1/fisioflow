@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
 // Mock the entire services
-jest.mock('../../services/secureStorage');
-jest.mock('../../services/encryption');
-jest.mock('../../services/auditLogger');
+vi.mock('../../services/secureStorage');
+vi.mock('../../services/encryption');
+vi.mock('../../services/auditLogger');
 
 // Patient Management Integration Tests
 // These tests verify the complete patient management workflow from creation to deletion
@@ -41,20 +41,20 @@ describe('Patient Management Integration', () => {
     const { AuditLogger } = require('../../services/auditLogger');
 
     mockSecureStorage = {
-      storePatient: jest.fn(),
-      getPatient: jest.fn(),
-      getAllPatients: jest.fn(),
-      deletePatient: jest.fn(),
+      storePatient: vi.fn(),
+      getPatient: vi.fn(),
+      getAllPatients: vi.fn(),
+      deletePatient: vi.fn(),
     };
 
     mockEncryption = {
-      encryptPatientData: jest.fn(),
-      decryptPatientData: jest.fn(),
-      verifyDataIntegrity: jest.fn(),
+      encryptPatientData: vi.fn(),
+      decryptPatientData: vi.fn(),
+      verifyDataIntegrity: vi.fn(),
     };
 
     mockAuditLogger = {
-      log: jest.fn(),
+      log: vi.fn(),
     };
 
     SecureStorageManager.mockImplementation(() => mockSecureStorage);
@@ -64,18 +64,18 @@ describe('Patient Management Integration', () => {
     // Mock sessionStorage for master key
     Object.defineProperty(global, 'sessionStorage', {
       value: {
-        getItem: jest.fn((key) => {
+        getItem: vi.fn((key) => {
           if (key === 'masterKey') return 'test-master-key-123';
           return null;
         }),
-        setItem: jest.fn(),
-        removeItem: jest.fn(),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
       },
       writable: true,
     });
 
     // Mock auth context
-    jest.doMock('../../hooks/useAuth', () => ({
+    vi.doMock('../../hooks/useAuth', () => ({
       useAuth: () => ({
         currentUser: {
           id: 'user-1',
@@ -93,7 +93,7 @@ describe('Patient Management Integration', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     queryClient.clear();
   });
 
@@ -331,7 +331,7 @@ describe('Patient Management Integration', () => {
       };
 
       // Reset mocks for update
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockEncryption.encryptPatientData.mockResolvedValue({
         publicData: { id: 'patient-1', name: 'João Silva' },
         encryptedData: encryptedPatientData.encryptedData,
@@ -418,7 +418,7 @@ describe('Patient Management Integration', () => {
       });
 
       // Step 4: DELETE PATIENT
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockSecureStorage.deletePatient.mockResolvedValue(undefined);
 
       const PatientDeleteButton = ({ patientId }: { patientId: string }) => {
@@ -521,7 +521,7 @@ describe('Patient Management Integration', () => {
       const user = userEvent.setup();
 
       // Mock different tenant context
-      jest.doMock('../../hooks/useAuth', () => ({
+      vi.doMock('../../hooks/useAuth', () => ({
         useAuth: () => ({
           currentUser: {
             id: 'user-2',

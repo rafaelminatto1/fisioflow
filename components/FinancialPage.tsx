@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import { Transaction, Patient } from '../types';
+
+import FinancialSummaryDashboard from './FinancialSummaryDashboard';
 import {
   IconDollarSign,
   IconClock,
@@ -14,10 +17,9 @@ import {
 } from './icons/IconComponents';
 import MetricCard from './MetricCard';
 import TransactionModal from './TransactionModal';
+import { Button } from './ui/Button';
 import PageLoader from './ui/PageLoader';
 import PageShell from './ui/PageShell';
-import { Button } from './ui/Button';
-import FinancialSummaryDashboard from './FinancialSummaryDashboard';
 
 const formatCurrency = (value: number) => {
   return `R$ ${value.toFixed(2).replace('.', ',')}`;

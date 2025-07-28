@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from './useAuth';
+
 import CrossModuleNotificationService, {
   CrossModuleNotification,
   NotificationRule,
 } from '../services/crossModuleNotificationService';
+
+import { useAuth } from './useAuth';
 import { useSystemEvents } from './useSystemEvents';
 
 export interface CrossModuleNotificationsHook {

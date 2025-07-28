@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+
 import { MessageTemplate } from '../../types';
 import BaseModal from '../ui/BaseModal';
 

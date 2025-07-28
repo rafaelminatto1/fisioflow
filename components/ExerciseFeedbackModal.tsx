@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+
 import { ExerciseFeedbackModalProps, ExerciseLog } from '../types';
+
 import { IconX } from './icons/IconComponents';
 
 const Slider: React.FC<{

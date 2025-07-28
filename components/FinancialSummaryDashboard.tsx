@@ -1,10 +1,11 @@
 import React from 'react';
-import MetricCard from './MetricCard';
+
 import {
   IconDollarSign,
   IconClock,
   IconAlertTriangle,
 } from './icons/IconComponents';
+import MetricCard from './MetricCard';
 
 interface FinancialSummaryDashboardProps {
   totalPaid: number;

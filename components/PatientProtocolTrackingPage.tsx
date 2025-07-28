@@ -1,16 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { useData } from '../hooks/useData';
+
 import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
 import {
   PatientProtocol,
   ProtocolPhase,
   ProtocolExercise,
   ProtocolProgressNote,
 } from '../types';
-import PageShell from './ui/PageShell';
-import { Button } from './ui/Button';
-import FormField from './ui/FormField';
-import BaseModal from './ui/BaseModal';
+
 import {
   IconActivity,
   IconClock,
@@ -28,6 +26,10 @@ import {
   IconPlus,
   IconX,
 } from './icons/IconComponents';
+import BaseModal from './ui/BaseModal';
+import { Button } from './ui/Button';
+import FormField from './ui/FormField';
+import PageShell from './ui/PageShell';
 
 const PatientProtocolTrackingPage: React.FC = () => {
   const {

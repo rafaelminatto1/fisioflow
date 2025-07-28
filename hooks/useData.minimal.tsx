@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+
 import { INITIAL_PATIENTS, INITIAL_TASKS, INITIAL_USERS } from '../constants';
 
 // Versão mínima do useData para deploy

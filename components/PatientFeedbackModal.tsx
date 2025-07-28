@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+
 import { PatientFeedbackModalProps } from '../types';
+
 import { IconX } from './icons/IconComponents';
 
 const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({

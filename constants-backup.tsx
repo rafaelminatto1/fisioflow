@@ -1,4 +1,11 @@
 import React from 'react';
+
+import {
+  IconBook,
+  IconClipboardList,
+  IconUsers,
+  IconChartBar,
+} from './components/icons/IconComponents';
 import {
   User,
   UserRole,
@@ -42,12 +49,6 @@ import {
   ExecutiveReport,
   KPIData,
 } from './types';
-import {
-  IconBook,
-  IconClipboardList,
-  IconUsers,
-  IconChartBar,
-} from './components/icons/IconComponents';
 
 export const INITIAL_TENANTS: Tenant[] = [
   { id: 't1', name: 'FisioPrime', plan: 'gold' },

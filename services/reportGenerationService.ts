@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+
 import {
   Patient,
   Appointment,

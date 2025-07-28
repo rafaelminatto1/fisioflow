@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Appointment, AppointmentModalProps } from '../types';
+
 import { useAuth } from '../hooks/useAuth';
+import { useNotification } from '../hooks/useNotification';
+import { generateSOAPNote } from '../services/geminiService';
+import { Appointment, AppointmentModalProps } from '../types';
+
 import {
   IconX,
   IconTrash,
@@ -8,8 +12,7 @@ import {
   IconCopy,
   IconCheckCircle,
 } from './icons/IconComponents';
-import { generateSOAPNote } from '../services/geminiService';
-import { useNotification } from '../hooks/useNotification';
+
 
 type AppointmentErrors = {
   title?: string;

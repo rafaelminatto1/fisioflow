@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+
+import { useCrossModuleNotifications } from '../hooks/useCrossModuleNotifications';
+import { CrossModuleNotification } from '../services/crossModuleNotificationService';
+
 import {
   IconBell,
   IconX,
@@ -15,8 +19,6 @@ import {
   IconEye,
   IconFilter,
 } from './icons/IconComponents';
-import { useCrossModuleNotifications } from '../hooks/useCrossModuleNotifications';
-import { CrossModuleNotification } from '../services/crossModuleNotificationService';
 
 interface CrossModuleNotificationsProps {
   targetModule?: string;
