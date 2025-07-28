@@ -16,7 +16,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     "allowJs": true,
-    "jsx": "react-jsx",
+    "jsx": "react",
 
     /* Linting - Strict mode gradual */
     "strict": false,
