@@ -6,11 +6,11 @@
 import { useCallback, useMemo, useRef, memo, useState, useEffect } from 'react';
 
 // Hook para memoização inteligente de callbacks baseado em dependências profundas
-export const useStableCallback = <T extends (...args: any[]) => any>(
-  callback: T,
+export const useStableCallback = (
+  callback: any,
   deps: any[]
-): T => {
-  const stableRef = useRef<T>(callback);
+): any => {
+  const stableRef = useRef(callback);
   
   // Comparação profunda das dependências
   const memoizedDeps = useMemo(() => deps, deps);
@@ -20,16 +20,16 @@ export const useStableCallback = <T extends (...args: any[]) => any>(
     stableRef.current = callback;
   }, [callback, memoizedDeps]);
   
-  return useCallback((...args: Parameters<T>) => {
+  return useCallback((...args: any[]) => {
     return stableRef.current(...args);
-  }, []) as T;
+  }, []);
 };
 
 // Hook para memoização de objetos complexos (evita re-renders por referência)
-export const useStableObject = <T extends Record<string, any>>(
-  obj: T,
+export const useStableObject = (
+  obj: any,
   deps: any[] = []
-): T => {
+): any => {
   return useMemo(() => obj, [JSON.stringify(obj), ...deps]);
 };
 
@@ -46,12 +46,12 @@ export const useOptimizedFilter = (
 };
 
 // Hook para debounce otimizado (evita chamadas excessivas)
-export const useOptimizedDebounce = <T>(
-  value: T,
+export const useOptimizedDebounce = (
+  value: any,
   delay: number = 300
-): T => {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+): any => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  const timeoutRef = useRef<any>();
 
   useEffect(() => {
     // Limpar timeout anterior
@@ -76,12 +76,12 @@ export const useOptimizedDebounce = <T>(
 };
 
 // Hook para cache local otimizado (evita recálculos)
-export const useOptimizedMemo = <T>(
-  computeFn: () => T,
+export const useOptimizedMemo = (
+  computeFn: () => any,
   deps: any[],
   cacheKey?: string
-): T => {
-  const cacheRef = useRef<Map<string, { value: T; deps: any[] }>>(new Map());
+): any => {
+  const cacheRef = useRef<Map<string, { value: any; deps: any[] }>>(new Map());
   
   return useMemo(() => {
     const key = cacheKey || JSON.stringify(deps);
@@ -109,9 +109,9 @@ export const useOptimizedMemo = <T>(
 };
 
 // HOC para componentes pesados com memo otimizado
-export const withOptimizedMemo = <P extends Record<string, any>>(
-  Component: React.ComponentType<P>,
-  propsAreEqual?: (prevProps: P, nextProps: P) => boolean
+export const withOptimizedMemo = (
+  Component: React.ComponentType<any>,
+  propsAreEqual?: (prevProps: any, nextProps: any) => boolean
 ) => {
   const OptimizedComponent = memo(Component, propsAreEqual);
   OptimizedComponent.displayName = `OptimizedMemo(${Component.displayName || Component.name})`;
@@ -119,10 +119,10 @@ export const withOptimizedMemo = <P extends Record<string, any>>(
 };
 
 // Hook para componentes de lista otimizados
-export const useOptimizedList = <T extends { id: string }>(
-  items: T[],
-  renderItem: (item: T, index: number) => React.ReactNode,
-  keyExtractor?: (item: T) => string
+export const useOptimizedList = (
+  items: any[],
+  renderItem: (item: any, index: number) => React.ReactNode,
+  keyExtractor?: (item: any) => string
 ) => {
   const stableRenderItem = useStableCallback(renderItem, []);
   const stableKeyExtractor = useStableCallback(
@@ -179,15 +179,15 @@ export const useVirtualizedScroll = (
 };
 
 // Hook para otimização de forms pesados
-export const useOptimizedForm = <T extends Record<string, any>>(
-  initialValues: T,
-  validationFn?: (values: T) => Record<string, string>
+export const useOptimizedForm = (
+  initialValues: any,
+  validationFn?: (values: any) => Record<string, string>
 ) => {
-  const [values, setValues] = useState<T>(initialValues);
+  const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const handleFieldChange = useStableCallback((field: keyof T, value: any) => {
+  const handleFieldChange = useStableCallback((field: string, value: any) => {
     setValues(prev => ({ ...prev, [field]: value }));
     
     // Validação em tempo real apenas para campos tocados
@@ -235,13 +235,13 @@ export const useOptimizedForm = <T extends Record<string, any>>(
 };
 
 // Hook para otimização de componentes com estado complexo
-export const useOptimizedState = <T>(
-  initialState: T,
-  reducer?: (state: T, action: any) => T
+export const useOptimizedState = (
+  initialState: any,
+  reducer?: (state: any, action: any) => any
 ) => {
-  const [state, setState] = useState<T>(initialState);
+  const [state, setState] = useState(initialState);
   
-  const optimizedSetState = useStableCallback((newState: Partial<T> | ((prev: T) => T)) => {
+  const optimizedSetState = useStableCallback((newState: any | ((prev: any) => any)) => {
     setState(prev => {
       if (typeof newState === 'function') {
         return newState(prev);
