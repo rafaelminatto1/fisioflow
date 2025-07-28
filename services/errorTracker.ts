@@ -686,78 +686,32 @@ export const errorTracker = new ErrorTracker({
   enablePerformanceCapture: true,
 });
 
-// === REACT ERROR BOUNDARY ===
-export class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; fallback?: React.ComponentType<{ error: Error }> },
-  { hasError: boolean; error?: Error }
-> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
-  }
+// === UTILITY FUNCTIONS ===
 
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
+/**
+ * Função utilitária para reportar erros
+ */
+export const reportError = (
+  error: Error, 
+  context?: Parameters<typeof errorTracker.reportError>[1]
+) => {
+  errorTracker.reportError(error, context);
+};
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    errorTracker.reportError(error, {
-      type: 'javascript',
-      severity: 'high',
-      category: 'react_boundary',
-      component: errorInfo.componentStack?.split('\n')[1]?.trim(),
-      metadata: {
-        componentStack: errorInfo.componentStack,
-      },
-      tags: ['react', 'boundary'],
-    });
-  }
+/**
+ * Função utilitária para adicionar breadcrumb
+ */
+export const addBreadcrumb = (
+  breadcrumb: Parameters<typeof errorTracker.addBreadcrumb>[0]
+) => {
+  errorTracker.addBreadcrumb(breadcrumb);
+};
 
-  render() {
-    if (this.state.hasError) {
-      const FallbackComponent = this.props.fallback;
-      if (FallbackComponent && this.state.error) {
-        return <FallbackComponent error={this.state.error} />;
-      }
-      
-      return (
-        <div className="error-boundary">
-          <h2>Algo deu errado!</h2>
-          <p>Um erro inesperado ocorreu. Nossa equipe foi notificada.</p>
-          <button onClick={() => window.location.reload()}>
-            Recarregar página
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-// === HOOKS ===
-export const useErrorHandler = () => {
-  const reportError = React.useCallback((
-    error: Error, 
-    context?: Parameters<typeof errorTracker.reportError>[1]
-  ) => {
-    errorTracker.reportError(error, context);
-  }, []);
-
-  const addBreadcrumb = React.useCallback((
-    breadcrumb: Parameters<typeof errorTracker.addBreadcrumb>[0]
-  ) => {
-    errorTracker.addBreadcrumb(breadcrumb);
-  }, []);
-
-  return {
-    reportError,
-    addBreadcrumb,
-    stats: errorTracker.getErrorStats(),
-  };
+/**
+ * Função utilitária para obter estatísticas de erro
+ */
+export const getErrorStats = () => {
+  return errorTracker.getErrorStats();
 };
 
 export default errorTracker;
-
-// Adicionar import do React para o ErrorBoundary
-import React from 'react';
