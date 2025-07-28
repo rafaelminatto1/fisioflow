@@ -113,13 +113,13 @@ import { useNotification, NotificationContext } from './useNotification';
 export const DataContext = createContext<any | undefined>(undefined);
 
 // Hook otimizado com índices e compressão
-const useOptimizedStorage = <T>(
+const useOptimizedStorage = (
   key: string,
-  initialValue: T,
-  searchFields: (keyof T)[] = [],
-  tenantField?: keyof T
-): [T, React.Dispatch<React.SetStateAction<T>>] => {
-  const [storedValue, setStoredValue] = useState<T>(() => {
+  initialValue: any,
+  searchFields: string[] = [],
+  tenantField?: string
+): [any, React.Dispatch<React.SetStateAction<any>>] => {
+  const [storedValue, setStoredValue] = useState<any>(() => {
     try {
       const data = dataOptimizer.loadOptimized<any>(key);
       return data.length > 0 ? data : initialValue;
@@ -151,12 +151,12 @@ const useOptimizedStorage = <T>(
 };
 
 // Hook legado para compatibilidade
-const useLocalStorage = <T>(
+const useLocalStorage = (
   key: string,
-  initialValue: T,
-  validator?: (data: any) => data is T
-): [T, React.Dispatch<React.SetStateAction<T>>] => {
-  const [storedValue, setStoredValue] = useState<T>(() => {
+  initialValue: any,
+  validator?: (data: any) => boolean
+): [any, React.Dispatch<React.SetStateAction<any>>] => {
+  const [storedValue, setStoredValue] = useState<any>(() => {
     try {
       const item = window.localStorage.getItem(key);
       if (item) {
