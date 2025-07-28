@@ -9,9 +9,7 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [
-      react({
-        jsxRuntime: 'automatic'
-      })
+      react()
     ],
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
