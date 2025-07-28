@@ -38,7 +38,7 @@ jobs:
     # Autobuild tenta construir qualquer código compilado (C/C++, C#, Go, ou Java).
     # Se este passo falhar, remova-o e execute os comandos de build manualmente
     - name: 🏗️ Autobuild
-      uses: github/codeql-action/autobuild@v2
+      uses: github/codeql-action/autobuild@v3
 
     # ℹ️ Comandos de build manuais podem ser executados aqui se necessário:
     # - run: |
