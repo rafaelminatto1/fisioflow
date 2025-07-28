@@ -3,6 +3,7 @@
  * Coleta métricas de performance, identifica gargalos e otimiza automaticamente
  */
 
+import React from 'react';
 import { auditLogger, AuditAction, LegalBasis } from './auditLogger';
 
 // === INTERFACES ===
@@ -767,6 +768,3 @@ export const PerformanceProfiler: React.FC<{
 };
 
 export default performanceMonitor;
-
-// Adicionar import do React
-import React from 'react';
