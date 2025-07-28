@@ -8,7 +8,11 @@ export default defineConfig(({ mode }) => {
   const isMinimal = mode === 'minimal';
   
   return {
-    plugins: [react()],
+    plugins: [
+      react({
+        jsxRuntime: 'automatic'
+      })
+    ],
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
