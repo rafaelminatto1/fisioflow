@@ -10,8 +10,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react({
-        jsxRuntime: 'automatic',
-        jsxImportSource: 'react'
+        jsxRuntime: 'classic'
       })
     ],
     define: {
