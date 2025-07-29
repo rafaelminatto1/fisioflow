@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build:deploy",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "npm install --legacy-peer-deps",
@@ -61,10 +61,5 @@
   "env": {
     "NODE_ENV": "production",
     "VITE_BUILD_MODE": "deploy"
-  },
-  "functions": {
-    "app/api/**/*.js": {
-      "maxDuration": 10
-    }
   }
 }
