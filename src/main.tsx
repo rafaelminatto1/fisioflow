@@ -5,21 +5,30 @@ import App from './App';
 import { AuthProvider } from './hooks/useAuth';
 import './index.css';
 
-// Registrar Service Worker para PWA
-if ('serviceWorker' in navigator) {
+// Registrar Service Worker para PWA apenas em produção
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        // SW registrado com sucesso
+        console.log('SW registrado com sucesso:', registration);
       })
       .catch((registrationError) => {
-        // Falha no registro do SW
+        console.error('Falha no registro do SW:', registrationError);
       });
   });
 }
 
 // Configurações de desenvolvimento
 if (process.env.NODE_ENV === 'development') {
+  // Limpar Service Worker em desenvolvimento
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for(let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+  
   // Habilitar React DevTools
   if (typeof window !== 'undefined') {
     (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__?.onCommitFiberRoot = 

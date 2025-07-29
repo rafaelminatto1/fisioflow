@@ -37,6 +37,9 @@ export default defineConfig(({ mode }) => {
       
       // Configuração de chunks para melhor cache
       rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html')
+        },
         output: {
           manualChunks: {
             // Vendor chunks

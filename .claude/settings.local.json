@@ -48,7 +48,10 @@
       "Bash(vercel list:*)",
       "Bash(vercel deploy:*)",
       "WebFetch(domain:fisioflow-ozxj0fwpr-rafael-minattos-projects.vercel.app)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(timeout 10 npm run dev)"
     ],
     "deny": []
   }
