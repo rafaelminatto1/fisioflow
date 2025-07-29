@@ -969,44 +969,6 @@ class QRCodeService {
     }
   }
 
-  /**
-   * Enhanced secure URL generation with expiration and validation
-   */
-  generateSecureUrl(data: QRCodeData): string {
-    // Save generated QR code for tracking
-    this.saveGeneratedQRCode(data);
-
-    // Create secure token
-    const secureData = {
-      ...data,
-      signature: this.generateSignature(data)
-    };
-
-    const params = new URLSearchParams({
-      qr: btoa(JSON.stringify(secureData)),
-      t: Date.now().toString()
-    });
-
-    // Enhanced URL routing
-    const routes: Record<QRCodeData['type'], string> = {
-      exercise: '/qr/exercise',
-      prescription: '/qr/prescription',
-      patient_portal: '/qr/patient',
-      program: '/qr/program',
-      payment: '/qr/payment',
-      appointment: '/qr/appointment',
-      checkin: '/qr/checkin',
-      contact: '/qr/contact',
-      wifi: '/qr/wifi',
-      location: '/qr/location',
-      feedback: '/qr/feedback',
-      emergency: '/qr/emergency'
-    };
-
-    const route = routes[data.type] || '/qr/unknown';
-    return `${this.baseUrl}${route}?${params.toString()}`;
-  }
-
   private generateSignature(data: QRCodeData): string {
     // Simple signature generation (in production, use proper cryptographic signing)
     const payload = `${data.id}-${data.type}-${data.timestamp}-${data.tenantId}`;
