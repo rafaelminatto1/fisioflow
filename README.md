@@ -92,12 +92,12 @@ fisioflow/
 
 ### Pré-requisitos
 
-- **Frontend**: Node.js 18+, npm ou yarn
-- **Backend**: Python 3.11+, PostgreSQL 15+, Redis 7+
-- **Infraestrutura**: Docker e Docker Compose (recomendado)
-- **Opcional**: Chave API do Google Gemini para IA
+- **Node.js**: versão 18+ (LTS recomendada)
+- **npm**: versão 9.0.0+
+- **Git**: versão 2.30.0+
+- **Opcional**: Chave API do Google Gemini para funcionalidades de IA
 
-### 🐳 Opção 1: Docker Compose (Recomendado)
+### ⚡ Instalação Rápida (SPA)
 
 1. **Clone o repositório**:
 ```bash
@@ -105,34 +105,57 @@ git clone [seu-repositorio]
 cd fisioflow-19-07
 ```
 
-2. **Configure as variáveis de ambiente**:
+2. **Instale as dependências**:
 ```bash
-cp .env.example .env
-# Edite o arquivo .env com suas configurações
+npm install
 ```
 
-3. **Inicie os serviços**:
+3. **Configure as variáveis de ambiente**:
 ```bash
-# Apenas backend e banco de dados
-docker-compose up -d db redis backend
-
-# Com frontend (se disponível)
-docker-compose --profile frontend up -d
-
-# Com monitoramento
-docker-compose --profile monitoring up -d
-
-# Todos os serviços
-docker-compose --profile frontend --profile celery --profile monitoring up -d
+# Crie o arquivo .env.local (opcional para funcionalidades de IA)
+echo "VITE_GEMINI_API_KEY=sua_chave_gemini_aqui" > .env.local
 ```
 
-4. **Acesse a aplicação**:
-- **API Backend**: http://localhost:5000
-- **Frontend**: http://localhost:3000
-- **Grafana**: http://localhost:3001 (admin/admin)
-- **Prometheus**: http://localhost:9090
+4. **Execute a aplicação**:
+```bash
+# Desenvolvimento
+npm run dev
 
-### 🔧 Opção 2: Instalação Manual
+# Build para produção
+npm run build
+
+# Preview da build
+npm run preview
+```
+
+5. **Acesse a aplicação**:
+- **Desenvolvimento**: http://localhost:3000
+- **Preview**: http://localhost:4173
+
+### 🧪 Scripts Disponíveis
+
+```bash
+# Desenvolvimento
+npm run dev              # Inicia servidor de desenvolvimento
+npm run build            # Build para produção
+npm run preview          # Preview da build de produção
+
+# Testes
+npm run test:unit        # Executa testes unitários
+npm run test:coverage    # Testes com relatório de coverage
+npm run test:watch       # Testes em modo watch
+
+# Qualidade de código
+npm run lint             # Executa ESLint
+npm run lint:fix         # Corrige problemas de lint automaticamente
+npm run typecheck        # Verificação de tipos TypeScript
+
+# Análise
+npm run analyze          # Análise do bundle
+node scripts/bundle-analysis.js  # Análise detalhada de performance
+```
+
+### 🔧 Configuração Avançada (Backend Opcional)
 
 #### Backend (Flask)
 

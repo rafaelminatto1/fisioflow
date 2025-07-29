@@ -40,7 +40,11 @@
       "Bash(ls:*)",
       "Bash(where npm)",
       "Bash(echo $PATH)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(git rev-list:*)",
+      "Bash(git gc:*)",
+      "Bash(git config:*)",
+      "Bash(npm audit:*)"
     ],
     "deny": []
   }
