@@ -20,19 +20,41 @@ if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
 
 // Configurações de desenvolvimento
 if (process.env.NODE_ENV === 'development') {
-  // Limpar Service Worker em desenvolvimento
+  // Limpar Service Worker em desenvolvimento AGRESSIVAMENTE
   if ('serviceWorker' in navigator) {
+    // Desregistrar todos os service workers
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
       for(let registration of registrations) {
+        console.log('🗑️ Removendo Service Worker:', registration.scope);
         registration.unregister();
       }
     });
+    
+    // Limpar caches
+    if ('caches' in window) {
+      caches.keys().then(cacheNames => {
+        cacheNames.forEach(cacheName => {
+          console.log('🗑️ Removendo cache:', cacheName);
+          caches.delete(cacheName);
+        });
+      });
+    }
+    
+    // Forçar reload sem cache após limpeza
+    setTimeout(() => {
+      if (navigator.serviceWorker.controller) {
+        console.log('🔄 Recarregando para aplicar limpeza...');
+        window.location.reload();
+      }
+    }, 1000);
   }
   
   // Habilitar React DevTools
   if (typeof window !== 'undefined') {
-    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__?.onCommitFiberRoot = 
-      (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__?.onCommitFiberRoot || (() => {});
+    const hook = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    if (hook && !hook.onCommitFiberRoot) {
+      hook.onCommitFiberRoot = () => {};
+    }
   }
 }
 

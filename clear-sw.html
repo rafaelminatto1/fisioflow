@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Limpeza Service Worker</title>
+</head>
+<body>
+    <h1>Limpando Service Worker...</h1>
+    <div id="status">Iniciando limpeza...</div>
+    
+    <script>
+        const statusDiv = document.getElementById('status');
+        
+        async function clearServiceWorkers() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    // Desregistrar todos os service workers
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    statusDiv.innerHTML += '<br>🗑️ Encontrados ' + registrations.length + ' Service Workers';
+                    
+                    for (let registration of registrations) {
+                        statusDiv.innerHTML += '<br>🗑️ Removendo: ' + registration.scope;
+                        await registration.unregister();
+                    }
+                    
+                    // Limpar todos os caches
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        statusDiv.innerHTML += '<br>🗑️ Encontrados ' + cacheNames.length + ' caches';
+                        
+                        for (const cacheName of cacheNames) {
+                            statusDiv.innerHTML += '<br>🗑️ Removendo cache: ' + cacheName;
+                            await caches.delete(cacheName);
+                        }
+                    }
+                    
+                    statusDiv.innerHTML += '<br>✅ Limpeza concluída!';
+                    statusDiv.innerHTML += '<br><strong>Agora feche o navegador completamente e reabra em http://localhost:3000</strong>';
+                    
+                } catch (error) {
+                    statusDiv.innerHTML += '<br>❌ Erro: ' + error.message;
+                }
+            } else {
+                statusDiv.innerHTML += '<br>❌ Service Worker não suportado';
+            }
+        }
+        
+        // Executar limpeza
+        clearServiceWorkers();
+    </script>
+</body>
+</html>
