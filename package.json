@@ -86,7 +86,7 @@
     "@vitejs/plugin-react": "^4.1.1",
     "@vitest/ui": "^0.34.6",
     "autoprefixer": "^10.4.16",
-    "babel-jest": "^29.7.0",
+    "babel-jest": "^30.0.5",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "cross-env": "^7.0.3",
     "eslint": "^8.53.0",
