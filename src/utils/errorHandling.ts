@@ -70,7 +70,7 @@ export class AppError extends Error implements CustomError {
 export const createValidationError = (
   message: string,
   field?: string,
-  value?: any
+  value?: unknown
 ): AppError => {
   return new AppError(message, ErrorType.VALIDATION, {
     code: 'VALIDATION_FAILED',
@@ -331,13 +331,13 @@ export const useErrorHandling = () => {
 
 // Decorator para tratamento automático de erros em métodos
 export const withErrorHandling = (
-  target: any,
+  target: unknown,
   propertyName: string,
   descriptor: PropertyDescriptor
 ) => {
   const method = descriptor.value;
 
-  descriptor.value = function (...args: any[]) {
+  descriptor.value = function (...args: unknown[]) {
     try {
       const result = method.apply(this, args);
       

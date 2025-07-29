@@ -5,12 +5,11 @@ import type { Patient } from '../types';
 import { aiCache } from './aiCache';
 
 const getGeminiInstance = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 
-                process.env.VITE_GEMINI_API_KEY || 
-                localStorage.getItem('GEMINI_API_KEY') || '';
+  // Only use environment variables for security
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
   
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY não configurada. Configure a chave da API.');
+    throw new Error('VITE_GEMINI_API_KEY não configurada. Configure a chave da API no ambiente.');
   }
   
   return new GoogleGenerativeAI(apiKey);

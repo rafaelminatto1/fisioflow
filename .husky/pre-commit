@@ -6,7 +6,7 @@ echo "🔍 Executando verificações pre-commit..."
 
 # 1. Lint-staged (formatação e lint básico)
 echo "🧹 Executando lint-staged..."
-npm run pre-commit
+npm.cmd run pre-commit
 
 # 2. Verificar se há secrets/keys expostos (apenas em arquivos de código)
 echo "🔐 Verificando por secrets expostos..."

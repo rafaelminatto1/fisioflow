@@ -9,7 +9,7 @@
     "build:check": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit --skipLibCheck && vite build",
     "build:deploy": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build --mode deploy",
     "build:minimal": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build --mode minimal",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 5000",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 50",
     "lint:fix": "eslint . --ext ts,tsx --fix --max-warnings 50",
     "lint:incremental": "eslint --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 50 .",
     "format": "prettier --write .",
@@ -18,7 +18,9 @@
     "test": "node scripts/test-runner.js",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest --watch",
-    "test:unit:coverage": "vitest --coverage",
+    "test:unit:coverage": "vitest run --coverage",
+    "test:unit:ui": "vitest --ui",
+    "test:coverage:report": "vitest run --coverage && echo 'Coverage report generated at coverage/index.html'",
     "test:integration": "jest --testPathPattern=integration",
     "test:integration:watch": "jest --testPathPattern=integration --watch",
     "test:hooks": "jest --testPathPattern=hooks",
@@ -53,14 +55,14 @@
     "idb": "^8.0.3",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
-    "lucide-react": "^0.294.0",
+    "lucide-react": "^0.468.0",
     "qrcode": "^1.5.4",
     "qrcode.js": "^0.0.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-joyride": "^2.9.3",
     "react-markdown": "^10.1.0",
-    "react-router-dom": "^6.18.0",
+    "react-router-dom": "^7.1.1",
     "react-window": "^1.8.11",
     "recharts": "^2.8.0",
     "remark-gfm": "^4.0.1",
@@ -72,13 +74,13 @@
     "@commitlint/cli": "^18.4.3",
     "@commitlint/config-conventional": "^18.4.3",
     "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^14.1.2",
+    "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^14.5.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/crypto-js": "^4.2.2",
     "@types/jest": "^29.5.12",
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
+    "@types/react": "^19.0.14",
+    "@types/react-dom": "^19.0.5",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react": "^4.1.1",
@@ -114,15 +116,15 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "prettier --write",
-      "eslint --fix --max-warnings 10"
+      "npx prettier --write",
+      "npx eslint --fix --max-warnings 10"
     ],
     "*.{js,jsx}": [
-      "prettier --write",
-      "eslint --fix --max-warnings 5"
+      "npx prettier --write",
+      "npx eslint --fix --max-warnings 5"
     ],
     "*.{json,md}": [
-      "prettier --write"
+      "npx prettier --write"
     ]
   },
   "optionalDependencies": {

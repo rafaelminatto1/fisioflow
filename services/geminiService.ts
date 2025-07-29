@@ -13,12 +13,11 @@ import { aiCache } from './aiCache';
 // This implementation now uses the real Gemini API.
 // The API key should be configured in the environment or passed from backend
 const getGeminiInstance = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 
-                process.env.VITE_GEMINI_API_KEY || 
-                localStorage.getItem('GEMINI_API_KEY') || '';
+  // Only use environment variables for security
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
   
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY não configurada. Configure a chave da API.');
+    throw new Error('VITE_GEMINI_API_KEY não configurada. Configure a chave da API no ambiente.');
   }
   
   return new GoogleGenerativeAI(apiKey);
@@ -36,14 +35,11 @@ export async function getTaskSummary(progressNote: string, userId = 'anonymous')
   try {
     const cached = aiCache.get(cacheKey, progressNote, userId);
     if (cached) {
-      console.log('📋 Retornando análise do cache (economia ~$0.01)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log('🤖 Calling Gemini API with note (custo ~$0.01)');
 
   try {
     const systemInstruction =
@@ -59,7 +55,6 @@ export async function getTaskSummary(progressNote: string, userId = 'anonymous')
     const result = await response.response;
     const text = result.text();
     if (!text) {
-      console.warn('Gemini API returned an empty response.');
       return 'A IA retornou uma resposta vazia. Tente reformular sua anotação.';
     }
 
@@ -67,7 +62,6 @@ export async function getTaskSummary(progressNote: string, userId = 'anonymous')
     aiCache.set(cacheKey, progressNote, text);
     return text;
   } catch (error) {
-    console.error('Error calling Gemini API:', error);
 
     if (error instanceof Error) {
       if (error.message.includes('API key')) {
@@ -98,14 +92,11 @@ export async function searchKnowledgeBase(
   try {
     const cached = aiCache.get(cacheKey, query, userId);
     if (cached) {
-      console.log('🔍 Retornando busca do cache (economia ~$0.02)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log('🤖 Searching knowledge base (custo ~$0.02)', query);
   try {
     const systemInstruction = `Você é um assistente especialista em fisioterapia para a clínica FisioFlow. Sua tarefa é responder perguntas baseando-se **estritamente** no conteúdo da base de conhecimento fornecida. Não invente informações. Se a resposta não estiver na base de conhecimento, diga claramente: "A informação não foi encontrada na base de conhecimento." Formate a resposta de forma clara e use markdown se apropriado.`;
 
@@ -121,9 +112,6 @@ export async function searchKnowledgeBase(
     const result = await response.response;
     const text = result.text();
     if (!text) {
-      console.warn(
-        'Gemini API returned an empty response for knowledge base search.'
-      );
       return 'A IA não conseguiu processar a busca. Tente novamente.';
     }
 
@@ -131,7 +119,6 @@ export async function searchKnowledgeBase(
     aiCache.set(cacheKey, query, text);
     return text;
   } catch (error) {
-    console.error('Error calling Gemini API for knowledge base search:', error);
 
     if (error instanceof Error) {
       if (error.message.includes('API key')) {
@@ -162,14 +149,11 @@ export async function generatePatientReport(
   try {
     const cached = aiCache.get(cacheKey, patient.medicalHistory || '', userId);
     if (cached) {
-      console.log('📄 Retornando relatório do cache (economia ~$0.03)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Generating report (custo ~$0.03): ${patient.name}`);
   try {
     const systemInstruction = `Você é um fisioterapeuta experiente e está redigindo um relatório de progresso para um paciente. Com base no histórico clínico e na lista de tarefas (plano de tratamento), gere um relatório conciso e profissional. O relatório deve ser estruturado com:
 1.  **Sumário do Paciente:** Breve descrição baseada no histórico clínico.
@@ -197,7 +181,6 @@ A resposta deve ser em formato Markdown, pronta para ser copiada. Use um tom for
     const result = await response.response;
     const text = result.text();
     if (!text) {
-      console.warn('Gemini API returned an empty response for patient report.');
       return 'A IA não conseguiu gerar o relatório. Tente novamente.';
     }
 
@@ -205,7 +188,6 @@ A resposta deve ser em formato Markdown, pronta para ser copiada. Use um tom for
     aiCache.set(cacheKey, patient.medicalHistory || '', text);
     return text;
   } catch (error) {
-    console.error('Error calling Gemini API for patient report:', error);
 
     if (error instanceof Error) {
       if (error.message.includes('API key')) {
@@ -235,14 +217,11 @@ export async function generateTreatmentPlan(
   try {
     const cached = aiCache.get(cacheKey, inputData, userId);
     if (cached) {
-      console.log('🩺 Retornando plano do cache (economia ~$0.02)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Generating treatment plan (custo ~$0.02):`, assessment.id);
   try {
     const systemInstruction = `Você é um fisioterapeuta sênior especialista em reabilitação. Sua tarefa é criar um plano de tratamento estruturado com base nas informações da avaliação do paciente. O plano deve ser conciso e prático. Organize a resposta em:
 1.  **Objetivos de Curto Prazo:** (Ex: Redução da dor, melhora da ADM).
@@ -268,7 +247,6 @@ Com base nesses dados, gere o plano de tratamento.`;
     const result = await response.response;
     const text = result.text();
     if (!text) {
-      console.warn('Gemini API returned an empty response for treatment plan.');
       return 'A IA não conseguiu gerar o plano de tratamento. Tente novamente.';
     }
 
@@ -276,7 +254,6 @@ Com base nesses dados, gere o plano de tratamento.`;
     aiCache.set(cacheKey, inputData, text);
     return text;
   } catch (error) {
-    console.error('Error calling Gemini API for treatment plan:', error);
     if (error instanceof Error) {
       if (error.message.includes('API key')) {
         return 'Erro: A chave da API não foi configurada corretamente.';
@@ -313,7 +290,6 @@ export async function predictAbandonmentRisk(
     const jsonText = result.text().trim();
     return JSON.parse(jsonText);
   } catch (error) {
-    console.error('Error in predictAbandonmentRisk:', error);
     throw new Error('Falha ao analisar o risco de abandono.');
   }
 }
@@ -344,7 +320,6 @@ export async function generateSOAPNote(notes: string): Promise<{
     const jsonText = result.text().trim();
     return JSON.parse(jsonText);
   } catch (error) {
-    console.error('Error in generateSOAPNote:', error);
     throw new Error('Falha ao gerar nota SOAP.');
   }
 }
@@ -367,14 +342,11 @@ export async function generateEvolutionReport(
   try {
     const cached = aiCache.get(cacheKey, JSON.stringify(sessions), userId);
     if (cached) {
-      console.log('📈 Retornando relatório de evolução do cache (economia ~$0.04)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Generating evolution report (custo ~$0.04): ${patient.name}`);
   
   try {
     const systemInstruction = `Você é um fisioterapeuta experiente gerando um relatório de evolução clínica. 
@@ -414,7 +386,6 @@ ${sessionData}`;
     aiCache.set(cacheKey, JSON.stringify(sessions), text);
     return text;
   } catch (error) {
-    console.error('Error generating evolution report:', error);
     return 'Erro ao gerar relatório de evolução. Verifique os dados e tente novamente.';
   }
 }
@@ -439,14 +410,11 @@ export async function generateInsuranceReport(
   try {
     const cached = aiCache.get(cacheKey, patient.medicalHistory || '', userId);
     if (cached) {
-      console.log('📋 Retornando relatório de convênio do cache (economia ~$0.05)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Generating insurance report (custo ~$0.05): ${reportType}`);
   
   try {
     const reportConfig = {
@@ -510,7 +478,6 @@ ${assessmentSummary || 'Nenhuma avaliação registrada'}`;
     aiCache.set(cacheKey, patient.medicalHistory || '', text);
     return text;
   } catch (error) {
-    console.error('Error generating insurance report:', error);
     return 'Erro ao gerar relatório. Verifique os dados e tente novamente.';
   }
 }
@@ -533,14 +500,11 @@ export async function generateExercisePrescription(
   try {
     const cached = aiCache.get(cacheKey, JSON.stringify(prescriptions), userId);
     if (cached) {
-      console.log('💊 Retornando receituário do cache (economia ~$0.03)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Generating exercise prescription (custo ~$0.03): ${patient.name}`);
   
   try {
     const systemInstruction = `Você é um fisioterapeuta criando um receituário de exercícios profissional.
@@ -592,7 +556,6 @@ ${exerciseDetails.map(ex =>
     aiCache.set(cacheKey, JSON.stringify(prescriptions), text);
     return text;
   } catch (error) {
-    console.error('Error generating exercise prescription:', error);
     return 'Erro ao gerar receituário de exercícios. Verifique os dados e tente novamente.';
   }
 }
@@ -613,14 +576,11 @@ export async function processVoiceToText(
   try {
     const cached = aiCache.get(cacheKey, voiceText, userId);
     if (cached) {
-      console.log('🎤 Retornando processamento de voz do cache (economia ~$0.02)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Processing voice to text (custo ~$0.02): ${contextType}`);
   
   try {
     const contextInstructions = {
@@ -657,7 +617,6 @@ export async function processVoiceToText(
     aiCache.set(cacheKey, voiceText, text);
     return text;
   } catch (error) {
-    console.error('Error processing voice to text:', error);
     return voiceText; // Retorna texto original em caso de erro
   }
 }
@@ -678,14 +637,11 @@ export async function extractClinicalInformation(
   try {
     const cached = aiCache.get(cacheKey, freeText, userId);
     if (cached) {
-      console.log('🔍 Retornando extração de dados do cache (economia ~$0.03)');
       return JSON.parse(cached);
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Extracting clinical information (custo ~$0.03): ${extractionType}`);
   
   try {
     const extractionPrompts = {
@@ -761,7 +717,6 @@ Texto para análise: "${freeText}"`;
     aiCache.set(cacheKey, freeText, jsonText);
     return extractedData;
   } catch (error) {
-    console.error('Error extracting clinical information:', error);
     return { [extractionType]: [] }; // Retorna estrutura vazia em caso de erro
   }
 }
@@ -782,14 +737,11 @@ export async function generateSMARTGoals(
   try {
     const cached = aiCache.get(cacheKey, generalObjectives + patientContext, userId);
     if (cached) {
-      console.log('🎯 Retornando objetivos SMART do cache (economia ~$0.03)');
       return JSON.parse(cached);
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Generating SMART goals (custo ~$0.03)`);
   
   try {
     const systemInstruction = `Você é um especialista em definição de objetivos terapêuticos SMART (Específicos, Mensuráveis, Atingíveis, Relevantes, Temporais).
@@ -841,7 +793,6 @@ Retorne JSON com estrutura:
     aiCache.set(cacheKey, generalObjectives + patientContext, jsonText);
     return smartGoals.smartGoals || [];
   } catch (error) {
-    console.error('Error generating SMART goals:', error);
     return [];
   }
 }
@@ -860,14 +811,11 @@ export async function correctMedicalTerminology(
   try {
     const cached = aiCache.get(cacheKey, clinicalText, userId);
     if (cached) {
-      console.log('📚 Retornando correção terminológica do cache (economia ~$0.02)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Correcting medical terminology (custo ~$0.02)`);
   
   try {
     const systemInstruction = `Você é um especialista em terminologia médica e fisioterapêutica.
@@ -897,7 +845,6 @@ export async function correctMedicalTerminology(
     aiCache.set(cacheKey, clinicalText, correctedText);
     return correctedText;
   } catch (error) {
-    console.error('Error correcting medical terminology:', error);
     return clinicalText; // Retorna texto original em caso de erro
   }
 }
@@ -916,14 +863,11 @@ export async function translateToPatientLanguage(
   try {
     const cached = aiCache.get(cacheKey, technicalText, userId);
     if (cached) {
-      console.log('👥 Retornando tradução para paciente do cache (economia ~$0.02)');
       return cached;
     }
   } catch (error) {
-    console.warn('Cache error:', error);
+    // Silently handle cache errors
   }
-
-  console.log(`🤖 Translating to patient language (custo ~$0.02)`);
   
   try {
     const systemInstruction = `Você é um especialista em comunicação médico-paciente.
@@ -954,7 +898,6 @@ export async function translateToPatientLanguage(
     aiCache.set(cacheKey, technicalText, patientText);
     return patientText;
   } catch (error) {
-    console.error('Error translating to patient language:', error);
     return technicalText; // Retorna texto original em caso de erro
   }
 }

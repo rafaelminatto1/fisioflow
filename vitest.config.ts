@@ -12,9 +12,12 @@ export default defineConfig({
     include: [
       'services/__tests__/**/*.test.{ts,tsx}',
       'hooks/__tests__/**/*.test.{ts,tsx}',
+      'hooks/data/__tests__/**/*.test.{ts,tsx}',
       'components/**/__tests__/**/*.test.{ts,tsx}',
       'utils/__tests__/**/*.test.{ts,tsx}',
-      'src/components/__tests__/**/*.test.{ts,tsx}'
+      'src/components/__tests__/**/*.test.{ts,tsx}',
+      'src/hooks/__tests__/**/*.test.{ts,tsx}',
+      'src/utils/__tests__/**/*.test.{ts,tsx}',
     ],
     exclude: [
       'node_modules/**',
@@ -44,12 +47,33 @@ export default defineConfig({
       ],
       thresholds: {
         global: {
-          branches: 70,
-          functions: 70,
-          lines: 70,
-          statements: 70
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80
+        },
+        // Thresholds específicos para módulos críticos
+        'hooks/data/': {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90
+        },
+        'services/': {
+          branches: 85,
+          functions: 85,
+          lines: 85,
+          statements: 85
+        },
+        'utils/': {
+          branches: 85,
+          functions: 85,
+          lines: 85,
+          statements: 85
         }
-      }
+      },
+      all: true,
+      skipFull: false
     },
     testTimeout: 10000,
     hookTimeout: 10000,

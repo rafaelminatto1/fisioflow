@@ -34,7 +34,13 @@
       "Bash(touch:*)",
       "Bash(npm run:*)",
       "Bash(npx vitest run:*)",
-      "Bash(ls -la)"
+      "Bash(ls -la)",
+      "Bash(npx eslint:*)",
+      "Bash(./node_modules/.bin/eslint:*)",
+      "Bash(ls:*)",
+      "Bash(where npm)",
+      "Bash(echo $PATH)",
+      "Bash(npx:*)"
     ],
     "deny": []
   }

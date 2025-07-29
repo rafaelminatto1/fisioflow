@@ -9,18 +9,15 @@ interface APIKeySettingsProps {
 }
 
 export function APIKeySettings({ isOpen, onClose }: APIKeySettingsProps) {
-  const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const { showNotification } = useNotification();
 
   useEffect(() => {
     if (isOpen) {
-      // Carrega a chave existente
-      const savedKey = localStorage.getItem('GEMINI_API_KEY') || '';
-      setApiKey(savedKey);
-      setIsValid(savedKey ? true : null);
+      // Verifica se a chave está configurada via variável de ambiente
+      const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+      setIsValid(envKey ? true : false);
     }
   }, [isOpen]);
 

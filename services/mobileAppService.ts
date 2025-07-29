@@ -200,7 +200,7 @@ class MobileAppService {
     this.setupEventListeners();
     this.startOfflineSync();
     
-    console.log('📱 Mobile App Service inicializado');
+    // Mobile App Service inicializado
   }
 
   // === DETECÇÃO DE DISPOSITIVO ===
@@ -265,7 +265,7 @@ class MobileAppService {
    */
   setupInstallPrompt(): void {
     window.addEventListener('beforeinstallprompt', (e) => {
-      console.log('💾 Install prompt disponível');
+      // Install prompt disponível
       e.preventDefault();
       this.installPrompt = e;
       
@@ -275,7 +275,7 @@ class MobileAppService {
     });
 
     window.addEventListener('appinstalled', () => {
-      console.log('✅ App instalado como PWA');
+      // App instalado como PWA
       if (this.deviceInfo) {
         this.deviceInfo.isInstalled = true;
         this.deviceInfo.installPromptAvailable = false;
@@ -297,15 +297,15 @@ class MobileAppService {
       const result = await this.installPrompt.userChoice;
       
       if (result.outcome === 'accepted') {
-        console.log('✅ Usuário aceitou instalar o app');
+        // Usuário aceitou instalar o app
       } else {
-        console.log('❌ Usuário rejeitou a instalação');
+        // Usuário rejeitou a instalação
       }
 
       this.installPrompt = null;
       return { outcome: result.outcome };
     } catch (error) {
-      console.error('❌ Erro ao mostrar prompt de instalação:', error);
+      // Erro ao mostrar prompt de instalação
       return { outcome: 'not_available' };
     }
   }
@@ -405,10 +405,10 @@ class MobileAppService {
         }
       );
 
-      console.log(`📸 ${options.type} capturada: ${capture.fileName} (${Math.round(blob.size / 1024)}KB)`);
+      // Mídia capturada
       return capture;
     } catch (error) {
-      console.error('❌ Erro ao capturar mídia:', error);
+      // Erro ao capturar mídia
       throw error;
     }
   }
@@ -474,11 +474,11 @@ class MobileAppService {
             }
           );
 
-          console.log(`📍 Localização obtida: ${locationData.latitude}, ${locationData.longitude} (±${locationData.accuracy}m)`);
+          // Localização obtida
           resolve(locationData);
         },
         (error) => {
-          console.error('❌ Erro ao obter localização:', error);
+          // Erro ao obter localização
           reject(error);
         },
         {
@@ -547,10 +547,10 @@ class MobileAppService {
       this.pushSubscriptions.set(pushSub.id, pushSub);
       await this.savePushSubscriptions();
 
-      console.log('🔔 Push notifications registradas');
+      // Push notifications registradas
       return pushSub;
     } catch (error) {
-      console.error('❌ Erro ao registrar push notifications:', error);
+      // Erro ao registrar push notifications
       throw error;
     }
   }
@@ -574,7 +574,7 @@ class MobileAppService {
     this.offlineActions.push(offlineAction);
     await this.saveOfflineActions();
 
-    console.log(`💾 Ação offline registrada: ${action.type} ${action.entityType}`);
+    // Ação offline registrada
     return offlineAction.id;
   }
 
@@ -583,7 +583,7 @@ class MobileAppService {
    */
   async syncOfflineActions(): Promise<{ synced: number; failed: number; conflicts: number }> {
     if (!navigator.onLine) {
-      console.log('📵 Offline - sync adiado');
+      // Offline - sync adiado
       return { synced: 0, failed: 0, conflicts: 0 };
     }
 
@@ -623,7 +623,7 @@ class MobileAppService {
     this.offlineActions = this.offlineActions.filter(action => action.status !== 'synced');
     await this.saveOfflineActions();
 
-    console.log(`🔄 Sync offline: ${synced} ok, ${failed} erro, ${conflicts} conflito`);
+    // Sync offline completed
     return { synced, failed, conflicts };
   }
 
@@ -668,7 +668,7 @@ class MobileAppService {
     // Aplicar configurações imediatamente
     this.applyMobileSettings(updated);
 
-    console.log(`⚙️ Configurações mobile atualizadas para ${userId}`);
+    // Configurações mobile atualizadas
   }
 
   /**
@@ -717,14 +717,14 @@ class MobileAppService {
         this.wakeLock = await (navigator as any).wakeLock.request('screen');
         
         this.wakeLock.addEventListener('release', () => {
-          console.log('🔓 Wake lock liberado');
+          // Wake lock liberado
           this.wakeLock = null;
         });
 
-        console.log(`🔒 Wake lock ativado: ${reason}`);
+        // Wake lock ativado
         return true;
       } catch (error) {
-        console.error('❌ Erro ao ativar wake lock:', error);
+        // Erro ao ativar wake lock
         return false;
       }
     }
@@ -761,7 +761,7 @@ class MobileAppService {
         await document.documentElement.requestFullscreen();
         return true;
       } catch (error) {
-        console.error('❌ Erro ao entrar em fullscreen:', error);
+        // Erro ao entrar em fullscreen
         return false;
       }
     }
@@ -950,7 +950,7 @@ class MobileAppService {
       if (this.deviceInfo) {
         this.deviceInfo.isOnline = true;
       }
-      console.log('🌐 Device online - iniciando sync');
+      // Device online - iniciando sync
       this.syncOfflineActions();
     });
 
@@ -958,7 +958,7 @@ class MobileAppService {
       if (this.deviceInfo) {
         this.deviceInfo.isOnline = false;
       }
-      console.log('📵 Device offline');
+      // Device offline
     });
 
     // Detectar mudanças de rede
@@ -968,7 +968,7 @@ class MobileAppService {
         if (this.deviceInfo) {
           this.deviceInfo.networkType = connection.effectiveType || 'unknown';
         }
-        console.log(`📶 Rede mudou para: ${this.deviceInfo?.networkType}`);
+        // Rede mudou
       });
     }
 
@@ -1023,7 +1023,7 @@ class MobileAppService {
         });
       }
     } catch (error) {
-      console.error('❌ Erro ao carregar dados mobile:', error);
+      // Erro ao carregar dados mobile
     }
   }
 
@@ -1031,7 +1031,7 @@ class MobileAppService {
     try {
       localStorage.setItem('fisioflow_offline_actions', JSON.stringify(this.offlineActions));
     } catch (error) {
-      console.error('❌ Erro ao salvar ações offline:', error);
+      // Erro ao salvar ações offline
     }
   }
 
@@ -1040,7 +1040,7 @@ class MobileAppService {
       const subscriptions = Array.from(this.pushSubscriptions.values());
       localStorage.setItem('fisioflow_push_subscriptions', JSON.stringify(subscriptions));
     } catch (error) {
-      console.error('❌ Erro ao salvar push subscriptions:', error);
+      // Erro ao salvar push subscriptions
     }
   }
 
@@ -1049,7 +1049,7 @@ class MobileAppService {
       const settings = Array.from(this.mobileSettings.values());
       localStorage.setItem('fisioflow_mobile_settings', JSON.stringify(settings));
     } catch (error) {
-      console.error('❌ Erro ao salvar configurações mobile:', error);
+      // Erro ao salvar configurações mobile
     }
   }
 
