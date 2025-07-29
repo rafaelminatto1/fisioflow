@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import { getValidatedTasksFromStorage } from '../services/storageService';
-import { Task } from '../types';
+import { getValidatedTasksFromStorage } from '@/services/storageService';
+import { Task } from '@/types';
 
 import { useAuth } from './useAuth';
 

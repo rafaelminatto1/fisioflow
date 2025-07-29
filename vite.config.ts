@@ -4,18 +4,18 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
-  const isProduction = mode === 'production';
+  const isProduction = mode === 'production' || mode === 'deploy';
   const isMinimal = mode === 'minimal';
   
   return {
     plugins: [
       react({
-        jsxRuntime: 'classic'
+        jsxRuntime: 'automatic'
       })
     ],
     define: {
-      // Note: VITE_GEMINI_API_KEY is automatically available in client code
-      // No need to explicitly define it here
+      // Definir variáveis globais para produção
+      __DEV__: !isProduction,
     },
     resolve: {
       alias: {
@@ -30,9 +30,10 @@ export default defineConfig(({ mode }) => {
     build: {
       // Otimizações para produção
       minify: isProduction ? 'terser' : false,
-      sourcemap: !isProduction,
+      sourcemap: false, // Desabilitar sourcemap em produção para reduzir tamanho
       target: 'es2020',
       cssCodeSplit: true,
+      reportCompressedSize: false, // Acelerar build
       
       // Configuração de chunks para melhor cache
       rollupOptions: {
@@ -80,13 +81,15 @@ export default defineConfig(({ mode }) => {
         compress: {
           drop_console: true,
           drop_debugger: true,
-          pure_funcs: ['console.log', 'console.info'],
+          pure_funcs: ['console.log', 'console.info', 'console.warn'],
+          passes: 2, // Múltiplas passadas para melhor compressão
         },
         mangle: {
           safari10: true,
         },
         format: {
           safari10: true,
+          comments: false, // Remover comentários
         },
       } : undefined,
       

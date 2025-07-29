@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import { getValidatedPatientsFromStorage } from '../services/storageService'; // Usando a função de validação
-import { Patient } from '../types';
+import { getValidatedPatientsFromStorage } from '@/services/storageService'; // Usando a função de validação
+import { Patient } from '@/types';
 
 import { useAuth } from './useAuth';
 

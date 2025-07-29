@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "vercel-cli": {
+      "command": "npx",
+      "args": ["vercel", "--help"],
+      "env": {
+        "VERCEL_ORG_ID": "",
+        "VERCEL_PROJECT_ID": ""
+      },
+      "disabled": false,
+      "autoApprove": ["vercel", "logs", "inspect", "list", "whoami"]
+    },
+    "vite-tools": {
+      "command": "npx",
+      "args": ["vite", "--help"],
+      "disabled": false,
+      "autoApprove": ["build", "preview", "dev"]
+    },
+    "bundle-analyzer": {
+      "command": "npx",
+      "args": ["vite-bundle-analyzer", "dist"],
+      "disabled": false,
+      "autoApprove": ["analyze"]
+    },
+    "browser-sync": {
+      "command": "npx",
+      "args": ["browser-sync", "start", "--server", "dist", "--port", "5500", "--no-open"],
+      "disabled": false,
+      "autoApprove": ["start", "reload"]
+    }
+  }
+}
