@@ -29,10 +29,10 @@ if (process.env.NODE_ENV === 'development') {
 
 // Configurações de produção
 if (process.env.NODE_ENV === 'production') {
-  // Desabilitar console.log em produção
-  console.log = () => {};
-  console.warn = () => {};
-  console.error = () => {};
+  // Temporariamente habilitado para debug
+  // console.log = () => {};
+  // console.warn = () => {};
+  // console.error = () => {};
 }
 
 // Configurar meta tags dinâmicas para PWA
