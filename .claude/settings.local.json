@@ -44,7 +44,9 @@
       "Bash(git rev-list:*)",
       "Bash(git gc:*)",
       "Bash(git config:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(vercel list:*)",
+      "Bash(vercel deploy:*)"
     ],
     "deny": []
   }

@@ -58,7 +58,6 @@
   "devDependencies": {
     "@commitlint/cli": "^18.4.3",
     "@commitlint/config-conventional": "^18.4.3",
-    "@rollup/rollup-win32-x64-msvc": "^4.46.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/crypto-js": "^4.2.2",
     "@types/jest": "^29.5.12",
@@ -106,8 +105,5 @@
     "*.{json,md}": [
       "npx prettier --write"
     ]
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-win32-x64-msvc": "^4.46.1"
   }
 }
