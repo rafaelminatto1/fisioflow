@@ -9,7 +9,10 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [
-      react()
+      react({
+        jsxRuntime: 'automatic',
+        jsxImportSource: 'react'
+      })
     ],
     define: {
       // Note: VITE_GEMINI_API_KEY is automatically available in client code
@@ -40,11 +43,19 @@ export default defineConfig(({ mode }) => {
             'react-vendor': ['react', 'react-dom'],
             'query-vendor': ['@tanstack/react-query'],
             'ui-vendor': ['lucide-react', 'recharts'],
+            'ai-vendor': ['@google/generative-ai'],
             
-            // App chunks
+            // Core app chunks
             'auth': ['./hooks/useAuth.tsx'],
-            'data': ['./hooks/useData.tsx'],
-            'components': ['./components/LazyRoutes.tsx'],
+            'data-core': ['./hooks/data/useOptimizedStorage.ts'],
+            'data-users': ['./hooks/data/useUsers.ts'],
+            'data-patients': ['./hooks/data/usePatients.ts'],
+            'data-tasks': ['./hooks/data/useTasks.ts'],
+            
+            // Component chunks
+            'components-core': ['./components/LazyRoutes.tsx'],
+            'components-dashboard': ['./components/Dashboard.tsx'],
+            'services': ['./services/geminiService.ts', './services/notificationService.ts'],
           },
           
           // Nomes de arquivo com hash para cache busting
