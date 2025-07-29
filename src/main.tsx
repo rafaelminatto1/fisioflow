@@ -2,7 +2,6 @@ import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from './App';
-import { AuthProvider } from './hooks/useAuth';
 import './index.css';
 
 // Registrar Service Worker para PWA apenas em produção
@@ -159,21 +158,17 @@ const root = createRoot(
 
 root.render(
   React.createElement(React.StrictMode, null,
-    React.createElement(AuthProvider, null,
-      React.createElement(App)
-    )
+    React.createElement(App)
   )
 );
 
 // Hot Module Replacement (HMR) para desenvolvimento
-if (process.env.NODE_ENV === 'development' && (module as any).hot) {
+if (process.env.NODE_ENV === 'development' && typeof module !== 'undefined' && (module as any).hot) {
   (module as any).hot.accept('./App', () => {
     const NextApp = require('./App').default;
     root.render(
       React.createElement(React.StrictMode, null,
-        React.createElement(AuthProvider, null,
-          React.createElement(NextApp)
-        )
+        React.createElement(NextApp)
       )
     );
   });

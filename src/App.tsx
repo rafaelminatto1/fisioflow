@@ -4,7 +4,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { useAuth } from './hooks/useAuth';
+import { useAuth, AuthProvider } from './hooks/useAuth';
 import './index.css';
 
 // Lazy loading dos componentes principais
@@ -69,88 +69,90 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <Router>
-          <div className="min-h-screen bg-gray-50">
-            <Suspense fallback={<LoadingSpinner />}>
-              <Routes>
-                {/* Rota pública */}
-                <Route path="/login" element={<LoginPage />} />
-                
-                {/* Rotas protegidas - Free tier */}
-                <Route 
-                  path="/" 
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/patients" 
-                  element={
-                    <ProtectedRoute>
-                      <PatientPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/appointments" 
-                  element={
-                    <ProtectedRoute>
-                      <CalendarPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Rotas protegidas - Premium tier */}
-                <Route 
-                  path="/reports" 
-                  element={
-                    <ProtectedRoute requiredTier="premium">
-                      <ReportsPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Rotas de configuração */}
-                <Route 
-                  path="/settings" 
-                  element={
-                    <ProtectedRoute>
-                      <SubscriptionManager />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/subscription" 
-                  element={
-                    <ProtectedRoute>
-                      <SubscriptionManager />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Redirect padrão */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </Suspense>
-          </div>
-        </Router>
-      </ErrorBoundary>
-      
-      {/* React Query DevTools apenas em desenvolvimento */}
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} />
-      )}
+      <AuthProvider>
+        <ErrorBoundary>
+          <Router>
+            <div className="min-h-screen bg-gray-50">
+              <Suspense fallback={<LoadingSpinner />}>
+                <Routes>
+                  {/* Rota pública */}
+                  <Route path="/login" element={<LoginPage />} />
+                  
+                  {/* Rotas protegidas - Free tier */}
+                  <Route 
+                    path="/" 
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/dashboard" 
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/patients" 
+                    element={
+                      <ProtectedRoute>
+                        <PatientPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/appointments" 
+                    element={
+                      <ProtectedRoute>
+                        <CalendarPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* Rotas protegidas - Premium tier */}
+                  <Route 
+                    path="/reports" 
+                    element={
+                      <ProtectedRoute requiredTier="premium">
+                        <ReportsPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* Rotas de configuração */}
+                  <Route 
+                    path="/settings" 
+                    element={
+                      <ProtectedRoute>
+                        <SubscriptionManager />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/subscription" 
+                    element={
+                      <ProtectedRoute>
+                        <SubscriptionManager />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* Redirect padrão */}
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </Suspense>
+            </div>
+          </Router>
+        </ErrorBoundary>
+        
+        {/* React Query DevTools apenas em desenvolvimento */}
+        {process.env.NODE_ENV === 'development' && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
