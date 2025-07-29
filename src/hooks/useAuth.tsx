@@ -80,33 +80,64 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    // Modo offline para desenvolvimento - criar usuário demo
+    if (process.env.NODE_ENV === 'development') {
+      return {
+        id: 'demo-user',
+        name: 'Usuário Demo',
+        email: 'demo@fisioflow.com',
+        role: 'FISIOTERAPEUTA',
+        tenantId: 'demo-tenant',
+        tier: 'free' as AuthTier,
+        limits: TIER_LIMITS.free,
+        usage: {
+          patients: 2,
+          sessions: 15,
+          users: 1,
+          storage: 45,
+          aiRequests: 3,
+        },
+      };
+    }
+    return null;
+  });
 
-  // Query para verificar autenticação
+  // Query para verificar autenticação (apenas em produção)
   const authQuery = useQuery({
     queryKey: ['auth', 'current-user'],
     queryFn: async () => {
+      if (process.env.NODE_ENV === 'development') {
+        return user; // Retorna usuário demo em desenvolvimento
+      }
+      
       const token = localStorage.getItem('fisioflow-token');
       if (!token) return null;
       
-      const userData = await api.verifyToken(token);
-      const usage = await api.getUserUsage(userData.id);
-      
-      return {
-        ...userData,
-        limits: TIER_LIMITS[userData.tier || 'free'],
-        usage,
-      };
+      try {
+        const userData = await api.verifyToken(token);
+        const usage = await api.getUserUsage(userData.id);
+        
+        return {
+          ...userData,
+          limits: TIER_LIMITS[userData.tier || 'free'],
+          usage,
+        };
+      } catch (error) {
+        console.error('Erro na autenticação:', error);
+        return null;
+      }
     },
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
+    enabled: process.env.NODE_ENV === 'production', // Apenas em produção
   });
 
   // Sincronizar user state com query
   useEffect(() => {
     if (authQuery.data) {
       setUser(authQuery.data);
-    } else if (authQuery.isError) {
+    } else if (authQuery.isError && process.env.NODE_ENV === 'production') {
       localStorage.removeItem('fisioflow-token');
       setUser(null);
     }

@@ -4,7 +4,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { useAuth, AuthProvider } from './hooks/useAuth';
+import { useAuth, AuthProvider } from './hooks/useAuthSimple';
 import './index.css';
 
 // Lazy loading dos componentes principais
