@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import App from './App';
+import { AuthProvider } from './hooks/useAuth';
 import './index.css';
 
 // Registrar Service Worker para PWA
@@ -9,10 +10,10 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('SW registrado com sucesso:', registration);
+        // SW registrado com sucesso
       })
       .catch((registrationError) => {
-        console.log('Falha no registro do SW:', registrationError);
+        // Falha no registro do SW
       });
   });
 }
@@ -86,14 +87,12 @@ setViewport();
 
 // Configurar tratamento de erros globais
 window.addEventListener('error', (event) => {
-  console.error('Erro global capturado:', event.error);
-  // Aqui você pode enviar o erro para um serviço de monitoramento
+  // Erro global capturado - pode ser enviado para serviço de monitoramento
   // como Sentry, LogRocket, etc.
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Promise rejeitada não tratada:', event.reason);
-  // Aqui você pode enviar o erro para um serviço de monitoramento
+  // Promise rejeitada não tratada - pode ser enviado para serviço de monitoramento
 });
 
 // Configurar performance monitoring
@@ -102,14 +101,14 @@ if ('performance' in window && 'PerformanceObserver' in window) {
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       if (entry.entryType === 'largest-contentful-paint') {
-        console.log('LCP:', entry.startTime);
+        // LCP measurement
       }
       if (entry.entryType === 'first-input') {
-        console.log('FID:', entry.processingStart - entry.startTime);
+        // FID measurement
       }
       if (entry.entryType === 'layout-shift') {
         if (!(entry as any).hadRecentInput) {
-          console.log('CLS:', (entry as any).value);
+          // CLS measurement
         }
       }
     }
@@ -119,7 +118,6 @@ if ('performance' in window && 'PerformanceObserver' in window) {
     observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
   } catch (e) {
     // Fallback para navegadores que não suportam todos os tipos
-    console.log('Performance Observer não suportado completamente');
   }
 }
 
@@ -130,7 +128,9 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </React.StrictMode>
 );
 
@@ -140,7 +140,9 @@ if (process.env.NODE_ENV === 'development' && (module as any).hot) {
     const NextApp = require('./App').default;
     root.render(
       <React.StrictMode>
-        <NextApp />
+        <AuthProvider>
+          <NextApp />
+        </AuthProvider>
       </React.StrictMode>
     );
   });
