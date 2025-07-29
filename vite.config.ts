@@ -9,13 +9,11 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [
-      react({
-        jsxImportSource: 'react'
-      })
+      react()
     ],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      // Note: VITE_GEMINI_API_KEY is automatically available in client code
+      // No need to explicitly define it here
     },
     resolve: {
       alias: {
