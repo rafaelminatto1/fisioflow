@@ -21,9 +21,46 @@ FisioFlow is a comprehensive integrated management system for physiotherapy clin
 
 ## Business Model
 
-The system uses a freemium model with three tiers:
-- **Free**: 5 interns, 10 cases/month, basic features
-- **Premium**: 50 interns, 100 cases/month, advanced features
-- **Enterprise**: Unlimited usage, full feature set
+### Current Usage (Internal Only)
+- **Scope**: Currently used only in the owner's clinic with their own professionals and patients
+- **Purpose**: Internal testing, validation, and optimization before potential public release
+- **Team**: Owner's physiotherapists, interns, and patients only
+
+### Future Freemium Model (Suggestions)
+When ready for public release, suggested tier structure:
+
+**Tier 1 - Starter (Free)**
+- 1 clinic location
+- 3 professionals
+- 50 patients
+- Basic scheduling
+- Basic reports
+- Community support
+
+**Tier 2 - Professional (R$ 197/month)**
+- 2 clinic locations
+- 10 professionals
+- 200 patients
+- Advanced scheduling
+- AI assistant (limited)
+- Partnership system (1 partner)
+- Advanced reports
+- Email support
+
+**Tier 3 - Enterprise (R$ 497/month)**
+- Unlimited locations
+- Unlimited professionals
+- Unlimited patients
+- Full AI assistant
+- Multiple partnerships
+- Custom integrations
+- Priority support
+- White-label options
+
+**Add-ons:**
+- Extra AI queries: R$ 0,10 per query after limit
+- Additional partnerships: R$ 97/month each
+- Custom integrations: R$ 297/month
+- Advanced analytics: R$ 197/month
 
 *Note: The freemium system is currently used only for internal testing and validation, not for public release.*
