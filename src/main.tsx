@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import * as React from 'react';
+import { createRoot } from 'react-dom/client';
 
 import App from './App';
 import { AuthProvider } from './hooks/useAuth';
@@ -153,16 +153,16 @@ if ('performance' in window && 'PerformanceObserver' in window) {
 }
 
 // Renderizar a aplicação
-const root = ReactDOM.createRoot(
+const root = createRoot(
   document.getElementById('root') as HTMLElement
 );
 
 root.render(
-  <React.StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </React.StrictMode>
+  React.createElement(React.StrictMode, null,
+    React.createElement(AuthProvider, null,
+      React.createElement(App)
+    )
+  )
 );
 
 // Hot Module Replacement (HMR) para desenvolvimento
@@ -170,11 +170,11 @@ if (process.env.NODE_ENV === 'development' && (module as any).hot) {
   (module as any).hot.accept('./App', () => {
     const NextApp = require('./App').default;
     root.render(
-      <React.StrictMode>
-        <AuthProvider>
-          <NextApp />
-        </AuthProvider>
-      </React.StrictMode>
+      React.createElement(React.StrictMode, null,
+        React.createElement(AuthProvider, null,
+          React.createElement(NextApp)
+        )
+      )
     );
   });
 }
