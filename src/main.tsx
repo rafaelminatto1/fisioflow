@@ -9,11 +9,22 @@ if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('SW registrado com sucesso:', registration);
+        console.log('✅ SW registrado com sucesso:', registration);
+        
+        // Verifica atualizações do SW periodicamente
+        setInterval(() => {
+          registration.update();
+        }, 60000); // Verifica a cada minuto
       })
       .catch((registrationError) => {
-        console.error('Falha no registro do SW:', registrationError);
+        console.error('❌ Falha no registro do SW:', registrationError);
       });
+  });
+
+  // Handle SW updates
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    console.log('🔄 Service Worker atualizado');
+    // Optionally notify user about the update
   });
 }
 

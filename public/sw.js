@@ -94,8 +94,13 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Ignora requests de outros domínios e chrome-extension
+  // Ignora requests de outros domínios, chrome-extension e requisições específicas
   if (url.origin !== location.origin && !url.origin.includes('chrome-extension')) {
+    return;
+  }
+
+  // Ignora requests para o próprio service worker e arquivos de sistema
+  if (url.pathname === '/sw.js' || url.pathname.includes('_next/') || url.pathname.includes('__webpack')) {
     return;
   }
 
@@ -256,9 +261,15 @@ async function staleWhileRevalidate(request) {
   const fetchPromise = fetch(request).then((networkResponse) => {
     if (networkResponse.ok) {
       cache.put(request, networkResponse.clone());
+    } else if (networkResponse.status === 401 && request.url.includes('manifest.json')) {
+      // Tratamento específico para erro 401 no manifest.json
+      console.warn(`🚨 Manifest.json retornou 401, verificar configuração de deploy`);
     }
     return networkResponse;
-  }).catch(() => cachedResponse); // Fallback para cache se network falhar
+  }).catch((error) => {
+    console.warn(`🌐 Network falhou para ${request.url}:`, error);
+    return cachedResponse || new Response('Service Unavailable', { status: 503 });
+  });
   
   if (cachedResponse) {
     console.log(`💾 Stale cache hit: ${request.url}`);
