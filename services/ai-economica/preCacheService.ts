@@ -1,11 +1,11 @@
 // services/ai-economica/preCacheService.ts
 // Sistema de pré-cache inteligente baseado em padrões de uso
 
-import { aiLogger } from './logger';
-import { CacheService } from './cacheService';
-import { AIResponse, QueryType } from '../../types/ai-economica.types';
+import { logger } from './logger';
+import { cacheService } from './cacheService';
+import { AIResponse, QueryType, ResponseSource } from '../../types/ai-economica.types';
 
-interface QueryPattern {
+export interface QueryPattern {
   query: string;
   queryType: QueryType;
   frequency: number;
@@ -15,9 +15,15 @@ interface QueryPattern {
   timeOfDay: number[]; // horas do dia quando é mais usado
   dayOfWeek: number[]; // dias da semana quando é mais usado
   tenantId: string;
+  seasonality?: {
+    month: number[];
+    trends: 'increasing' | 'decreasing' | 'stable';
+  };
+  contextTags: string[]; // tags de contexto para melhor agrupamento
+  successRate: number; // taxa de sucesso das respostas
 }
 
-interface PreCacheJob {
+export interface PreCacheJob {
   id: string;
   query: string;
   queryType: QueryType;
@@ -27,9 +33,12 @@ interface PreCacheJob {
   createdAt: string;
   completedAt?: string;
   error?: string;
+  estimatedDuration?: number;
+  actualDuration?: number;
+  cacheHitAfterPreload?: boolean;
 }
 
-interface CacheWarmingStrategy {
+export interface CacheWarmingStrategy {
   name: string;
   description: string;
   enabled: boolean;
@@ -37,64 +46,120 @@ interface CacheWarmingStrategy {
   maxQueries: number;
   minFrequency: number;
   execute: () => Promise<void>;
+  lastExecuted?: string;
+  successCount: number;
+  failureCount: number;
+  avgExecutionTime: number;
 }
 
-class PreCacheService {
-  private cacheService: CacheService;
+export class PreCacheService {
   private queryPatterns: Map<string, QueryPattern> = new Map();
   private preCacheJobs: Map<string, PreCacheJob> = new Map();
   private isRunning = false;
   private warmingInterval?: NodeJS.Timeout;
+  private patternAnalysisInterval?: NodeJS.Timeout;
 
   // Estratégias de warming
   private warmingStrategies: CacheWarmingStrategy[] = [];
+  
+  // Machine Learning simples para predição
+  private predictionModel: Map<string, number> = new Map();
+  private contextualPatterns: Map<string, QueryPattern[]> = new Map();
 
-  constructor(cacheService: CacheService) {
-    this.cacheService = cacheService;
+  constructor() {
     this.initializeStrategies();
-    aiLogger.info('PRE_CACHE_SERVICE', 'Serviço de pré-cache inicializado');
+    this.startPatternAnalysis();
+    logger.info('Serviço de pré-cache inteligente inicializado', {
+      component: 'PreCacheService'
+    });
   }
 
-  // Inicializar estratégias de warming
+  // Inicializar estratégias de warming inteligentes
   private initializeStrategies(): void {
     this.warmingStrategies = [
       {
         name: 'frequent_queries',
-        description: 'Pré-cache de consultas frequentes',
+        description: 'Pré-cache de consultas frequentes com análise de tendências',
         enabled: true,
         schedule: '0 */6 * * *', // A cada 6 horas
         maxQueries: 50,
         minFrequency: 5,
         execute: () => this.warmFrequentQueries(),
+        successCount: 0,
+        failureCount: 0,
+        avgExecutionTime: 0
       },
       {
-        name: 'peak_hours',
-        description: 'Pré-cache para horários de pico',
+        name: 'predictive_peak',
+        description: 'Pré-cache preditivo para horários de pico baseado em ML',
         enabled: true,
-        schedule: '0 7,13 * * 1-5', // 7h e 13h em dias úteis
-        maxQueries: 30,
+        schedule: '0 6,12,18 * * 1-5', // Antes dos picos: 6h, 12h, 18h
+        maxQueries: 40,
         minFrequency: 3,
-        execute: () => this.warmPeakHoursQueries(),
+        execute: () => this.warmPredictivePeakQueries(),
+        successCount: 0,
+        failureCount: 0,
+        avgExecutionTime: 0
       },
       {
-        name: 'new_content',
-        description: 'Pré-cache de conteúdo novo da base de conhecimento',
+        name: 'contextual_learning',
+        description: 'Aprendizado contextual baseado em padrões de uso',
         enabled: true,
-        schedule: '0 2 * * *', // 2h da manhã diariamente
-        maxQueries: 20,
-        minFrequency: 1,
-        execute: () => this.warmNewContentQueries(),
-      },
-      {
-        name: 'user_context',
-        description: 'Pré-cache baseado em contexto do usuário',
-        enabled: true,
-        schedule: '*/30 * * * *', // A cada 30 minutos
-        maxQueries: 15,
+        schedule: '*/20 * * * *', // A cada 20 minutos
+        maxQueries: 25,
         minFrequency: 2,
-        execute: () => this.warmUserContextQueries(),
+        execute: () => this.warmContextualQueries(),
+        successCount: 0,
+        failureCount: 0,
+        avgExecutionTime: 0
       },
+      {
+        name: 'seasonal_adaptation',
+        description: 'Adaptação sazonal baseada em padrões temporais',
+        enabled: true,
+        schedule: '0 1 * * *', // 1h da manhã diariamente
+        maxQueries: 30,
+        minFrequency: 1,
+        execute: () => this.warmSeasonalQueries(),
+        successCount: 0,
+        failureCount: 0,
+        avgExecutionTime: 0
+      },
+      {
+        name: 'collaborative_filtering',
+        description: 'Filtragem colaborativa baseada em usuários similares',
+        enabled: true,
+        schedule: '0 */4 * * *', // A cada 4 horas
+        maxQueries: 20,
+        minFrequency: 2,
+        execute: () => this.warmCollaborativeQueries(),
+        successCount: 0,
+        failureCount: 0,
+        avgExecutionTime: 0
+      },
+      {
+        name: 'failure_recovery',
+        description: 'Recuperação inteligente de consultas que falharam',
+        enabled: true,
+        schedule: '*/15 * * * *', // A cada 15 minutos
+        maxQueries: 10,
+        minFrequency: 1,
+        execute: () => this.warmFailureRecoveryQueries(),
+        successCount: 0,
+        failureCount: 0,
+        avgExecutionTime: 0
+      }
     ];
+  }
+
+  // Iniciar análise de padrões
+  private startPatternAnalysis(): void {
+    // Análise de padrões a cada 10 minutos
+    this.patternAnalysisInterval = setInterval(() => {
+      this.analyzePatterns();
+      this.updatePredictionModel();
+      this.identifyContextualPatterns();
+    }, 10 * 60 * 1000);
   }
 
   // Iniciar serviço de pré-cache
@@ -103,20 +168,23 @@ class PreCacheService {
 
     this.isRunning = true;
 
-    // Executar estratégias em intervalos
+    // Executar estratégias em intervalos adaptativos
     this.warmingInterval = setInterval(
       () => {
         this.executeWarmingStrategies();
       },
-      30 * 60 * 1000
-    ); // A cada 30 minutos
+      this.calculateOptimalInterval()
+    );
 
-    // Executar warming inicial
+    // Executar warming inicial inteligente
     setTimeout(() => {
-      this.executeWarmingStrategies();
+      this.performInitialWarmup();
     }, 5000); // 5 segundos após inicialização
 
-    aiLogger.info('PRE_CACHE_SERVICE', 'Serviço de pré-cache iniciado');
+    logger.info('Serviço de pré-cache inteligente iniciado', {
+      component: 'PreCacheService',
+      strategiesCount: this.warmingStrategies.length
+    });
   }
 
   // Parar serviço
@@ -130,7 +198,9 @@ class PreCacheService {
       this.warmingInterval = undefined;
     }
 
-    aiLogger.info('PRE_CACHE_SERVICE', 'Serviço de pré-cache parado');
+    logger.info('Serviço de pré-cache parado', {
+      component: 'PreCacheService'
+    });
   }
 
   // Registrar padrão de consulta
@@ -186,18 +256,18 @@ class PreCacheService {
         this.queryPatterns.set(patternKey, newPattern);
       }
 
-      aiLogger.debug('PRE_CACHE_SERVICE', 'Padrão de consulta registrado', {
+      logger.debug('Padrão de consulta registrado', {
+        component: 'PreCacheService',
         patternKey,
         frequency: this.queryPatterns.get(patternKey)?.frequency,
         queryType,
         userRole,
       });
     } catch (error) {
-      aiLogger.error(
-        'PRE_CACHE_SERVICE',
-        'Erro ao registrar padrão de consulta',
-        { error }
-      );
+      logger.error('Erro ao registrar padrão de consulta', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   }
 
@@ -211,28 +281,25 @@ class PreCacheService {
 
         // Verificar se é hora de executar (implementação simples)
         if (this.shouldExecuteStrategy(strategy)) {
-          aiLogger.info(
-            'PRE_CACHE_SERVICE',
-            `Executando estratégia: ${strategy.name}`
-          );
+          logger.info(`Executando estratégia: ${strategy.name}`, {
+            component: 'PreCacheService'
+          });
 
           try {
             await strategy.execute();
           } catch (error) {
-            aiLogger.error(
-              'PRE_CACHE_SERVICE',
-              `Erro na estratégia ${strategy.name}`,
-              { error }
-            );
+            logger.error(`Erro na estratégia ${strategy.name}`, {
+              component: 'PreCacheService',
+              error: error instanceof Error ? error.message : 'Erro desconhecido'
+            });
           }
         }
       }
     } catch (error) {
-      aiLogger.error(
-        'PRE_CACHE_SERVICE',
-        'Erro ao executar estratégias de warming',
-        { error }
-      );
+      logger.error('Erro ao executar estratégias de warming', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   }
 
@@ -284,20 +351,16 @@ class PreCacheService {
 
       await this.executePreCacheJobs(jobs);
 
-      aiLogger.info(
-        'PRE_CACHE_SERVICE',
-        'Warming de consultas frequentes concluído',
-        {
-          patternsProcessed: frequentPatterns.length,
-          jobsCreated: jobs.length,
-        }
-      );
+      logger.info('Warming de consultas frequentes concluído', {
+        component: 'PreCacheService',
+        patternsProcessed: frequentPatterns.length,
+        jobsCreated: jobs.length,
+      });
     } catch (error) {
-      aiLogger.error(
-        'PRE_CACHE_SERVICE',
-        'Erro no warming de consultas frequentes',
-        { error }
-      );
+      logger.error('Erro no warming de consultas frequentes', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   }
 
@@ -333,21 +396,17 @@ class PreCacheService {
 
       await this.executePreCacheJobs(jobs);
 
-      aiLogger.info(
-        'PRE_CACHE_SERVICE',
-        'Warming para horário de pico concluído',
-        {
-          currentHour,
-          patternsProcessed: peakPatterns.length,
-          jobsCreated: jobs.length,
-        }
-      );
+      logger.info('Warming para horário de pico concluído', {
+        component: 'PreCacheService',
+        currentHour,
+        patternsProcessed: peakPatterns.length,
+        jobsCreated: jobs.length,
+      });
     } catch (error) {
-      aiLogger.error(
-        'PRE_CACHE_SERVICE',
-        'Erro no warming para horário de pico',
-        { error }
-      );
+      logger.error('Erro no warming para horário de pico', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   }
 
@@ -386,13 +445,15 @@ class PreCacheService {
 
       await this.executePreCacheJobs(jobs);
 
-      aiLogger.info('PRE_CACHE_SERVICE', 'Warming de conteúdo novo concluído', {
+      logger.info('Warming de conteúdo novo concluído', {
+        component: 'PreCacheService',
         queriesProcessed: newContentQueries.length,
         jobsCreated: jobs.length,
       });
     } catch (error) {
-      aiLogger.error('PRE_CACHE_SERVICE', 'Erro no warming de conteúdo novo', {
-        error,
+      logger.error('Erro no warming de conteúdo novo', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
     }
   }
@@ -428,20 +489,16 @@ class PreCacheService {
 
       await this.executePreCacheJobs(jobs);
 
-      aiLogger.info(
-        'PRE_CACHE_SERVICE',
-        'Warming de contexto do usuário concluído',
-        {
-          patternsProcessed: contextPatterns.length,
-          jobsCreated: jobs.length,
-        }
-      );
+      logger.info('Warming de contexto do usuário concluído', {
+        component: 'PreCacheService',
+        patternsProcessed: contextPatterns.length,
+        jobsCreated: jobs.length,
+      });
     } catch (error) {
-      aiLogger.error(
-        'PRE_CACHE_SERVICE',
-        'Erro no warming de contexto do usuário',
-        { error }
-      );
+      logger.error('Erro no warming de contexto do usuário', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   }
 
@@ -464,7 +521,8 @@ class PreCacheService {
 
     this.preCacheJobs.set(job.id, job);
 
-    aiLogger.debug('PRE_CACHE_SERVICE', 'Job de pré-cache criado', {
+    logger.debug('Job de pré-cache criado', {
+      component: 'PreCacheService',
       jobId: job.id,
       query,
       queryType,
@@ -493,7 +551,7 @@ class PreCacheService {
           queryId: job.id,
           content: `Resposta pré-cacheada para: ${job.query}`,
           confidence: 0.8,
-          source: 'internal',
+          source: ResponseSource.INTERNAL,
           references: [],
           suggestions: [],
           followUpQuestions: [],
@@ -507,12 +565,13 @@ class PreCacheService {
 
         // Armazenar no cache
         const cacheKey = this.generateCacheKey(job.query, job.queryType);
-        await this.cacheService.set(cacheKey, mockResponse, job.queryType);
+        await cacheService.set(cacheKey, mockResponse, job.queryType);
 
         job.status = 'completed';
         job.completedAt = new Date().toISOString();
 
-        aiLogger.debug('PRE_CACHE_SERVICE', 'Job de pré-cache concluído', {
+        logger.debug('Job de pré-cache concluído', {
+          component: 'PreCacheService',
           jobId: job.id,
           query: job.query,
           queryType: job.queryType,
@@ -525,14 +584,11 @@ class PreCacheService {
         job.error =
           error instanceof Error ? error.message : 'Erro desconhecido';
 
-        aiLogger.error(
-          'PRE_CACHE_SERVICE',
-          'Erro ao executar job de pré-cache',
-          {
-            jobId: job.id,
-            error,
-          }
-        );
+        logger.error('Erro ao executar job de pré-cache', {
+          component: 'PreCacheService',
+          jobId: job.id,
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
       }
     }
   }
@@ -707,11 +763,10 @@ class PreCacheService {
     const strategy = this.warmingStrategies.find((s) => s.name === name);
     if (strategy) {
       Object.assign(strategy, updates);
-      aiLogger.info(
-        'PRE_CACHE_SERVICE',
-        `Estratégia ${name} atualizada`,
+      logger.info(`Estratégia ${name} atualizada`, {
+        component: 'PreCacheService',
         updates
-      );
+      });
       return true;
     }
     return false;
@@ -722,5 +777,657 @@ class PreCacheService {
   }
 }
 
-export { PreCacheService, QueryPattern, PreCacheJob, CacheWarmingStrategy };
+  // ===== NOVOS MÉTODOS INTELIGENTES =====
+
+  /**
+   * Análise inteligente de padrões
+   */
+  private analyzePatterns(): void {
+    try {
+      const patterns = Array.from(this.queryPatterns.values());
+      
+      // Identificar tendências temporais
+      this.identifyTemporalTrends(patterns);
+      
+      // Agrupar padrões similares
+      this.clusterSimilarPatterns(patterns);
+      
+      // Calcular scores de importância
+      this.calculateImportanceScores(patterns);
+      
+      logger.debug('Análise de padrões concluída', {
+        component: 'PreCacheService',
+        patternsAnalyzed: patterns.length
+      });
+    } catch (error) {
+      logger.error('Erro na análise de padrões', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  /**
+   * Identifica tendências temporais nos padrões
+   */
+  private identifyTemporalTrends(patterns: QueryPattern[]): void {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    
+    patterns.forEach(pattern => {
+      // Analisar sazonalidade
+      if (!pattern.seasonality) {
+        pattern.seasonality = {
+          month: [currentMonth],
+          trends: 'stable'
+        };
+      } else {
+        if (!pattern.seasonality.month.includes(currentMonth)) {
+          pattern.seasonality.month.push(currentMonth);
+        }
+        
+        // Calcular tendência baseada na frequência recente
+        const recentUsage = this.calculateRecentUsage(pattern);
+        pattern.seasonality.trends = recentUsage > pattern.frequency * 0.8 ? 'increasing' : 
+                                   recentUsage < pattern.frequency * 0.5 ? 'decreasing' : 'stable';
+      }
+    });
+  }
+
+  /**
+   * Agrupa padrões similares para otimização
+   */
+  private clusterSimilarPatterns(patterns: QueryPattern[]): void {
+    const clusters = new Map<string, QueryPattern[]>();
+    
+    patterns.forEach(pattern => {
+      const clusterKey = this.generateClusterKey(pattern);
+      
+      if (!clusters.has(clusterKey)) {
+        clusters.set(clusterKey, []);
+      }
+      clusters.get(clusterKey)!.push(pattern);
+    });
+    
+    // Armazenar clusters para uso posterior
+    this.contextualPatterns = clusters;
+  }
+
+  /**
+   * Calcula scores de importância para priorização
+   */
+  private calculateImportanceScores(patterns: QueryPattern[]): void {
+    patterns.forEach(pattern => {
+      let score = 0;
+      
+      // Frequência (peso 40%)
+      score += (pattern.frequency / 100) * 0.4;
+      
+      // Recência (peso 20%)
+      const daysSinceLastUse = (Date.now() - new Date(pattern.lastUsed).getTime()) / (1000 * 60 * 60 * 24);
+      score += Math.max(0, (30 - daysSinceLastUse) / 30) * 0.2;
+      
+      // Diversidade de usuários (peso 15%)
+      score += (pattern.userRoles.length / 5) * 0.15;
+      
+      // Taxa de sucesso (peso 15%)
+      score += pattern.successRate * 0.15;
+      
+      // Tendência (peso 10%)
+      const trendMultiplier = pattern.seasonality?.trends === 'increasing' ? 1.2 : 
+                             pattern.seasonality?.trends === 'decreasing' ? 0.8 : 1.0;
+      score *= trendMultiplier;
+      
+      // Armazenar score no modelo de predição
+      this.predictionModel.set(pattern.query, Math.min(1, score));
+    });
+  }
+
+  /**
+   * Atualiza modelo de predição simples
+   */
+  private updatePredictionModel(): void {
+    const patterns = Array.from(this.queryPatterns.values());
+    
+    // Modelo simples baseado em regressão linear
+    patterns.forEach(pattern => {
+      const features = [
+        pattern.frequency,
+        pattern.userRoles.length,
+        pattern.timeOfDay.length,
+        pattern.successRate,
+        this.calculateRecentUsage(pattern)
+      ];
+      
+      // Predição simples: média ponderada das features
+      const prediction = features.reduce((sum, feature, index) => {
+        const weights = [0.3, 0.2, 0.2, 0.2, 0.1]; // Pesos das features
+        return sum + (feature * weights[index]);
+      }, 0) / features.length;
+      
+      this.predictionModel.set(pattern.query, Math.min(1, prediction));
+    });
+  }
+
+  /**
+   * Identifica padrões contextuais
+   */
+  private identifyContextualPatterns(): void {
+    const patterns = Array.from(this.queryPatterns.values());
+    
+    // Agrupar por contexto (tipo de query + tags)
+    const contextGroups = new Map<string, QueryPattern[]>();
+    
+    patterns.forEach(pattern => {
+      const contextKey = `${pattern.queryType}_${pattern.contextTags.join('_')}`;
+      
+      if (!contextGroups.has(contextKey)) {
+        contextGroups.set(contextKey, []);
+      }
+      contextGroups.get(contextKey)!.push(pattern);
+    });
+    
+    this.contextualPatterns = contextGroups;
+  }
+
+  /**
+   * Warming preditivo para horários de pico
+   */
+  private async warmPredictivePeakQueries(): Promise<void> {
+    const startTime = Date.now();
+    
+    try {
+      const currentHour = new Date().getHours();
+      const nextHour = (currentHour + 1) % 24;
+      
+      // Predizer consultas para a próxima hora
+      const predictedQueries = this.predictQueriesForHour(nextHour);
+      
+      const jobs: PreCacheJob[] = [];
+      
+      for (const prediction of predictedQueries.slice(0, 40)) {
+        const job = await this.createPreCacheJob(
+          prediction.query,
+          prediction.queryType,
+          Math.ceil(prediction.probability * 5), // Converter probabilidade em prioridade
+          'predictive_peak'
+        );
+        jobs.push(job);
+      }
+      
+      await this.executePreCacheJobs(jobs);
+      
+      const duration = Date.now() - startTime;
+      this.updateStrategyStats('predictive_peak', true, duration);
+      
+      logger.info('Warming preditivo concluído', {
+        component: 'PreCacheService',
+        predictedQueries: predictedQueries.length,
+        jobsCreated: jobs.length,
+        targetHour: nextHour
+      });
+      
+    } catch (error) {
+      this.updateStrategyStats('predictive_peak', false, Date.now() - startTime);
+      logger.error('Erro no warming preditivo', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  /**
+   * Warming contextual baseado em aprendizado
+   */
+  private async warmContextualQueries(): Promise<void> {
+    const startTime = Date.now();
+    
+    try {
+      const jobs: PreCacheJob[] = [];
+      
+      // Para cada grupo contextual, gerar consultas relacionadas
+      for (const [context, patterns] of this.contextualPatterns.entries()) {
+        const relatedQueries = this.generateContextualQueries(patterns);
+        
+        for (const query of relatedQueries.slice(0, 5)) {
+          const job = await this.createPreCacheJob(
+            query.query,
+            query.queryType,
+            query.priority,
+            'contextual_learning'
+          );
+          jobs.push(job);
+        }
+      }
+      
+      await this.executePreCacheJobs(jobs.slice(0, 25));
+      
+      const duration = Date.now() - startTime;
+      this.updateStrategyStats('contextual_learning', true, duration);
+      
+      logger.info('Warming contextual concluído', {
+        component: 'PreCacheService',
+        contextsProcessed: this.contextualPatterns.size,
+        jobsCreated: jobs.length
+      });
+      
+    } catch (error) {
+      this.updateStrategyStats('contextual_learning', false, Date.now() - startTime);
+      logger.error('Erro no warming contextual', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  /**
+   * Warming sazonal baseado em padrões temporais
+   */
+  private async warmSeasonalQueries(): Promise<void> {
+    const startTime = Date.now();
+    
+    try {
+      const currentMonth = new Date().getMonth();
+      const seasonalPatterns = Array.from(this.queryPatterns.values())
+        .filter(pattern => 
+          pattern.seasonality?.month.includes(currentMonth) &&
+          pattern.seasonality.trends !== 'decreasing'
+        )
+        .sort((a, b) => b.frequency - a.frequency);
+      
+      const jobs: PreCacheJob[] = [];
+      
+      for (const pattern of seasonalPatterns.slice(0, 30)) {
+        const job = await this.createPreCacheJob(
+          pattern.query,
+          pattern.queryType,
+          this.calculateSeasonalPriority(pattern),
+          'seasonal_adaptation'
+        );
+        jobs.push(job);
+      }
+      
+      await this.executePreCacheJobs(jobs);
+      
+      const duration = Date.now() - startTime;
+      this.updateStrategyStats('seasonal_adaptation', true, duration);
+      
+      logger.info('Warming sazonal concluído', {
+        component: 'PreCacheService',
+        currentMonth,
+        seasonalPatterns: seasonalPatterns.length,
+        jobsCreated: jobs.length
+      });
+      
+    } catch (error) {
+      this.updateStrategyStats('seasonal_adaptation', false, Date.now() - startTime);
+      logger.error('Erro no warming sazonal', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  /**
+   * Warming colaborativo baseado em usuários similares
+   */
+  private async warmCollaborativeQueries(): Promise<void> {
+    const startTime = Date.now();
+    
+    try {
+      const userSimilarities = this.calculateUserSimilarities();
+      const jobs: PreCacheJob[] = [];
+      
+      for (const [userRole, similarUsers] of userSimilarities.entries()) {
+        const recommendedQueries = this.generateCollaborativeRecommendations(userRole, similarUsers);
+        
+        for (const query of recommendedQueries.slice(0, 4)) {
+          const job = await this.createPreCacheJob(
+            query.query,
+            query.queryType,
+            query.priority,
+            'collaborative_filtering'
+          );
+          jobs.push(job);
+        }
+      }
+      
+      await this.executePreCacheJobs(jobs.slice(0, 20));
+      
+      const duration = Date.now() - startTime;
+      this.updateStrategyStats('collaborative_filtering', true, duration);
+      
+      logger.info('Warming colaborativo concluído', {
+        component: 'PreCacheService',
+        userGroups: userSimilarities.size,
+        jobsCreated: jobs.length
+      });
+      
+    } catch (error) {
+      this.updateStrategyStats('collaborative_filtering', false, Date.now() - startTime);
+      logger.error('Erro no warming colaborativo', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  /**
+   * Warming de recuperação para consultas que falharam
+   */
+  private async warmFailureRecoveryQueries(): Promise<void> {
+    const startTime = Date.now();
+    
+    try {
+      const failedJobs = Array.from(this.preCacheJobs.values())
+        .filter(job => job.status === 'failed')
+        .sort((a, b) => b.priority - a.priority)
+        .slice(0, 10);
+      
+      const jobs: PreCacheJob[] = [];
+      
+      for (const failedJob of failedJobs) {
+        // Tentar novamente com prioridade reduzida
+        const job = await this.createPreCacheJob(
+          failedJob.query,
+          failedJob.queryType,
+          Math.max(1, failedJob.priority - 1),
+          'failure_recovery'
+        );
+        jobs.push(job);
+      }
+      
+      await this.executePreCacheJobs(jobs);
+      
+      const duration = Date.now() - startTime;
+      this.updateStrategyStats('failure_recovery', true, duration);
+      
+      logger.info('Warming de recuperação concluído', {
+        component: 'PreCacheService',
+        failedJobsRetried: failedJobs.length,
+        jobsCreated: jobs.length
+      });
+      
+    } catch (error) {
+      this.updateStrategyStats('failure_recovery', false, Date.now() - startTime);
+      logger.error('Erro no warming de recuperação', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  // ===== MÉTODOS AUXILIARES INTELIGENTES =====
+
+  private calculateOptimalInterval(): number {
+    // Calcular intervalo ótimo baseado na carga atual e padrões
+    const baseInterval = 30 * 60 * 1000; // 30 minutos
+    const loadFactor = this.calculateCurrentLoad();
+    
+    // Ajustar intervalo baseado na carga
+    return Math.max(15 * 60 * 1000, baseInterval * (2 - loadFactor));
+  }
+
+  private calculateCurrentLoad(): number {
+    const runningJobs = Array.from(this.preCacheJobs.values())
+      .filter(job => job.status === 'running').length;
+    const totalJobs = this.preCacheJobs.size;
+    
+    return totalJobs > 0 ? runningJobs / totalJobs : 0;
+  }
+
+  private async performInitialWarmup(): Promise<void> {
+    logger.info('Iniciando warming inicial inteligente', {
+      component: 'PreCacheService'
+    });
+    
+    // Executar apenas estratégias críticas no início
+    await this.warmFrequentQueries();
+    await this.warmPredictivePeakQueries();
+  }
+
+  private calculateRecentUsage(pattern: QueryPattern): number {
+    const daysSinceLastUse = (Date.now() - new Date(pattern.lastUsed).getTime()) / (1000 * 60 * 60 * 24);
+    return Math.max(0, pattern.frequency * Math.exp(-daysSinceLastUse / 7)); // Decay exponencial
+  }
+
+  private generateClusterKey(pattern: QueryPattern): string {
+    return `${pattern.queryType}_${pattern.contextTags.sort().join('_')}`;
+  }
+
+  private predictQueriesForHour(hour: number): Array<{query: string, queryType: QueryType, probability: number}> {
+    const predictions: Array<{query: string, queryType: QueryType, probability: number}> = [];
+    
+    for (const [query, pattern] of this.queryPatterns.entries()) {
+      if (pattern.timeOfDay.includes(hour)) {
+        const baseProbability = this.predictionModel.get(pattern.query) || 0;
+        const hourFrequency = pattern.timeOfDay.filter(h => h === hour).length / pattern.timeOfDay.length;
+        const probability = baseProbability * hourFrequency;
+        
+        predictions.push({
+          query: pattern.query,
+          queryType: pattern.queryType,
+          probability
+        });
+      }
+    }
+    
+    return predictions.sort((a, b) => b.probability - a.probability);
+  }
+
+  private generateContextualQueries(patterns: QueryPattern[]): Array<{query: string, queryType: QueryType, priority: number}> {
+    const contextualQueries: Array<{query: string, queryType: QueryType, priority: number}> = [];
+    
+    // Gerar consultas baseadas em padrões do contexto
+    patterns.forEach(pattern => {
+      const relatedQueries = this.generateRelatedQueries(pattern);
+      relatedQueries.forEach(related => {
+        contextualQueries.push({
+          ...related,
+          priority: Math.ceil((this.predictionModel.get(pattern.query) || 0) * 5)
+        });
+      });
+    });
+    
+    return contextualQueries;
+  }
+
+  private calculateSeasonalPriority(pattern: QueryPattern): number {
+    let priority = this.calculatePriority(pattern);
+    
+    if (pattern.seasonality?.trends === 'increasing') {
+      priority += 2;
+    }
+    
+    return Math.min(5, priority);
+  }
+
+  private calculateUserSimilarities(): Map<string, string[]> {
+    const similarities = new Map<string, string[]>();
+    const userPatterns = new Map<string, QueryPattern[]>();
+    
+    // Agrupar padrões por usuário
+    for (const pattern of this.queryPatterns.values()) {
+      pattern.userRoles.forEach(role => {
+        if (!userPatterns.has(role)) {
+          userPatterns.set(role, []);
+        }
+        userPatterns.get(role)!.push(pattern);
+      });
+    }
+    
+    // Calcular similaridades simples baseadas em consultas comuns
+    for (const [userRole, patterns] of userPatterns.entries()) {
+      const similarUsers: string[] = [];
+      
+      for (const [otherRole, otherPatterns] of userPatterns.entries()) {
+        if (userRole !== otherRole) {
+          const commonQueries = patterns.filter(p1 => 
+            otherPatterns.some(p2 => p1.query === p2.query)
+          ).length;
+          
+          if (commonQueries >= 2) { // Pelo menos 2 consultas em comum
+            similarUsers.push(otherRole);
+          }
+        }
+      }
+      
+      similarities.set(userRole, similarUsers);
+    }
+    
+    return similarities;
+  }
+
+  private generateCollaborativeRecommendations(
+    userRole: string, 
+    similarUsers: string[]
+  ): Array<{query: string, queryType: QueryType, priority: number}> {
+    const recommendations: Array<{query: string, queryType: QueryType, priority: number}> = [];
+    
+    // Encontrar consultas populares entre usuários similares
+    const similarUserPatterns = Array.from(this.queryPatterns.values())
+      .filter(pattern => pattern.userRoles.some(role => similarUsers.includes(role)))
+      .filter(pattern => !pattern.userRoles.includes(userRole)) // Excluir consultas já feitas pelo usuário
+      .sort((a, b) => b.frequency - a.frequency);
+    
+    similarUserPatterns.slice(0, 10).forEach(pattern => {
+      recommendations.push({
+        query: pattern.query,
+        queryType: pattern.queryType,
+        priority: Math.ceil(pattern.frequency / 10)
+      });
+    });
+    
+    return recommendations;
+  }
+
+  private updateStrategyStats(strategyName: string, success: boolean, duration: number): void {
+    const strategy = this.warmingStrategies.find(s => s.name === strategyName);
+    if (strategy) {
+      if (success) {
+        strategy.successCount++;
+      } else {
+        strategy.failureCount++;
+      }
+      
+      // Atualizar média de tempo de execução
+      const totalExecutions = strategy.successCount + strategy.failureCount;
+      strategy.avgExecutionTime = ((strategy.avgExecutionTime * (totalExecutions - 1)) + duration) / totalExecutions;
+      strategy.lastExecuted = new Date().toISOString();
+    }
+  }
+
+  // Atualizar método de registro de padrões para incluir contexto
+  recordQueryPattern(
+    query: string,
+    queryType: QueryType,
+    responseTime: number,
+    userRole: string,
+    tenantId: string,
+    contextTags: string[] = [],
+    success: boolean = true
+  ): void {
+    try {
+      const patternKey = this.generatePatternKey(query, queryType, tenantId);
+      const now = new Date();
+      const hour = now.getHours();
+      const dayOfWeek = now.getDay();
+
+      const existingPattern = this.queryPatterns.get(patternKey);
+
+      if (existingPattern) {
+        // Atualizar padrão existente
+        existingPattern.frequency++;
+        existingPattern.lastUsed = now.toISOString();
+        existingPattern.avgResponseTime =
+          (existingPattern.avgResponseTime * (existingPattern.frequency - 1) +
+            responseTime) /
+          existingPattern.frequency;
+
+        // Atualizar taxa de sucesso
+        const totalAttempts = existingPattern.frequency;
+        const previousSuccesses = Math.round(existingPattern.successRate * (totalAttempts - 1));
+        const newSuccesses = previousSuccesses + (success ? 1 : 0);
+        existingPattern.successRate = newSuccesses / totalAttempts;
+
+        if (!existingPattern.userRoles.includes(userRole)) {
+          existingPattern.userRoles.push(userRole);
+        }
+
+        if (!existingPattern.timeOfDay.includes(hour)) {
+          existingPattern.timeOfDay.push(hour);
+        }
+
+        if (!existingPattern.dayOfWeek.includes(dayOfWeek)) {
+          existingPattern.dayOfWeek.push(dayOfWeek);
+        }
+
+        // Atualizar tags de contexto
+        contextTags.forEach(tag => {
+          if (!existingPattern.contextTags.includes(tag)) {
+            existingPattern.contextTags.push(tag);
+          }
+        });
+      } else {
+        // Criar novo padrão
+        const newPattern: QueryPattern = {
+          query,
+          queryType,
+          frequency: 1,
+          lastUsed: now.toISOString(),
+          avgResponseTime: responseTime,
+          userRoles: [userRole],
+          timeOfDay: [hour],
+          dayOfWeek: [dayOfWeek],
+          tenantId,
+          contextTags: [...contextTags],
+          successRate: success ? 1.0 : 0.0
+        };
+
+        this.queryPatterns.set(patternKey, newPattern);
+      }
+
+      logger.debug('Padrão de consulta registrado', {
+        component: 'PreCacheService',
+        patternKey,
+        frequency: this.queryPatterns.get(patternKey)?.frequency,
+        queryType,
+        userRole,
+        contextTags,
+        success
+      });
+    } catch (error) {
+      logger.error('Erro ao registrar padrão de consulta', {
+        component: 'PreCacheService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  // Parar serviço atualizado
+  stop(): void {
+    if (!this.isRunning) return;
+
+    this.isRunning = false;
+
+    if (this.warmingInterval) {
+      clearInterval(this.warmingInterval);
+      this.warmingInterval = undefined;
+    }
+
+    if (this.patternAnalysisInterval) {
+      clearInterval(this.patternAnalysisInterval);
+      this.patternAnalysisInterval = undefined;
+    }
+
+    logger.info('Serviço de pré-cache inteligente parado', {
+      component: 'PreCacheService'
+    });
+  }
+}
+
+// Instância singleton
+export const preCacheService = new PreCacheService();
+
+export type { QueryPattern, PreCacheJob, CacheWarmingStrategy };
 export default PreCacheService;

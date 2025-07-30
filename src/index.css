@@ -155,8 +155,24 @@ body {
 /* Utilitários customizados */
 .glass-effect {
   background: rgba(15, 23, 42, 0.8);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Compatibilidade com Safari para user-select */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.select-text {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 .gradient-text {
@@ -184,6 +200,32 @@ body {
 /* Estados de loading */
 .loading-skeleton {
   @apply animate-pulse bg-slate-700 rounded;
+}
+
+/* Cross-browser compatibility fixes */
+* {
+  -webkit-user-select: inherit;
+  -moz-user-select: inherit;
+  -ms-user-select: inherit;
+  user-select: inherit;
+}
+
+input, textarea, button, select {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Fallbacks para propriedades modernas */
+.backdrop-blur {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.backdrop-saturate {
+  -webkit-backdrop-filter: saturate(180%);
+  backdrop-filter: saturate(180%);
 }
 
 /* Print styles */

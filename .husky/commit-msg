@@ -4,8 +4,14 @@
 # Commit message hook para FisioFlow
 echo "📝 Validando mensagem de commit..."
 
-# 1. Commitlint (padrão convencional)
-npx --no-install commitlint --edit "$1"
+# 1. Commitlint (padrão convencional) - com fallback para Windows
+if command -v npx >/dev/null 2>&1; then
+  npx --no-install commitlint --edit "$1"
+elif command -v npm >/dev/null 2>&1; then
+  npm exec commitlint --edit "$1"
+else
+  echo "⚠️  npx/npm não encontrado, pulando commitlint"
+fi
 
 # 2. Verificações adicionais
 commit_regex='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,50}'

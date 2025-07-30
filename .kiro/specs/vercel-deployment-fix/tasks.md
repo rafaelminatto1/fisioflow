@@ -11,6 +11,10 @@
 
 
 - [ ] 2. Corrigir duplicação de QueryClient
+
+
+
+
   - Remover QueryClient duplicado do src/App.tsx
   - Manter apenas a configuração do index.tsx como ponto único de entrada
 

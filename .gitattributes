@@ -110,6 +110,10 @@ pnpm-lock.yaml linguist-generated=true
 dist/* linguist-generated=true
 build/* linguist-generated=true
 coverage/* linguist-generated=true
+.next/* linguist-generated=true
+.nuxt/* linguist-generated=true
+.cache/* linguist-generated=true
+.parcel-cache/* linguist-generated=true
 
 # Minified files
 *.min.js linguist-generated=true
@@ -118,3 +122,36 @@ coverage/* linguist-generated=true
 # Generated documentation
 docs/api/* linguist-generated=true
 *.generated.* linguist-generated=true
+
+# FisioFlow specific configurations
+# Merge strategies for sensitive files
+*.env merge=ours
+*.env.local merge=ours
+*.key merge=ours
+secrets.json merge=ours
+
+# PWA files - important for deployment
+public/sw.js text eol=lf
+public/manifest.json text eol=lf
+
+# TypeScript definition files
+*.d.ts linguist-generated=true
+
+# Test files should not count towards language statistics
+**/__tests__/** linguist-vendored=true
+**/*.test.* linguist-vendored=true
+**/*.spec.* linguist-vendored=true
+
+# Vendor/third-party code
+node_modules/** linguist-vendored=true
+public/demo-setup.js linguist-vendored=true
+
+# Old/backup directories
+old/** linguist-vendored=true
+backup/** linguist-vendored=true
+*.backup linguist-vendored=true
+
+# Language detection overrides
+components/**/*.tsx linguist-language=TypeScript
+services/**/*.ts linguist-language=TypeScript
+hooks/**/*.tsx linguist-language=TypeScript

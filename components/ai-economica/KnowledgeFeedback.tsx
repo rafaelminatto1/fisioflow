@@ -1,606 +1,330 @@
-// components/ai-economica/KnowledgeFeedback.tsx
-// Componente para feedback e avaliação de conhecimento
-
-import React, { useState, useEffect } from 'react';
-import {
-  feedbackService,
-  FeedbackEntry,
-  QualityMetrics,
-  ImprovementSuggestion,
-} from '../../services/ai-economica/feedbackService';
-import { KnowledgeEntry } from '../../types/ai-economica.types';
+import React, { useState } from 'react';
+import { Star, ThumbsUp, ThumbsDown, MessageSquare, Send, AlertCircle } from 'lucide-react';
+import { FeedbackType } from '../../types/ai-economica.types';
+import { feedbackService } from '../../services/ai-economica/feedbackService';
 
 interface KnowledgeFeedbackProps {
-  knowledgeEntry: KnowledgeEntry;
+  entryId: string;
   userId: string;
-  userRole: string;
-  tenantId: string;
   onFeedbackSubmitted?: () => void;
+  compact?: boolean;
 }
 
-interface FeedbackFormData {
-  type: FeedbackEntry['type'];
-  rating: number;
-  comment: string;
-  suggestions: string;
-}
-
-const FEEDBACK_TYPES = [
-  {
-    value: 'helpful',
-    label: '👍 Útil',
-    description: 'Este conhecimento me ajudou',
-    color: 'text-green-600',
-  },
-  {
-    value: 'not_helpful',
-    label: '👎 Não útil',
-    description: 'Este conhecimento não me ajudou',
-    color: 'text-red-600',
-  },
-  {
-    value: 'incorrect',
-    label: '❌ Incorreto',
-    description: 'Há informações incorretas',
-    color: 'text-red-700',
-  },
-  {
-    value: 'outdated',
-    label: '📅 Desatualizado',
-    description: 'As informações estão desatualizadas',
-    color: 'text-orange-600',
-  },
-  {
-    value: 'suggestion',
-    label: '💡 Sugestão',
-    description: 'Tenho sugestões de melhoria',
-    color: 'text-blue-600',
-  },
-];
-
-const RATING_LABELS = {
-  1: 'Muito ruim',
-  2: 'Ruim',
-  3: 'Regular',
-  4: 'Bom',
-  5: 'Excelente',
-};
-
+/**
+ * Componente para coleta de feedback sobre entradas da base de conhecimento
+ */
 export const KnowledgeFeedback: React.FC<KnowledgeFeedbackProps> = ({
-  knowledgeEntry,
+  entryId,
   userId,
-  userRole,
-  tenantId,
   onFeedbackSubmitted,
+  compact = false
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [rating, setRating] = useState<number>(0);
+  const [feedbackType, setFeedbackType] = useState<FeedbackType>('quality');
+  const [comment, setComment] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>(['']);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [formData, setFormData] = useState<FeedbackFormData>({
-    type: 'helpful',
-    rating: 5,
-    comment: '',
-    suggestions: '',
-  });
+  const [showDetailedForm, setShowDetailedForm] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  const [existingFeedbacks, setExistingFeedbacks] = useState<FeedbackEntry[]>(
-    []
-  );
-  const [qualityMetrics, setQualityMetrics] = useState<QualityMetrics | null>(
-    null
-  );
-  const [improvements, setImprovements] = useState<ImprovementSuggestion[]>([]);
+  const handleQuickFeedback = async (quickRating: number, type: FeedbackType) => {
+    if (isSubmitting) return;
 
-  useEffect(() => {
-    loadFeedbackData();
-  }, [knowledgeEntry.id]);
-
-  const loadFeedbackData = async () => {
-    try {
-      const [feedbacks, metrics, suggestions] = await Promise.all([
-        feedbackService.getFeedbacksForEntry(knowledgeEntry.id),
-        feedbackService.getQualityMetrics(knowledgeEntry.id),
-        feedbackService.getImprovementSuggestions({
-          entryId: knowledgeEntry.id,
-        }),
-      ]);
-
-      setExistingFeedbacks(feedbacks);
-      setQualityMetrics(metrics);
-      setImprovements(suggestions);
-    } catch (error) {
-      console.error('Erro ao carregar dados de feedback:', error);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      await feedbackService.submitFeedback({
-        knowledgeEntryId: knowledgeEntry.id,
+      await feedbackService.submitFeedback(
+        entryId,
         userId,
-        tenantId,
-        type: formData.type,
-        rating: formData.rating,
-        comment: formData.comment || undefined,
-        suggestions: formData.suggestions || undefined,
-        metadata: {
-          userRole,
-          queryContext: 'knowledge_review',
-        },
-      });
-
-      // Reset form
-      setFormData({
-        type: 'helpful',
-        rating: 5,
-        comment: '',
-        suggestions: '',
-      });
-
-      setIsOpen(false);
-      await loadFeedbackData();
+        quickRating,
+        type
+      );
+      
+      setSubmitted(true);
       onFeedbackSubmitted?.();
+      
+      setTimeout(() => setSubmitted(false), 3000);
     } catch (error) {
-      console.error('Erro ao enviar feedback:', error);
+      console.error('Erro ao enviar feedback rápido:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const handleDetailedSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting || rating === 0) return;
 
-  const getFeedbackTypeInfo = (type: FeedbackEntry['type']) => {
-    return FEEDBACK_TYPES.find((t) => t.value === type) || FEEDBACK_TYPES[0];
-  };
-
-  const getPriorityColor = (priority: ImprovementSuggestion['priority']) => {
-    switch (priority) {
-      case 'critical':
-        return 'text-red-700 bg-red-100';
-      case 'high':
-        return 'text-orange-700 bg-orange-100';
-      case 'medium':
-        return 'text-yellow-700 bg-yellow-100';
-      case 'low':
-        return 'text-blue-700 bg-blue-100';
-      default:
-        return 'text-gray-700 bg-gray-100';
+    setIsSubmitting(true);
+    try {
+      const validSuggestions = suggestions.filter(s => s.trim().length > 0);
+      
+      await feedbackService.submitFeedback(
+        entryId,
+        userId,
+        rating,
+        feedbackType,
+        comment.trim() || undefined,
+        validSuggestions.length > 0 ? validSuggestions : undefined
+      );
+      
+      setSubmitted(true);
+      setShowDetailedForm(false);
+      resetForm();
+      onFeedbackSubmitted?.();
+      
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (error) {
+      console.error('Erro ao enviar feedback detalhado:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const getStatusColor = (status: ImprovementSuggestion['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'text-yellow-700 bg-yellow-100';
-      case 'in_progress':
-        return 'text-blue-700 bg-blue-100';
-      case 'completed':
-        return 'text-green-700 bg-green-100';
-      case 'rejected':
-        return 'text-red-700 bg-red-100';
-      default:
-        return 'text-gray-700 bg-gray-100';
+  const resetForm = () => {
+    setRating(0);
+    setFeedbackType('quality');
+    setComment('');
+    setSuggestions(['']);
+  };
+
+  const addSuggestionField = () => {
+    setSuggestions([...suggestions, '']);
+  };
+
+  const updateSuggestion = (index: number, value: string) => {
+    const newSuggestions = [...suggestions];
+    newSuggestions[index] = value;
+    setSuggestions(newSuggestions);
+  };
+
+  const removeSuggestion = (index: number) => {
+    if (suggestions.length > 1) {
+      setSuggestions(suggestions.filter((_, i) => i !== index));
     }
   };
+
+  if (submitted) {
+    return (
+      <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+        <ThumbsUp className="w-4 h-4" />
+        <span className="text-sm font-medium">Obrigado pelo seu feedback!</span>
+      </div>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+        <span className="text-xs text-gray-600">Esta resposta foi útil?</span>
+        
+        <button
+          onClick={() => handleQuickFeedback(5, 'quality')}
+          disabled={isSubmitting}
+          className="flex items-center gap-1 px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors disabled:opacity-50"
+        >
+          <ThumbsUp className="w-3 h-3" />
+          Sim
+        </button>
+        
+        <button
+          onClick={() => handleQuickFeedback(2, 'quality')}
+          disabled={isSubmitting}
+          className="flex items-center gap-1 px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors disabled:opacity-50"
+        >
+          <ThumbsDown className="w-3 h-3" />
+          Não
+        </button>
+        
+        <button
+          onClick={() => setShowDetailedForm(true)}
+          className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
+        >
+          <MessageSquare className="w-3 h-3" />
+          Comentar
+        </button>
+      </div>
+    );
+  }
+
+  if (!showDetailedForm) {
+    return (
+      <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
+        <h4 className="text-sm font-medium text-gray-900">
+          Como você avalia esta informação?
+        </h4>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleQuickFeedback(5, 'quality')}
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <ThumbsUp className="w-4 h-4" />
+            <span className="text-sm">Muito útil</span>
+          </button>
+          
+          <button
+            onClick={() => handleQuickFeedback(3, 'quality')}
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-3 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <AlertCircle className="w-4 h-4" />
+            <span className="text-sm">Parcialmente útil</span>
+          </button>
+          
+          <button
+            onClick={() => handleQuickFeedback(1, 'quality')}
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <ThumbsDown className="w-4 h-4" />
+            <span className="text-sm">Não útil</span>
+          </button>
+        </div>
+        
+        <button
+          onClick={() => setShowDetailedForm(true)}
+          className="text-sm text-blue-600 hover:text-blue-800 underline"
+        >
+          Dar feedback detalhado
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-6 border-t border-gray-200 pt-6">
-      {/* Header com métricas */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <h3 className="text-lg font-semibold text-gray-900">Feedback</h3>
-
-          {qualityMetrics && (
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center">
-                <span className="mr-1 text-sm text-gray-600">Avaliação:</span>
-                <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <svg
-                      key={star}
-                      className={`h-4 w-4 ${
-                        star <= qualityMetrics.averageRating
-                          ? 'text-yellow-400'
-                          : 'text-gray-300'
-                      }`}
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                  <span className="ml-1 text-sm text-gray-600">
-                    {qualityMetrics.averageRating.toFixed(1)} (
-                    {qualityMetrics.totalFeedbacks})
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center">
-                <span className="mr-1 text-sm text-gray-600">Confiança:</span>
-                <span
-                  className={`text-sm font-medium ${
-                    qualityMetrics.confidenceScore >= 0.8
-                      ? 'text-green-600'
-                      : qualityMetrics.confidenceScore >= 0.6
-                        ? 'text-yellow-600'
-                        : 'text-red-600'
-                  }`}
-                >
-                  {Math.round(qualityMetrics.confidenceScore * 100)}%
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
-            {showHistory ? 'Ocultar histórico' : 'Ver histórico'}
-          </button>
-
-          <button
-            onClick={() => setIsOpen(true)}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-          >
-            Dar Feedback
-          </button>
-        </div>
+    <div className="space-y-4 p-4 bg-white border border-gray-200 rounded-lg">
+      <div className="flex items-center justify-between">
+        <h4 className="text-lg font-medium text-gray-900">
+          Feedback Detalhado
+        </h4>
+        <button
+          onClick={() => setShowDetailedForm(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          ✕
+        </button>
       </div>
 
-      {/* Alertas de problemas */}
-      {qualityMetrics &&
-        (qualityMetrics.incorrectCount > 0 ||
-          qualityMetrics.outdatedCount > 0) && (
-          <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
-            <div className="flex items-center">
-              <svg
-                className="mr-2 h-5 w-5 text-yellow-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
+      <form onSubmit={handleDetailedSubmit} className="space-y-4">
+        {/* Avaliação por estrelas */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Avaliação geral
+          </label>
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                className={`p-1 rounded transition-colors ${
+                  star <= rating
+                    ? 'text-yellow-400 hover:text-yellow-500'
+                    : 'text-gray-300 hover:text-gray-400'
+                }`}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div className="text-sm">
-                <span className="font-medium text-yellow-800">Atenção:</span>
-                <span className="ml-1 text-yellow-700">
-                  {qualityMetrics.incorrectCount > 0 &&
-                    `${qualityMetrics.incorrectCount} relato(s) de conteúdo incorreto`}
-                  {qualityMetrics.incorrectCount > 0 &&
-                    qualityMetrics.outdatedCount > 0 &&
-                    ', '}
-                  {qualityMetrics.outdatedCount > 0 &&
-                    `${qualityMetrics.outdatedCount} relato(s) de conteúdo desatualizado`}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-      {/* Sugestões de melhoria pendentes */}
-      {improvements.filter(
-        (i) =>
-          i.status === 'pending' &&
-          (i.priority === 'critical' || i.priority === 'high')
-      ).length > 0 && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
-          <div className="mb-2 flex items-center">
-            <svg
-              className="mr-2 h-5 w-5 text-red-600"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="font-medium text-red-800">
-              Melhorias Urgentes Pendentes
+                <Star className="w-6 h-6 fill-current" />
+              </button>
+            ))}
+            <span className="ml-2 text-sm text-gray-600">
+              {rating > 0 && (
+                rating === 1 ? 'Muito ruim' :
+                rating === 2 ? 'Ruim' :
+                rating === 3 ? 'Regular' :
+                rating === 4 ? 'Bom' : 'Excelente'
+              )}
             </span>
           </div>
-          <div className="space-y-1">
-            {improvements
-              .filter(
-                (i) =>
-                  i.status === 'pending' &&
-                  (i.priority === 'critical' || i.priority === 'high')
-              )
-              .slice(0, 3)
-              .map((improvement) => (
-                <div key={improvement.id} className="text-sm text-red-700">
-                  <span
-                    className={`mr-2 inline-block rounded px-2 py-1 text-xs font-medium ${getPriorityColor(improvement.priority)}`}
-                  >
-                    {improvement.priority.toUpperCase()}
-                  </span>
-                  {improvement.description}
-                </div>
-              ))}
-          </div>
         </div>
-      )}
 
-      {/* Histórico de feedbacks */}
-      {showHistory && existingFeedbacks.length > 0 && (
-        <div className="mb-6 rounded-lg bg-gray-50 p-4">
-          <h4 className="mb-3 font-medium text-gray-900">
-            Histórico de Feedbacks
-          </h4>
-          <div className="max-h-60 space-y-3 overflow-y-auto">
-            {existingFeedbacks.slice(0, 10).map((feedback) => {
-              const typeInfo = getFeedbackTypeInfo(feedback.type);
-              return (
-                <div
-                  key={feedback.id}
-                  className="rounded-lg border border-gray-200 bg-white p-3"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="mb-1 flex items-center space-x-2">
-                        <span
-                          className={`text-sm font-medium ${typeInfo.color}`}
-                        >
-                          {typeInfo.label}
-                        </span>
-                        <div className="flex items-center">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <svg
-                              key={star}
-                              className={`h-3 w-3 ${
-                                star <= feedback.rating
-                                  ? 'text-yellow-400'
-                                  : 'text-gray-300'
-                              }`}
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                          <span className="ml-1 text-xs text-gray-600">
-                            {feedback.rating}/5
-                          </span>
-                        </div>
-                      </div>
-
-                      {feedback.comment && (
-                        <p className="mb-1 text-sm text-gray-700">
-                          {feedback.comment}
-                        </p>
-                      )}
-
-                      {feedback.suggestions && (
-                        <p className="rounded bg-blue-50 p-2 text-sm text-blue-700">
-                          <strong>Sugestão:</strong> {feedback.suggestions}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="ml-4 text-xs text-gray-500">
-                      {formatDate(feedback.timestamp)}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {/* Tipo de feedback */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Tipo de feedback
+          </label>
+          <select
+            value={feedbackType}
+            onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="quality">Qualidade do conteúdo</option>
+            <option value="accuracy">Precisão das informações</option>
+            <option value="completeness">Completude da resposta</option>
+            <option value="relevance">Relevância para o caso</option>
+            <option value="clarity">Clareza da explicação</option>
+            <option value="usefulness">Utilidade prática</option>
+          </select>
         </div>
-      )}
 
-      {/* Modal de feedback */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-xl">
-            <div className="p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Avaliar Conhecimento
-                </h3>
+        {/* Comentário */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Comentário (opcional)
+          </label>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Descreva sua experiência com esta informação..."
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Sugestões de melhoria */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Sugestões de melhoria (opcional)
+          </label>
+          {suggestions.map((suggestion, index) => (
+            <div key={index} className="flex items-center gap-2 mb-2">
+              <input
+                type="text"
+                value={suggestion}
+                onChange={(e) => updateSuggestion(index, e.target.value)}
+                placeholder="Como esta informação poderia ser melhorada?"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {suggestions.length > 1 && (
                 <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  type="button"
+                  onClick={() => removeSuggestion(index)}
+                  className="text-red-500 hover:text-red-700"
                 >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  ✕
                 </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Tipo de feedback */}
-                <div>
-                  <label className="mb-3 block text-sm font-medium text-gray-700">
-                    Tipo de Feedback
-                  </label>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {FEEDBACK_TYPES.map((type) => (
-                      <label
-                        key={type.value}
-                        className="relative cursor-pointer"
-                      >
-                        <input
-                          type="radio"
-                          name="type"
-                          value={type.value}
-                          checked={formData.type === type.value}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              type: e.target.value as FeedbackEntry['type'],
-                            }))
-                          }
-                          className="sr-only"
-                        />
-                        <div
-                          className={`rounded-lg border-2 p-3 transition-all ${
-                            formData.type === type.value
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <div className={`font-medium ${type.color}`}>
-                            {type.label}
-                          </div>
-                          <div className="mt-1 text-sm text-gray-600">
-                            {type.description}
-                          </div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Avaliação */}
-                <div>
-                  <label className="mb-3 block text-sm font-medium text-gray-700">
-                    Avaliação Geral
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({ ...prev, rating: star }))
-                          }
-                          className={`h-8 w-8 ${
-                            star <= formData.rating
-                              ? 'text-yellow-400 hover:text-yellow-500'
-                              : 'text-gray-300 hover:text-gray-400'
-                          } transition-colors`}
-                        >
-                          <svg fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        </button>
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      {
-                        RATING_LABELS[
-                          formData.rating as keyof typeof RATING_LABELS
-                        ]
-                      }
-                    </span>
-                  </div>
-                </div>
-
-                {/* Comentário */}
-                <div>
-                  <label
-                    htmlFor="comment"
-                    className="mb-2 block text-sm font-medium text-gray-700"
-                  >
-                    Comentário{' '}
-                    {formData.type === 'incorrect' ||
-                    formData.type === 'outdated'
-                      ? '(obrigatório)'
-                      : '(opcional)'}
-                  </label>
-                  <textarea
-                    id="comment"
-                    rows={4}
-                    value={formData.comment}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        comment: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={
-                      formData.type === 'incorrect'
-                        ? 'Descreva qual informação está incorreta...'
-                        : formData.type === 'outdated'
-                          ? 'Explique por que o conteúdo está desatualizado...'
-                          : 'Compartilhe sua experiência com este conhecimento...'
-                    }
-                    required={
-                      formData.type === 'incorrect' ||
-                      formData.type === 'outdated'
-                    }
-                  />
-                </div>
-
-                {/* Sugestões */}
-                {formData.type === 'suggestion' && (
-                  <div>
-                    <label
-                      htmlFor="suggestions"
-                      className="mb-2 block text-sm font-medium text-gray-700"
-                    >
-                      Sugestões de Melhoria *
-                    </label>
-                    <textarea
-                      id="suggestions"
-                      rows={4}
-                      value={formData.suggestions}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          suggestions: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Descreva suas sugestões para melhorar este conhecimento..."
-                      required
-                    />
-                  </div>
-                )}
-
-                {/* Botões */}
-                <div className="flex justify-end space-x-3 border-t border-gray-200 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsOpen(false)}
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Enviando...' : 'Enviar Feedback'}
-                  </button>
-                </div>
-              </form>
+              )}
             </div>
-          </div>
+          ))}
+          <button
+            type="button"
+            onClick={addSuggestionField}
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            + Adicionar outra sugestão
+          </button>
         </div>
-      )}
+
+        {/* Botões de ação */}
+        <div className="flex items-center gap-3 pt-4">
+          <button
+            type="submit"
+            disabled={isSubmitting || rating === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Send className="w-4 h-4" />
+            {isSubmitting ? 'Enviando...' : 'Enviar Feedback'}
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => setShowDetailedForm(false)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg transition-colors"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

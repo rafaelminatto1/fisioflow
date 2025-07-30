@@ -253,7 +253,7 @@ export const AnatomicalBodyMap: React.FC<AnatomicalBodyMapProps> = ({
       <svg
         viewBox="0 0 330 270"
         className="h-full w-full rounded-lg border border-gray-200 bg-white"
-        style={{ userSelect: 'none' }}
+        style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
       >
         {/* Corpo base (silhueta) */}
         <defs>

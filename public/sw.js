@@ -45,13 +45,17 @@ const CACHE_STRATEGIES = {
 
 // Instala o Service Worker
 self.addEventListener('install', (event) => {
-  console.log('🔧 Service Worker instalando...');
+  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+    console.log('🔧 Service Worker instalando...');
+  }
   
   event.waitUntil(
     Promise.all([
       // Cache assets estáticos
       caches.open(STATIC_CACHE).then((cache) => {
-        console.log('📦 Cacheando assets estáticos');
+        if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+          console.log('📦 Cacheando assets estáticos');
+        }
         return cache.addAll(STATIC_ASSETS);
       }),
       
@@ -63,7 +67,9 @@ self.addEventListener('install', (event) => {
 
 // Ativa o Service Worker
 self.addEventListener('activate', (event) => {
-  console.log('✅ Service Worker ativado');
+  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+    console.log('✅ Service Worker ativado');
+  }
   
   event.waitUntil(
     Promise.all([
@@ -77,7 +83,9 @@ self.addEventListener('activate', (event) => {
               cacheName !== API_CACHE
             )
             .map(cacheName => {
-              console.log(`🗑️ Removendo cache antigo: ${cacheName}`);
+              if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+                console.log(`🗑️ Removendo cache antigo: ${cacheName}`);
+              }
               return caches.delete(cacheName);
             })
         );
@@ -153,11 +161,17 @@ async function cacheFirst(request) {
     const cachedResponse = await cache.match(request);
     
     if (cachedResponse) {
-      console.log(`💾 Cache hit: ${request.url}`);
+      // Log apenas em desenvolvimento
+      if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+        console.log(`💾 Cache hit: ${request.url}`);
+      }
       return cachedResponse;
     }
     
-    console.log(`🌐 Cache miss, buscando: ${request.url}`);
+    // Log apenas em desenvolvimento
+    if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+      console.log(`🌐 Cache miss, buscando: ${request.url}`);
+    }
     const networkResponse = await fetch(request);
     
     if (networkResponse.ok && networkResponse.status < 400) {
@@ -188,7 +202,9 @@ async function cacheFirst(request) {
     const cachedResponse = await cache.match(request);
     
     if (cachedResponse) {
-      console.log(`💾 Fallback cache hit: ${request.url}`);
+      if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+        console.log(`💾 Fallback cache hit: ${request.url}`);
+      }
       return cachedResponse;
     }
     
@@ -202,7 +218,9 @@ async function cacheFirst(request) {
 // Network First - tenta network primeiro, fallback para cache
 async function networkFirst(request) {
   try {
-    console.log(`🌐 Network first: ${request.url}`);
+    if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+      console.log(`🌐 Network first: ${request.url}`);
+    }
     const networkResponse = await fetch(request);
     
     if (networkResponse.ok) {
@@ -226,7 +244,9 @@ async function networkFirst(request) {
     
     return networkResponse;
   } catch (error) {
-    console.log(`💾 Network falhou, tentando cache: ${request.url}`);
+    if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+      console.log(`💾 Network falhou, tentando cache: ${request.url}`);
+    }
     
     const cache = await caches.open(API_CACHE);
     const cachedResponse = await cache.match(request);
@@ -237,7 +257,9 @@ async function networkFirst(request) {
       const isExpired = cachedAt && (Date.now() - parseInt(cachedAt)) > 5 * 60 * 1000;
       
       if (!isExpired) {
-        console.log(`💾 Cache offline hit: ${request.url}`);
+        if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+          console.log(`💾 Cache offline hit: ${request.url}`);
+        }
         return cachedResponse;
       }
     }
@@ -272,11 +294,15 @@ async function staleWhileRevalidate(request) {
   });
   
   if (cachedResponse) {
-    console.log(`💾 Stale cache hit: ${request.url}`);
+    if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+      console.log(`💾 Stale cache hit: ${request.url}`);
+    }
     return cachedResponse;
   }
   
-  console.log(`🌐 No cache, aguardando network: ${request.url}`);
+  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+    console.log(`🌐 No cache, aguardando network: ${request.url}`);
+  }
   return fetchPromise;
 }
 

@@ -1,695 +1,730 @@
 // services/ai-economica/aiService.ts
 // Serviço principal de IA econômica - Orquestrador do fluxo: base interna → cache → premium
 
-import { 
-  AIQuery, 
-  AIResponse, 
-  QueryType, 
+import {
+  AIQuery,
+  AIResponse,
+  QueryType,
   KnowledgeResult,
   ResponseSource,
-  PremiumProvider 
-} from '../../types/ai-economica.types'
-import { aiLogger } from './logger'
-import { KnowledgeBaseService } from './knowledgeBaseService'
-import { CacheService } from './cacheService'
-import { PremiumAccountManager } from './premiumAccountManager'
-import { PreCacheService } from './preCacheService'
-import { monitoringService } from './monitoringService'
-import { feedbackService } from './feedbackService'
+  PremiumProvider,
+} from '../../types/ai-economica.types';
+import { logger } from './logger';
+import { knowledgeBaseService } from './knowledgeBaseService';
+import { cacheService } from './cacheService';
+import { premiumAccountManager } from './premiumAccountManager';
+import { preCacheService } from './preCacheService';
+import { monitoringService } from './monitoringService';
 
 interface AIServiceConfig {
-  internalConfidenceThreshold: number // Mínimo para usar resposta interna
-  cacheEnabled: boolean
-  premiumEnabled: boolean
-  maxResponseTime: number // ms
-  fallbackEnabled: boolean
+  internalConfidenceThreshold: number; // Mínimo para usar resposta interna
+  cacheEnabled: boolean;
+  premiumEnabled: boolean;
+  maxResponseTime: number; // ms
+  fallbackEnabled: boolean;
 }
 
 interface ProcessingContext {
-  query: AIQuery
-  startTime: number
-  attemptedSources: ResponseSource[]
-  internalResults?: KnowledgeResult[]
-  cacheResult?: AIResponse
-  premiumResult?: AIResponse
-  selectedProvider?: PremiumProvider
-  errors: Array<{ source: ResponseSource; error: string }>
+  query: AIQuery;
+  startTime: number;
+  attemptedSources: ResponseSource[];
+  internalResults?: KnowledgeResult[];
+  cacheResult?: AIResponse;
+  premiumResult?: AIResponse;
+  selectedProvider?: PremiumProvider;
+  errors: Array<{ source: ResponseSource; error: string }>;
 }
 
 interface ResponseQuality {
-  confidence: number
-  relevance: number
-  completeness: number
-  accuracy: number
-  overall: number
+  confidence: number;
+  relevance: number;
+  completeness: number;
+  accuracy: number;
+  overall: number;
 }
 
 export class AIService {
-  private knowledgeBase: KnowledgeBaseService
-  private cache: CacheService
-  private premiumManager: PremiumAccountManager
-  private preCache: PreCacheService
-  private config: AIServiceConfig
+  private config: AIServiceConfig;
 
   constructor() {
-    this.knowledgeBase = new KnowledgeBaseService()
-    this.cache = new CacheService()
-    this.premiumManager = new PremiumAccountManager()
-    this.preCache = new PreCacheService(this.cache)
-    
     this.config = {
       internalConfidenceThreshold: 0.7,
       cacheEnabled: true,
       premiumEnabled: true,
       maxResponseTime: 30000, // 30 segundos
-      fallbackEnabled: true
-    }
+      fallbackEnabled: true,
+    };
 
-    // Inicializar serviços
-    this.preCache.start()
-    
-    aiLogger.info('AI_SERVICE', 'Serviço principal de IA econômica inicializado')
+    // Iniciar serviços
+    preCacheService.start();
+
+    logger.info('Serviço principal de IA econômica inicializado', {
+      component: 'AIService'
+    });
   }
 
-  // Método principal para processar consultas
+  // Método principal - processa consulta seguindo o fluxo econômico
   async processQuery(query: AIQuery): Promise<AIResponse> {
     const context: ProcessingContext = {
       query,
       startTime: Date.now(),
       attemptedSources: [],
-      errors: []
-    }
+      errors: [],
+    };
 
     try {
-      // Validar consulta
-      this.validateQuery(query)
-      
-      // Registrar padrão para pré-cache
-      this.recordQueryPattern(query)
-      
-      // Executar fluxo econômico
-      const response = await this.executeEconomicFlow(context)
-      
-      // Calcular métricas finais
-      const responseTime = Date.now() - context.startTime
-      response.responseTime = responseTime
-      
-      // Registrar uso e métricas
-      await this.recordQueryMetrics(context, response)
-      
-      // Log de sucesso
-      aiLogger.info('AI_SERVICE', 'Consulta processada com sucesso', {
+      logger.info('Iniciando processamento de consulta', {
+        component: 'AIService',
         queryId: query.id,
-        source: response.source,
-        provider: response.provider,
-        responseTime,
-        confidence: response.confidence,
-        attemptedSources: context.attemptedSources
-      })
-
-      return response
-      
-    } catch (error) {
-      const responseTime = Date.now() - context.startTime
-      
-      // Log de erro
-      aiLogger.error('AI_SERVICE', 'Erro ao processar consulta', {
-        queryId: query.id,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        responseTime,
-        attemptedSources: context.attemptedSources,
-        errors: context.errors
-      })
-      
-      // Tentar fallback se habilitado
-      if (this.config.fallbackEnabled) {
-        return this.generateFallbackResponse(query, error as Error)
-      }
-      
-      throw error
-    }
-  }
-
-  // Executar fluxo econômico: base interna → cache → premium
-  private async executeEconomicFlow(context: ProcessingContext): Promise<AIResponse> {
-    const { query } = context
-    
-    // 1. PRIMEIRA PRIORIDADE: Base de conhecimento interna
-    try {
-      context.attemptedSources.push('internal')
-      const internalResponse = await this.searchInternalKnowledge(query)
-      
-      if (internalResponse && internalResponse.confidence >= this.config.internalConfidenceThreshold) {
-        context.internalResults = internalResponse.results
-        
-        aiLogger.info('AI_SERVICE', 'Resposta obtida da base interna', {
-          queryId: query.id,
-          confidence: internalResponse.confidence,
-          resultsCount: internalResponse.results.length
-        })
-        
-        return {
-          id: this.generateResponseId(),
-          queryId: query.id,
-          content: internalResponse.content,
-          confidence: internalResponse.confidence,
-          source: 'internal',
-          references: internalResponse.references,
-          suggestions: internalResponse.suggestions,
-          followUpQuestions: internalResponse.followUpQuestions,
-          responseTime: 0,
-          createdAt: new Date().toISOString(),
-          metadata: {
-            reliability: internalResponse.confidence,
-            relevance: internalResponse.relevance || 0.9
-          }
-        }
-      }
-    } catch (error) {
-      context.errors.push({
-        source: 'internal',
-        error: error instanceof Error ? error.message : 'Erro na base interna'
-      })
-      
-      aiLogger.warn('AI_SERVICE', 'Erro na busca interna, continuando para cache', {
-        queryId: query.id,
-        error
-      })
-    }
-
-    // 2. SEGUNDA PRIORIDADE: Cache
-    if (this.config.cacheEnabled) {
-      try {
-        context.attemptedSources.push('cache')
-        const cacheKey = this.generateCacheKey(query)
-        const cachedResponse = await this.cache.get(cacheKey, query.type)
-        
-        if (cachedResponse) {
-          context.cacheResult = cachedResponse
-          
-          aiLogger.info('AI_SERVICE', 'Resposta obtida do cache', {
-            queryId: query.id,
-            cacheKey,
-            confidence: cachedResponse.confidence
-          })
-          
-          return {
-            ...cachedResponse,
-            id: this.generateResponseId(),
-            queryId: query.id,
-            source: 'cache',
-            createdAt: new Date().toISOString()
-          }
-        }
-      } catch (error) {
-        context.errors.push({
-          source: 'cache',
-          error: error instanceof Error ? error.message : 'Erro no cache'
-        })
-        
-        aiLogger.warn('AI_SERVICE', 'Erro no cache, continuando para premium', {
-          queryId: query.id,
-          error
-        })
-      }
-    }
-
-    // 3. TERCEIRA PRIORIDADE: Contas premium
-    if (this.config.premiumEnabled) {
-      try {
-        context.attemptedSources.push('premium')
-        const premiumResponse = await this.queryPremiumProvider(query)
-        
-        if (premiumResponse) {
-          context.premiumResult = premiumResponse
-          context.selectedProvider = premiumResponse.provider
-          
-          // Armazenar no cache para futuras consultas
-          if (this.config.cacheEnabled) {
-            const cacheKey = this.generateCacheKey(query)
-            await this.cache.set(cacheKey, premiumResponse, query.type)
-          }
-          
-          aiLogger.info('AI_SERVICE', 'Resposta obtida de provedor premium', {
-            queryId: query.id,
-            provider: premiumResponse.provider,
-            confidence: premiumResponse.confidence,
-            tokensUsed: premiumResponse.tokensUsed
-          })
-          
-          return premiumResponse
-        }
-      } catch (error) {
-        context.errors.push({
-          source: 'premium',
-          error: error instanceof Error ? error.message : 'Erro nos provedores premium'
-        })
-        
-        aiLogger.error('AI_SERVICE', 'Erro nos provedores premium', {
-          queryId: query.id,
-          error
-        })
-      }
-    }
-
-    // Se chegou aqui, nenhuma fonte funcionou
-    throw new Error('Nenhuma fonte de IA disponível no momento')
-  }
-
-  // Buscar na base de conhecimento interna
-  private async searchInternalKnowledge(query: AIQuery): Promise<{
-    content: string
-    confidence: number
-    relevance: number
-    results: KnowledgeResult[]
-    references: any[]
-    suggestions: string[]
-    followUpQuestions: string[]
-  } | null> {
-    try {
-      // Buscar por texto
-      const textResults = await this.knowledgeBase.search({
-        text: query.text,
         type: query.type,
-        context: query.context
-      })
+        text: query.text.substring(0, 100) + '...',
+      });
 
-      // Buscar por sintomas se disponível
-      let symptomResults: KnowledgeResult[] = []
-      if (query.context.symptoms && query.context.symptoms.length > 0) {
-        symptomResults = await this.knowledgeBase.search({
-          text: '',
-          symptoms: query.context.symptoms,
-          context: query.context
-        })
+      // Registrar padrão para pré-cache
+      this.recordQueryPattern(query);
+
+      // Fluxo econômico: 1. Base Interna → 2. Cache → 3. Premium
+
+      // 1. Tentar base de conhecimento interna primeiro
+      const internalResponse = await this.tryInternalKnowledge(context);
+      if (internalResponse) {
+        return this.finalizeResponse(internalResponse, context);
       }
 
-      // Buscar por diagnóstico se disponível
-      let diagnosisResults: KnowledgeResult[] = []
-      if (query.context.diagnosis) {
-        diagnosisResults = await this.knowledgeBase.search({
-          text: '',
-          diagnosis: query.context.diagnosis,
-          context: query.context
-        })
+      // 2. Tentar cache se habilitado
+      if (this.config.cacheEnabled) {
+        const cacheResponse = await this.tryCache(context);
+        if (cacheResponse) {
+          return this.finalizeResponse(cacheResponse, context);
+        }
       }
 
-      // Combinar e ranquear resultados
-      const allResults = [...textResults, ...symptomResults, ...diagnosisResults]
-      const uniqueResults = this.deduplicateResults(allResults)
-      const rankedResults = this.rankResults(uniqueResults, query)
-
-      if (rankedResults.length === 0) {
-        return null
+      // 3. Tentar contas premium se habilitado
+      if (this.config.premiumEnabled) {
+        const premiumResponse = await this.tryPremium(context);
+        if (premiumResponse) {
+          // Cachear resposta premium para uso futuro
+          if (this.config.cacheEnabled) {
+            await this.cacheResponse(context.query, premiumResponse);
+          }
+          return this.finalizeResponse(premiumResponse, context);
+        }
       }
 
-      // Gerar resposta combinada
-      const combinedResponse = this.combineInternalResults(rankedResults, query)
-      
-      return combinedResponse
-      
+      // 4. Fallback se habilitado
+      if (this.config.fallbackEnabled) {
+        const fallbackResponse = this.createFallbackResponse(context);
+        return this.finalizeResponse(fallbackResponse, context);
+      }
+
+      // Se chegou aqui, não conseguiu responder
+      throw new Error(
+        'Não foi possível processar a consulta com nenhuma fonte disponível'
+      );
     } catch (error) {
-      aiLogger.error('AI_SERVICE', 'Erro na busca interna', { error, queryId: query.id })
-      return null
+      return this.handleError(error, context);
     }
   }
 
-  // Consultar provedor premium
-  private async queryPremiumProvider(query: AIQuery): Promise<AIResponse | null> {
+  // Tentar resposta da base de conhecimento interna
+  private async tryInternalKnowledge(
+    context: ProcessingContext
+  ): Promise<AIResponse | null> {
     try {
-      // Selecionar melhor provedor disponível
-      const selectedProvider = await this.premiumManager.selectBestProvider(query.type)
-      
-      if (!selectedProvider) {
-        aiLogger.warn('AI_SERVICE', 'Nenhum provedor premium disponível', {
-          queryId: query.id,
-          queryType: query.type
-        })
-        return null
+      context.attemptedSources.push(ResponseSource.INTERNAL);
+
+      logger.debug('Tentando base de conhecimento interna', {
+        component: 'AIService',
+        queryId: context.query.id,
+      });
+
+      const searchParams = {
+        text: context.query.text,
+        type: context.query.type,
+        symptoms: context.query.context.symptoms,
+        diagnosis: context.query.context.diagnosis,
+        specialty: context.query.context.specialty,
+        context: context.query.context,
+      };
+
+      const results = await knowledgeBaseService.search(searchParams);
+      context.internalResults = results;
+
+      if (results.length === 0) {
+        logger.debug('Nenhum resultado na base interna', {
+          component: 'AIService'
+        });
+        return null;
       }
 
-      // Executar consulta
-      const response = await this.premiumManager.query(selectedProvider, query)
-      
-      return response
-      
+      // Verificar se o melhor resultado atende ao threshold de confiança
+      const bestResult = results[0];
+      const combinedConfidence =
+        bestResult.relevanceScore * bestResult.entry.confidence;
+
+      if (combinedConfidence < this.config.internalConfidenceThreshold) {
+        logger.debug('Confiança insuficiente na base interna', {
+          component: 'AIService',
+          combinedConfidence,
+          threshold: this.config.internalConfidenceThreshold,
+        });
+        return null;
+      }
+
+      // Criar resposta baseada nos resultados internos
+      const response = this.createInternalResponse(results, context.query);
+
+      logger.info('Resposta obtida da base interna', {
+        component: 'AIService',
+        queryId: context.query.id,
+        confidence: response.confidence,
+        resultsCount: results.length,
+      });
+
+      return response;
     } catch (error) {
-      aiLogger.error('AI_SERVICE', 'Erro ao consultar provedor premium', {
-        error,
-        queryId: query.id
-      })
-      return null
+      const errorMsg =
+        error instanceof Error ? error.message : 'Erro desconhecido';
+      context.errors.push({ source: ResponseSource.INTERNAL, error: errorMsg });
+
+      logger.error('Erro na base de conhecimento interna', {
+        component: 'AIService',
+        queryId: context.query.id,
+        error: errorMsg,
+      });
+
+      return null;
     }
   }
 
-  // Combinar resultados da base interna
-  private combineInternalResults(results: KnowledgeResult[], query: AIQuery): {
-    content: string
-    confidence: number
-    relevance: number
-    results: KnowledgeResult[]
-    references: any[]
-    suggestions: string[]
-    followUpQuestions: string[]
+  // Tentar resposta do cache
+  private async tryCache(
+    context: ProcessingContext
+  ): Promise<AIResponse | null> {
+    try {
+      context.attemptedSources.push(ResponseSource.CACHE);
+
+      logger.debug('Tentando cache', {
+        component: 'AIService',
+        queryId: context.query.id,
+      });
+
+      const cacheKey = this.generateCacheKey(context.query);
+      const cachedResponse = await cacheService.get(cacheKey, context.query.type);
+
+      if (!cachedResponse) {
+        logger.debug('Cache miss', {
+          component: 'AIService'
+        });
+        return null;
+      }
+
+      context.cacheResult = cachedResponse;
+
+      logger.info('Resposta obtida do cache', {
+        component: 'AIService',
+        queryId: context.query.id,
+        cacheKey,
+        originalTimestamp: cachedResponse.createdAt,
+      });
+
+      // Atualizar timestamp para resposta atual
+      return {
+        ...cachedResponse,
+        id: `cached_${Date.now()}`,
+        queryId: context.query.id,
+        createdAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      const errorMsg =
+        error instanceof Error ? error.message : 'Erro desconhecido';
+      context.errors.push({ source: ResponseSource.CACHE, error: errorMsg });
+
+      logger.error('Erro no cache', {
+        component: 'AIService',
+        queryId: context.query.id,
+        error: errorMsg,
+      });
+
+      return null;
+    }
+  }
+
+  // Tentar resposta das contas premium
+  private async tryPremium(
+    context: ProcessingContext
+  ): Promise<AIResponse | null> {
+    try {
+      context.attemptedSources.push(ResponseSource.PREMIUM);
+
+      logger.debug('Tentando contas premium', {
+        component: 'AIService',
+        queryId: context.query.id,
+        queryType: context.query.type,
+      });
+
+      // Executar consulta usando o gerenciador premium
+      const response = await premiumAccountManager.executeQuery(context.query);
+      context.premiumResult = response;
+
+      logger.info('Resposta obtida de provedor premium', {
+        component: 'AIService',
+        queryId: context.query.id,
+        provider: response.provider,
+        confidence: response.confidence,
+      });
+
+      return response;
+    } catch (error) {
+      const errorMsg =
+        error instanceof Error ? error.message : 'Erro desconhecido';
+      context.errors.push({ source: ResponseSource.PREMIUM, error: errorMsg });
+
+      logger.error('Erro nas contas premium', {
+        component: 'AIService',
+        queryId: context.query.id,
+        selectedProvider: context.selectedProvider,
+        error: errorMsg,
+      });
+
+      return null;
+    }
+  }
+
+  // Criar resposta baseada na base interna
+  private createInternalResponse(
+    results: KnowledgeResult[],
+    query: AIQuery
+  ): AIResponse {
+    const bestResult = results[0];
+    const combinedResults = this.combineInternalResults(results);
+
+    return {
+      id: `internal_${Date.now()}`,
+      queryId: query.id,
+      content: combinedResults.content,
+      confidence: combinedResults.confidence,
+      source: ResponseSource.INTERNAL,
+      references: combinedResults.references,
+      suggestions: combinedResults.suggestions,
+      followUpQuestions: combinedResults.followUpQuestions,
+      responseTime: 0, // Será preenchido na finalização
+      createdAt: new Date().toISOString(),
+      metadata: {
+        evidenceLevel: bestResult.entry.metadata?.evidenceLevel || 'low',
+        reliability: combinedResults.confidence,
+        relevance: bestResult.relevanceScore,
+      },
+    };
+  }
+
+  // Combinar múltiplos resultados internos
+  private combineInternalResults(results: KnowledgeResult[]): {
+    content: string;
+    confidence: number;
+    references: AIResponse['references'];
+    suggestions: string[];
+    followUpQuestions: string[];
   } {
-    // Pegar os melhores resultados (máximo 5)
-    const topResults = results.slice(0, 5)
-    
-    // Calcular confiança média ponderada
-    const totalRelevance = topResults.reduce((sum, r) => sum + r.relevanceScore, 0)
-    const weightedConfidence = topResults.reduce((sum, r) => 
-      sum + (r.entry.confidence * r.relevanceScore), 0
-    ) / totalRelevance
-    
-    // Calcular relevância média
-    const avgRelevance = totalRelevance / topResults.length
+    if (results.length === 0) {
+      throw new Error('Nenhum resultado para combinar');
+    }
 
-    // Gerar conteúdo combinado
-    let content = `Baseado na base de conhecimento interna, encontrei ${topResults.length} resultado(s) relevante(s):\n\n`
-    
-    topResults.forEach((result, index) => {
-      content += `**${index + 1}. ${result.entry.title}**\n`
-      content += `${result.entry.summary || result.entry.content.substring(0, 200)}...\n`
-      content += `*Confiança: ${Math.round(result.entry.confidence * 100)}% | Relevância: ${Math.round(result.relevanceScore * 100)}%*\n\n`
-    })
+    if (results.length === 1) {
+      const result = results[0];
+      return {
+        content: result.entry.content,
+        confidence: result.entry.confidence * result.relevanceScore,
+        references: [
+          {
+            id: result.entry.id,
+            title: result.entry.title,
+            type: 'internal',
+            confidence: result.entry.confidence,
+          },
+        ],
+        suggestions: [`Baseado em: ${result.entry.title}`],
+        followUpQuestions: [
+          `Gostaria de mais detalhes sobre ${result.entry.title.toLowerCase()}?`,
+        ],
+      };
+    }
 
-    // Gerar referências
-    const references = topResults.map(result => ({
+    // Combinar múltiplos resultados
+    const topResults = results.slice(0, 3); // Usar apenas os 3 melhores
+    const combinedContent = this.createCombinedContent(topResults);
+    const avgConfidence =
+      topResults.reduce(
+        (sum, r) => sum + r.entry.confidence * r.relevanceScore,
+        0
+      ) / topResults.length;
+
+    const references = topResults.map((result) => ({
       id: result.entry.id,
       title: result.entry.title,
       type: 'internal' as const,
-      confidence: result.entry.confidence
-    }))
+      confidence: result.entry.confidence,
+    }));
 
-    // Gerar sugestões baseadas nos resultados
-    const suggestions = this.generateSuggestions(topResults, query)
-    
-    // Gerar perguntas de follow-up
-    const followUpQuestions = this.generateFollowUpQuestions(topResults, query)
+    const suggestions = [
+      `Baseado em ${topResults.length} fontes da base de conhecimento`,
+      ...topResults.slice(0, 2).map((r) => `Veja também: ${r.entry.title}`),
+    ];
+
+    const followUpQuestions = [
+      'Gostaria de mais detalhes sobre algum destes tópicos?',
+      'Precisa de informações sobre casos similares?',
+    ];
 
     return {
-      content,
-      confidence: weightedConfidence,
-      relevance: avgRelevance,
-      results: topResults,
+      content: combinedContent,
+      confidence: avgConfidence,
       references,
       suggestions,
-      followUpQuestions
-    }
+      followUpQuestions,
+    };
   }
 
-  // Gerar sugestões baseadas nos resultados
-  private generateSuggestions(results: KnowledgeResult[], query: AIQuery): string[] {
-    const suggestions: string[] = []
-    
-    // Sugestões baseadas em técnicas relacionadas
-    const techniques = new Set<string>()
-    results.forEach(result => {
-      result.entry.techniques.forEach(technique => techniques.add(technique))
-    })
-    
-    if (techniques.size > 0) {
-      suggestions.push(`Considere também estas técnicas: ${Array.from(techniques).slice(0, 3).join(', ')}`)
-    }
+  // Criar conteúdo combinado de múltiplas fontes
+  private createCombinedContent(results: KnowledgeResult[]): string {
+    let content = 'Baseado na nossa base de conhecimento interna:\n\n';
 
-    // Sugestões baseadas em condições relacionadas
-    const conditions = new Set<string>()
-    results.forEach(result => {
-      result.entry.conditions.forEach(condition => conditions.add(condition))
-    })
-    
-    if (conditions.size > 1) {
-      suggestions.push(`Condições relacionadas que podem ser relevantes: ${Array.from(conditions).slice(0, 3).join(', ')}`)
-    }
+    results.forEach((result, index) => {
+      content += `**${index + 1}. ${result.entry.title}**\n`;
+      content += `${result.entry.summary || result.entry.content.substring(0, 200)}...\n`;
 
-    // Sugestão de especialidade
-    const specialties = new Set<string>()
-    results.forEach(result => {
-      result.entry.metadata.specialty.forEach(spec => specialties.add(spec))
-    })
-    
-    if (specialties.size > 0 && !query.context.specialty) {
-      suggestions.push(`Para informações mais específicas, considere consultar especialista em: ${Array.from(specialties)[0]}`)
-    }
+      if (result.entry.contraindications.length > 0) {
+        content += `⚠️ **Contraindicações:** ${result.entry.contraindications.join(', ')}\n`;
+      }
 
-    return suggestions.slice(0, 3) // Máximo 3 sugestões
+      content += '\n';
+    });
+
+    content +=
+      '\n*Esta resposta foi gerada a partir do conhecimento acumulado da nossa equipe de fisioterapeutas.*';
+
+    return content;
   }
 
-  // Gerar perguntas de follow-up
-  private generateFollowUpQuestions(results: KnowledgeResult[], query: AIQuery): string[] {
-    const questions: string[] = []
-    
-    // Perguntas baseadas no tipo de consulta
-    switch (query.type) {
-      case QueryType.PROTOCOL_SUGGESTION:
-        questions.push('Gostaria de ver exercícios específicos para este protocolo?')
-        questions.push('Precisa de informações sobre contraindicações?')
-        break
-      case QueryType.EXERCISE_RECOMMENDATION:
-        questions.push('Quer saber sobre progressão destes exercícios?')
-        questions.push('Precisa de adaptações para casos específicos?')
-        break
-      case QueryType.DIAGNOSIS_HELP:
-        questions.push('Gostaria de ver casos clínicos similares?')
-        questions.push('Precisa de informações sobre diagnóstico diferencial?')
-        break
-      default:
-        questions.push('Precisa de mais detalhes sobre algum aspecto específico?')
-        questions.push('Gostaria de ver informações relacionadas?')
+  // Criar resposta de fallback
+  private createFallbackResponse(context: ProcessingContext): AIResponse {
+    const errorSummary = context.errors
+      .map((e) => `${e.source}: ${e.error}`)
+      .join('; ');
+
+    let content =
+      'Desculpe, não consegui encontrar uma resposta específica para sua consulta no momento.\n\n';
+
+    if (context.internalResults && context.internalResults.length > 0) {
+      content +=
+        'Encontrei algumas informações relacionadas na nossa base de conhecimento, mas com baixa confiança. ';
+      content +=
+        'Recomendo consultar diretamente com um fisioterapeuta da equipe.\n\n';
+
+      const topResult = context.internalResults[0];
+      content += `**Informação relacionada:** ${topResult.entry.title}\n`;
+      content += `${topResult.entry.summary || topResult.entry.content.substring(0, 150)}...\n`;
     }
 
-    // Perguntas baseadas nos resultados
-    if (results.some(r => r.entry.contraindications.length > 0)) {
-      questions.push('Quer revisar as contraindicações importantes?')
+    content += '\n**Sugestões:**\n';
+    content += '- Reformule sua pergunta com mais detalhes\n';
+    content += '- Consulte nossa base de conhecimento diretamente\n';
+    content += '- Entre em contato com um fisioterapeuta da equipe\n';
+
+    return {
+      id: `fallback_${Date.now()}`,
+      queryId: context.query.id,
+      content,
+      confidence: 0.3,
+      source: ResponseSource.INTERNAL,
+      references: [],
+      suggestions: [
+        'Tente reformular sua pergunta',
+        'Consulte nossa base de conhecimento',
+        'Fale com um fisioterapeuta',
+      ],
+      followUpQuestions: [
+        'Pode fornecer mais detalhes sobre sua consulta?',
+        'Gostaria de falar com um fisioterapeuta?',
+      ],
+      responseTime: 0,
+      createdAt: new Date().toISOString(),
+      metadata: {
+        reliability: 0.3,
+        relevance: 0.2,
+      },
+    };
+  }
+
+  // Finalizar resposta
+  private finalizeResponse(
+    response: AIResponse,
+    context: ProcessingContext
+  ): AIResponse {
+    const responseTime = Date.now() - context.startTime;
+    const finalResponse = {
+      ...response,
+      responseTime,
+    };
+
+    // Registrar métricas
+    monitoringService.recordQuery(
+      response.source,
+      response.provider,
+      responseTime
+    );
+
+    // Registrar padrão de uso para pré-cache
+    if (context.query.context.userRole) {
+      preCacheService.recordQueryPattern(
+        context.query.text,
+        context.query.type,
+        responseTime,
+        context.query.context.userRole,
+        'default', // tenantId padrão
+        [], // contextTags
+        true // success
+      );
     }
 
-    if (results.some(r => r.entry.references.length > 0)) {
-      questions.push('Gostaria de ver as referências científicas?')
-    }
+    // Log final
+    logger.info('Consulta processada com sucesso', {
+      component: 'AIService',
+      queryId: context.query.id,
+      source: response.source,
+      provider: response.provider,
+      confidence: response.confidence,
+      responseTime,
+      attemptedSources: context.attemptedSources,
+    });
 
-    return questions.slice(0, 3) // Máximo 3 perguntas
+    return finalResponse;
+  }
+
+  // Tratar erros
+  private handleError(error: unknown, context: ProcessingContext): AIResponse {
+    const errorMsg =
+      error instanceof Error ? error.message : 'Erro desconhecido';
+    const responseTime = Date.now() - context.startTime;
+
+    logger.error('Erro no processamento da consulta', {
+      component: 'AIService',
+      queryId: context.query.id,
+      error: errorMsg,
+      attemptedSources: context.attemptedSources,
+      errors: context.errors,
+      responseTime,
+    });
+
+    // Registrar erro no monitoramento
+    monitoringService.recordError(ResponseSource.INTERNAL, new Error(errorMsg));
+
+    // Retornar resposta de erro
+    return {
+      id: `error_${Date.now()}`,
+      queryId: context.query.id,
+      content:
+        'Ocorreu um erro interno ao processar sua consulta. Por favor, tente novamente ou entre em contato com o suporte.',
+      confidence: 0.1,
+      source: ResponseSource.INTERNAL,
+      references: [],
+      suggestions: [
+        'Tente novamente em alguns minutos',
+        'Reformule sua pergunta',
+        'Entre em contato com o suporte',
+      ],
+      followUpQuestions: [],
+      responseTime,
+      createdAt: new Date().toISOString(),
+      metadata: {
+        reliability: 0.1,
+        relevance: 0.1,
+      },
+    };
   }
 
   // Métodos utilitários
 
-  private validateQuery(query: AIQuery): void {
-    if (!query.text || query.text.trim().length === 0) {
-      throw new Error('Texto da consulta é obrigatório')
+  private generateCacheKey(query: AIQuery): string {
+    const normalizedText = query.text.toLowerCase().trim().replace(/\s+/g, '_');
+    const contextHash = this.hashContext(query.context);
+    return `${query.type}_${normalizedText}_${contextHash}`.substring(0, 100);
+  }
+
+  private hashContext(context: AIQuery['context']): string {
+    const contextStr = JSON.stringify({
+      symptoms: context.symptoms?.sort(),
+      diagnosis: context.diagnosis,
+      specialty: context.specialty,
+    });
+
+    // Hash simples (em produção usar biblioteca de hash)
+    let hash = 0;
+    for (let i = 0; i < contextStr.length; i++) {
+      const char = contextStr.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32-bit integer
     }
-    
-    if (query.text.length > 5000) {
-      throw new Error('Texto da consulta muito longo (máximo 5000 caracteres)')
-    }
-    
-    if (!Object.values(QueryType).includes(query.type)) {
-      throw new Error('Tipo de consulta inválido')
+    return Math.abs(hash).toString(36);
+  }
+
+  private async cacheResponse(
+    query: AIQuery,
+    response: AIResponse
+  ): Promise<void> {
+    try {
+      const cacheKey = this.generateCacheKey(query);
+      await cacheService.set(cacheKey, response, query.type);
+
+      logger.debug('Resposta cacheada', {
+        component: 'AIService',
+        queryId: query.id,
+        cacheKey,
+        source: response.source,
+      });
+    } catch (error) {
+      logger.error('Erro ao cachear resposta', {
+        component: 'AIService',
+        queryId: query.id,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      });
     }
   }
 
   private recordQueryPattern(query: AIQuery): void {
     try {
-      // Registrar padrão para o sistema de pré-cache
-      this.preCache.recordQueryPattern(
-        query.text,
-        query.type,
-        0, // responseTime será atualizado depois
-        query.context.userRole || 'unknown',
-        query.context.tenantId || 'default'
-      )
+      if (query.context.userRole && query.context.tenantId) {
+        // Será registrado na finalização com o tempo de resposta real
+      }
     } catch (error) {
-      aiLogger.warn('AI_SERVICE', 'Erro ao registrar padrão de consulta', { error })
+      logger.error('Erro ao registrar padrão de consulta', {
+        component: 'AIService',
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      });
     }
   }
 
-  private async recordQueryMetrics(context: ProcessingContext, response: AIResponse): Promise<void> {
-    try {
-      const { query, startTime, selectedProvider } = context
-      const responseTime = Date.now() - startTime
-      
-      // Registrar no serviço de monitoramento
-      monitoringService.recordQuery(
-        response.source,
-        selectedProvider,
-        responseTime
-      )
-      
-      // Atualizar padrão de consulta com tempo de resposta real
-      this.preCache.recordQueryPattern(
-        query.text,
-        query.type,
-        responseTime,
-        query.context.userRole || 'unknown',
-        query.context.tenantId || 'default'
-      )
-      
-      // Registrar economia se não usou premium
-      if (response.source !== 'premium') {
-        const estimatedPremiumCost = 0.002 // $0.002 por consulta
-        monitoringService.recordCostSaving(estimatedPremiumCost)
-      }
-      
-    } catch (error) {
-      aiLogger.warn('AI_SERVICE', 'Erro ao registrar métricas', { error })
-    }
-  }
+  // Métodos públicos para controle e estatísticas
 
-  private deduplicateResults(results: KnowledgeResult[]): KnowledgeResult[] {
-    const seen = new Set<string>()
-    return results.filter(result => {
-      if (seen.has(result.entry.id)) {
-        return false
-      }
-      seen.add(result.entry.id)
-      return true
-    })
-  }
-
-  private rankResults(results: KnowledgeResult[], query: AIQuery): KnowledgeResult[] {
-    return results.sort((a, b) => {
-      // Score combinado: relevância * confiança * fatores contextuais
-      let scoreA = a.relevanceScore * a.entry.confidence
-      let scoreB = b.relevanceScore * b.entry.confidence
-      
-      // Bonus para especialidade correspondente
-      if (query.context.specialty) {
-        if (a.entry.metadata.specialty.includes(query.context.specialty)) scoreA += 0.1
-        if (b.entry.metadata.specialty.includes(query.context.specialty)) scoreB += 0.1
-      }
-      
-      // Bonus para uso recente
-      const daysSinceUsedA = (Date.now() - new Date(a.entry.lastUsed).getTime()) / (1000 * 60 * 60 * 24)
-      const daysSinceUsedB = (Date.now() - new Date(b.entry.lastUsed).getTime()) / (1000 * 60 * 60 * 24)
-      
-      if (daysSinceUsedA < 7) scoreA += 0.05
-      if (daysSinceUsedB < 7) scoreB += 0.05
-      
-      // Bonus por taxa de sucesso
-      scoreA += a.entry.successRate * 0.1
-      scoreB += b.entry.successRate * 0.1
-      
-      return scoreB - scoreA
-    })
-  }
-
-  private generateFallbackResponse(query: AIQuery, error: Error): AIResponse {
+  async getServiceStats(): Promise<{
+    totalQueries: number;
+    queriesBySource: Record<ResponseSource, number>;
+    avgResponseTime: number;
+    successRate: number;
+    cacheHitRate: number;
+    internalSuccessRate: number;
+  }> {
+    // Implementar baseado nos logs ou métricas coletadas
     return {
-      id: this.generateResponseId(),
-      queryId: query.id,
-      content: `Desculpe, não foi possível processar sua consulta no momento devido a: ${error.message}. Tente novamente em alguns minutos ou reformule sua pergunta.`,
-      confidence: 0.1,
-      source: 'internal',
-      references: [],
-      suggestions: [
-        'Tente reformular sua pergunta de forma mais específica',
-        'Verifique se há erros de digitação',
-        'Tente novamente em alguns minutos'
-      ],
-      followUpQuestions: [
-        'Posso ajudar com algo mais específico?',
-        'Gostaria de tentar uma abordagem diferente?'
-      ],
-      responseTime: 0,
-      createdAt: new Date().toISOString(),
-      metadata: {
-        reliability: 0.1,
-        relevance: 0.1
-      }
-    }
+      totalQueries: 0,
+      queriesBySource: {
+        [ResponseSource.INTERNAL]: 0,
+        [ResponseSource.CACHE]: 0,
+        [ResponseSource.PREMIUM]: 0,
+      },
+      avgResponseTime: 0,
+      successRate: 0,
+      cacheHitRate: 0,
+      internalSuccessRate: 0,
+    };
   }
-
-  private generateResponseId(): string {
-    return `ai_response_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-  }
-
-  private generateCacheKey(query: AIQuery): string {
-    const normalizedText = query.text.toLowerCase().trim().replace(/\s+/g, '_')
-    return `${query.type}_${normalizedText}_${query.context.tenantId || 'default'}`
-  }
-
-  // Métodos públicos para configuração e estatísticas
 
   updateConfig(updates: Partial<AIServiceConfig>): void {
-    Object.assign(this.config, updates)
-    aiLogger.info('AI_SERVICE', 'Configuração atualizada', updates)
+    this.config = { ...this.config, ...updates };
+    logger.info('Configuração atualizada', {
+      component: 'AIService',
+      updates
+    });
   }
 
   getConfig(): AIServiceConfig {
-    return { ...this.config }
+    return { ...this.config };
   }
 
-  async getServiceStats(): Promise<{
-    totalQueries: number
-    queriesBySource: Record<ResponseSource, number>
-    avgResponseTime: number
-    successRate: number
-    economySavings: number
-    cacheHitRate: number
+  // Método para teste e diagnóstico
+  async testAllSources(testQuery: AIQuery): Promise<{
+    internal: { success: boolean; response?: AIResponse; error?: string };
+    cache: { success: boolean; response?: AIResponse; error?: string };
+    premium: { success: boolean; response?: AIResponse; error?: string };
   }> {
-    // Implementar coleta de estatísticas dos logs
-    const logs = aiLogger.getLogs({
-      category: 'AI_SERVICE',
-      startDate: new Date(Date.now() - 24 * 60 * 60 * 1000) // últimas 24h
-    })
+    const results: {
+      internal: { success: boolean; response?: AIResponse; error?: string };
+      cache: { success: boolean; response?: AIResponse; error?: string };
+      premium: { success: boolean; response?: AIResponse; error?: string };
+    } = {
+      internal: { success: false },
+      cache: { success: false },
+      premium: { success: false },
+    };
 
-    const queryLogs = logs.filter(log => log.message.includes('processada com sucesso'))
-    const totalQueries = queryLogs.length
-    
-    const queriesBySource: Record<ResponseSource, number> = {
-      internal: 0,
-      cache: 0,
-      premium: 0
+    // Testar base interna
+    try {
+      const context: ProcessingContext = {
+        query: testQuery,
+        startTime: Date.now(),
+        attemptedSources: [],
+        errors: [],
+      };
+
+      const internalResponse = await this.tryInternalKnowledge(context);
+      results.internal = {
+        success: !!internalResponse,
+        response: internalResponse || undefined,
+      };
+    } catch (error) {
+      results.internal = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      };
     }
 
-    let totalResponseTime = 0
-    let economySavings = 0
+    // Testar cache
+    try {
+      const context: ProcessingContext = {
+        query: testQuery,
+        startTime: Date.now(),
+        attemptedSources: [],
+        errors: [],
+      };
 
-    queryLogs.forEach(log => {
-      if (log.data?.source) {
-        queriesBySource[log.data.source as ResponseSource]++
-      }
-      if (log.data?.responseTime) {
-        totalResponseTime += log.data.responseTime
-      }
-      if (log.data?.source !== 'premium') {
-        economySavings += 0.002 // $0.002 por consulta não premium
-      }
-    })
-
-    const avgResponseTime = totalQueries > 0 ? totalResponseTime / totalQueries : 0
-    const successRate = totalQueries / Math.max(logs.length, 1)
-    const cacheHitRate = totalQueries > 0 ? queriesBySource.cache / totalQueries : 0
-
-    return {
-      totalQueries,
-      queriesBySource,
-      avgResponseTime: Math.round(avgResponseTime),
-      successRate: Math.round(successRate * 100) / 100,
-      economySavings: Math.round(economySavings * 100) / 100,
-      cacheHitRate: Math.round(cacheHitRate * 100) / 100
-    }
-  }
-
-  // Método para teste e debug
-  async testQuery(text: string, type: QueryType = QueryType.GENERAL_QUESTION): Promise<AIResponse> {
-    const testQuery: AIQuery = {
-      id: `test_${Date.now()}`,
-      text,
-      type,
-      context: {
-        userRole: 'test',
-        tenantId: 'test'
-      },
-      priority: 'normal',
-      maxResponseTime: 30000,
-      hash: `test_${Date.now()}`,
-      createdAt: new Date().toISOString()
+      const cacheResponse = await this.tryCache(context);
+      results.cache = {
+        success: !!cacheResponse,
+        response: cacheResponse || undefined,
+      };
+    } catch (error) {
+      results.cache = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      };
     }
 
-    return this.processQuery(testQuery)
+    // Testar premium
+    try {
+      const context: ProcessingContext = {
+        query: testQuery,
+        startTime: Date.now(),
+        attemptedSources: [],
+        errors: [],
+      };
+
+      const premiumResponse = await this.tryPremium(context);
+      results.premium = {
+        success: !!premiumResponse,
+        response: premiumResponse || undefined,
+      };
+    } catch (error) {
+      results.premium = {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      };
+    }
+
+    return results;
   }
 }
 
 // Instância singleton
-export const aiService = new AIService()
+export const aiService = new AIService();
 
-export default aiService
+export default aiService;

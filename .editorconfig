@@ -1,0 +1,51 @@
+# EditorConfig para FisioFlow
+# Padronização de formatação entre editores
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{js,jsx,ts,tsx}]
+indent_size = 2
+max_line_length = 100
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+[*.{sh,bash}]
+end_of_line = lf
+
+[*.{bat,cmd,ps1}]
+end_of_line = crlf
+
+[Makefile]
+indent_style = tab
+
+[*.py]
+indent_size = 4
+max_line_length = 88
+
+[*.{html,css,scss,less}]
+indent_size = 2
+
+[package.json]
+indent_size = 2
+
+[*.prisma]
+indent_size = 2
+
+[docker-compose*.yml]
+indent_size = 2
+
+[*.toml]
+indent_size = 2

@@ -32,7 +32,7 @@ root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
-      {import.meta.env.VITE_REACT_QUERY_DEVTOOLS === 'true' && (
+      {import.meta.env.DEV && (
         <ReactQueryDevtools initialIsOpen={false} />
       )}
     </QueryClientProvider>

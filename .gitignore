@@ -1,46 +1,83 @@
-# Logs
-logs
+# ===========================================
+# .gitignore otimizado para FisioFlow
+# ===========================================
+
+# Logs e debug (agrupado)
+logs/
 *.log
+*.log.*
+*.out
+*.err
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencies
-node_modules
+# Dependencies (agrupado)
 node_modules/
 jspm_packages/
 
-# Build outputs
-dist
-dist-ssr
-build
+# Build outputs (agrupado)
+dist/
+dist-ssr/
 build/
+.next/
+.nuxt/
+out/
+.cache/
+.parcel-cache/
+.vuepress/dist/
+.docusaurus/
+.svelte-kit/
+.turbo/
+*.tsbuildinfo
+
+# Environment e configuração (agrupado)
+.env*
+!.env.example
 *.local
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.test
-
-# Testing
-coverage
+# Testing (agrupado)
 coverage/
-/coverage
+.nyc_output/
 *.lcov
-.nyc_output
+junit.xml
+test-results/
+.jest/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+# Cache directories (agrupado)
+.npm/
+.eslintcache
+.stylelintcache
+.prettiercache
+.tscache
+.rpt2_cache*/
+.rts2_cache*/
+
+# Package managers (agrupado)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.yarn-integrity
+
+# OS generated files (agrupado)
+.DS_Store*
+._*
+Thumbs.db
+ehthumbs*.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+.Spotlight-V100
+.Trashes
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Editor e IDE (agrupado)
 .vscode/
-.idea
 .idea/
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
@@ -49,158 +86,34 @@ coverage/
 *.swp
 *.swo
 *~
-
-# OS generated files
-Thumbs.db
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-
-# Temporary files
-*.tmp
-*.temp
-tmp/
-temp/
-
-# Package manager
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-.yarn-integrity
-
-# Cache directories
-.cache
-.cache/
-.parcel-cache
-node_modules/.cache/
-.npm
-.eslintcache
-
-# Database
-*.db
-*.sqlite
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Build tools output
-*.tgz
-.next
-.nuxt
-.vuepress/dist
-.serverless
-.fusebox/
-.dynamodb/
-.tern-port
-.vscode-test
-
-# TypeScript
-.tsbuildinfo
-*.tsbuildinfo
-*.d.ts.map
-
-# Problematic directories
-vercel-mcp-temp/
-old/
-scripts/whatsapp-evolution/
-
-# Vercel
-.vercel
-
-# Git problematic files
-NUL
-*.orig
-*.rej
-*.bak
-
-# Windows specific
-*.lnk
-ehthumbs_vista.db
-[Dd]esktop.ini
-$RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.stackdump
-
-# macOS specific
-.AppleDouble
-.LSOverride
-Icon
-._*
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
-
-# Linux specific
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
-
-# IDE and Editor files
-.vscode/settings.json
-.vscode/tasks.json
-.vscode/launch.json
-.vscode/extensions.json
-.vscode/*.code-snippets
-.history/
-*.code-workspace
 .ionide/
-
-# JetBrains IDEs
-.idea/
-*.iws
-*.iml
-*.ipr
-out/
-
-# Sublime Text
-*.tmlanguage.cache
-*.tmPreferences.cache
-*.stTheme.cache
-*.sublime-workspace
-*.sublime-project
-
-# Vim
+*.code-workspace
+.history/
+.sublime-*
 [._]*.s[a-v][a-z]
-!*.svg
 [._]*.sw[a-p]
 [._]s[a-rt-v][a-z]
 [._]ss[a-gi-z]
 [._]sw[a-p]
 Session.vim
 Tags
-
-# Emacs
-*~
 \#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
+/.emacs*
+auto-save-list/
+tramp/
 .\#*
 
-# Security and sensitive files
+# Temporary files (agrupado)
+*.tmp
+*.temp
+tmp/
+temp/
+*.backup
+*.bck
+*.old
+*.save
+
+# Security (agrupado)
 *.pem
 *.key
 *.crt
@@ -214,46 +127,13 @@ secrets.json
 auth.json
 credentials.json
 
-# Backup files
-*.backup
-*.bck
-*.old
-*.save
+# Runtime data (agrupado)
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-# Log files
-*.log.*
-*.out
-*.err
-
-# Development tools
-.eslintcache
-.stylelintcache
-.prettiercache
-.tscache
-
-# Testing
-.jest/
-.nyc_output/
-junit.xml
-test-results/
-
-# Mobile development
-*.mobileprovision
-*.p8
-*.p12
-*.cer
-*.certSigningRequest
-
-# React Native
-*.jsbundle
-*.bundle
-
-# Expo
-.expo/
-.expo-shared/
-web-build/
-
-# Miscellaneous
+# Compiled and archived files (agrupado)
 *.tgz
 *.tar.gz
 *.zip
@@ -262,123 +142,63 @@ web-build/
 *.dmg
 *.iso
 *.img
-*.mdf
 *.toast
 *.vcd
 
-# Performance monitoring
+# Mobile development (agrupado)
+*.mobileprovision
+*.p8
+*.cer
+*.certSigningRequest
+*.jsbundle
+*.bundle
+.expo/
+.expo-shared/
+web-build/
+
+# Databases (agrupado)
+*.db
+*.sqlite
+
+# Performance monitoring (agrupado)
 .clinic/
 *.cpuprofile
 *.heapprofile
 *.heapsnapshot
 
+# Framework specific (agrupado)
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.netlify/
+.vercel/
+
 # Storybook
 storybook-static/
 
-# Next.js
-.next/
-out/
+# Special cases
+NUL
+*.orig
+*.rej
+*.stackdump
 
-# Nuxt.js
-.nuxt/
-dist/
+# Project specific excludes
+vercel-mcp-temp/
+old/
+scripts/whatsapp-evolution/
 
-# Gatsby
-.cache/
+# Prisma
+prisma/migrations/
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+
+# Gatsby build output
 public/
 # Allow essential PWA files
 !public/manifest.json
 !public/sw.js
 !public/icons/
 !public/demo-setup.js
-
-# Vuepress
-.vuepress/dist
-
-# Serverless
-.serverless/
-
-# FuseBox
-.fusebox/
-
-# DynamoDB Local
-.dynamodb/
-
-# TernJS
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# Temporary folders
-tmp/
-temp/
-
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional stylelint cache
-.stylelintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Snowpack dependency directory (https://snowpack.dev/)
-web_modules/
-
-# Rollup.js default build output
-dist/
-
-# Docusaurus cache and generated files
-.docusaurus
-
-# Sapper build / export output
-__sapper__
-
-# Local Netlify folder
-.netlify
-
-# SvelteKit build / generate output
-.svelte-kit
-
-# Turborepo
-.turbo
-
-# Prisma
-prisma/migrations/
-
-# Supabase
-supabase/.branches
-supabase/.temp

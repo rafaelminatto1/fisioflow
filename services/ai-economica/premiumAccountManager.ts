@@ -14,7 +14,7 @@ import {
   PROVIDER_STRATEGY,
   getPreferredProviders,
 } from '../../config/ai-economica.config';
-import { aiLogger } from './logger';
+import { logger } from './logger';
 import { monitoringService } from './monitoringService';
 
 interface UsageTracker {
@@ -97,11 +97,10 @@ export class PremiumAccountManager {
 
       return await this.executeQueryWithProvider(provider, query, startTime);
     } catch (error) {
-      aiLogger.error(
-        'PREMIUM_ACCOUNT_MANAGER',
-        'Erro na execução da query',
-        error
-      );
+      logger.error('Erro na execução da query', {
+        component: 'PremiumAccountManager',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
       throw error;
     }
   }
@@ -129,7 +128,8 @@ export class PremiumAccountManager {
       await this.recordUsage(provider, query, responseTime, true);
       this.updatePerformanceMetrics(provider, responseTime, true);
 
-      aiLogger.debug('PREMIUM_ACCOUNT_MANAGER', 'Query executada com sucesso', {
+      logger.debug('Query executada com sucesso', {
+        component: 'PremiumAccountManager',
         provider,
         queryType: query.type,
         responseTime: Math.round(responseTime),
@@ -143,11 +143,10 @@ export class PremiumAccountManager {
       await this.recordUsage(provider, query, responseTime, false);
       this.updatePerformanceMetrics(provider, responseTime, false);
 
-      aiLogger.error(
-        'PREMIUM_ACCOUNT_MANAGER',
-        `Erro no provedor ${provider}`,
-        error
-      );
+      logger.error(`Erro no provedor ${provider}`, {
+        component: 'PremiumAccountManager',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
       throw error;
     }
   }
@@ -259,10 +258,9 @@ export class PremiumAccountManager {
 
     // Verifica limite mensal
     if (usage.monthlyUsage >= config.monthlyLimit) {
-      aiLogger.warn(
-        'PREMIUM_ACCOUNT_MANAGER',
-        `Limite mensal atingido para ${provider}`
-      );
+      logger.warn(`Limite mensal atingido para ${provider}`, {
+        component: 'PremiumAccountManager'
+      });
       return false;
     }
 
@@ -272,10 +270,9 @@ export class PremiumAccountManager {
     );
 
     if (recentRequests.length >= DEFAULT_CONFIG.rateLimits.requestsPerMinute) {
-      aiLogger.warn(
-        'PREMIUM_ACCOUNT_MANAGER',
-        `Rate limit atingido para ${provider}`
-      );
+      logger.warn(`Rate limit atingido para ${provider}`, {
+        component: 'PremiumAccountManager'
+      });
       return false;
     }
 
@@ -409,10 +406,9 @@ export class PremiumAccountManager {
    * Força health check de todos os provedores
    */
   async performHealthCheck(): Promise<void> {
-    aiLogger.info(
-      'PREMIUM_ACCOUNT_MANAGER',
-      'Iniciando health check dos provedores'
-    );
+    logger.info('Iniciando health check dos provedores', {
+      component: 'PremiumAccountManager'
+    });
 
     const promises = Array.from(this.providerClients.entries()).map(
       async ([provider, client]) => {
@@ -427,17 +423,15 @@ export class PremiumAccountManager {
             }
           }
 
-          aiLogger.debug(
-            'PREMIUM_ACCOUNT_MANAGER',
-            `Health check ${provider}`,
-            { isHealthy }
-          );
+          logger.debug(`Health check ${provider}`, {
+            component: 'PremiumAccountManager',
+            isHealthy
+          });
         } catch (error) {
-          aiLogger.error(
-            'PREMIUM_ACCOUNT_MANAGER',
-            `Health check falhou ${provider}`,
-            error
-          );
+          logger.error(`Health check falhou ${provider}`, {
+            component: 'PremiumAccountManager',
+            error: error instanceof Error ? error.message : 'Erro desconhecido'
+          });
 
           const perf = this.performance.get(provider);
           if (perf) {
@@ -464,11 +458,10 @@ export class PremiumAccountManager {
 
       localStorage.setItem('ai-economica-usage', JSON.stringify(data));
     } catch (error) {
-      aiLogger.error(
-        'PREMIUM_ACCOUNT_MANAGER',
-        'Erro ao salvar dados de uso',
-        error
-      );
+      logger.error('Erro ao salvar dados de uso', {
+        component: 'PremiumAccountManager',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   }
 
@@ -490,16 +483,14 @@ export class PremiumAccountManager {
         this.performance = new Map(Object.entries(parsed.performance));
       }
 
-      aiLogger.debug(
-        'PREMIUM_ACCOUNT_MANAGER',
-        'Dados de uso carregados do storage'
-      );
+      logger.debug('Dados de uso carregados do storage', {
+        component: 'PremiumAccountManager'
+      });
     } catch (error) {
-      aiLogger.error(
-        'PREMIUM_ACCOUNT_MANAGER',
-        'Erro ao carregar dados de uso',
-        error
-      );
+      logger.error('Erro ao carregar dados de uso', {
+        component: 'PremiumAccountManager',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   }
 
@@ -526,7 +517,9 @@ export class PremiumAccountManager {
     });
 
     this.saveUsageToStorage();
-    aiLogger.info('PREMIUM_ACCOUNT_MANAGER', 'Uso mensal resetado');
+    logger.info('Uso mensal resetado', {
+      component: 'PremiumAccountManager'
+    });
   }
 
   /**
@@ -553,7 +546,8 @@ export class PremiumAccountManager {
     strategy: 'round_robin' | 'least_used' | 'best_performance'
   ): void {
     this.rotationStrategy = strategy;
-    aiLogger.info('PREMIUM_ACCOUNT_MANAGER', 'Estratégia de rotação alterada', {
+    logger.info('Estratégia de rotação alterada', {
+      component: 'PremiumAccountManager',
       strategy,
     });
   }
@@ -563,7 +557,9 @@ export class PremiumAccountManager {
    */
   private initializeProviders(): void {
     // Implementação básica - em produção seria mais robusta
-    aiLogger.info('PREMIUM_ACCOUNT_MANAGER', 'Provedores inicializados');
+    logger.info('Provedores inicializados', {
+      component: 'PremiumAccountManager'
+    });
   }
 }
 
