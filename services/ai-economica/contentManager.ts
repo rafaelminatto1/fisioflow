@@ -16,10 +16,10 @@ export class ContentManager {
   async save(entry: KnowledgeEntry): Promise<void> {
     // Salvar entrada
     this.storage.set(entry.id, entry);
-    
+
     // Atualizar índices
     this.updateIndices(entry);
-    
+
     // Persistir no localStorage
     await this.persistToStorage();
   }
@@ -28,7 +28,7 @@ export class ContentManager {
     if (!this.storage.has(entry.id)) {
       throw new Error(`Entry ${entry.id} not found`);
     }
-    
+
     await this.save(entry);
   }
 
@@ -37,18 +37,21 @@ export class ContentManager {
     if (!entry || (tenantId && entry.tenantId !== tenantId)) {
       return;
     }
-    
+
     // Remover dos índices
     this.removeFromIndices(entry);
-    
+
     // Remover do storage
     this.storage.delete(id);
-    
+
     // Persistir mudanças
     await this.persistToStorage();
   }
 
-  async findById(id: string, tenantId?: string): Promise<KnowledgeEntry | null> {
+  async findById(
+    id: string,
+    tenantId?: string
+  ): Promise<KnowledgeEntry | null> {
     const entry = this.storage.get(id);
     if (!entry || (tenantId && entry.tenantId !== tenantId)) {
       return null;
@@ -56,45 +59,58 @@ export class ContentManager {
     return entry;
   }
 
-  async findByAuthor(authorId: string, tenantId?: string): Promise<KnowledgeEntry[]> {
+  async findByAuthor(
+    authorId: string,
+    tenantId?: string
+  ): Promise<KnowledgeEntry[]> {
     const entryIds = this.authorIndex.get(authorId) || new Set();
     const entries: KnowledgeEntry[] = [];
-    
+
     for (const entryId of entryIds) {
       const entry = this.storage.get(entryId);
       if (entry && (!tenantId || entry.tenantId === tenantId)) {
         entries.push(entry);
       }
     }
-    
-    return entries.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+    return entries.sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
   }
 
-  async findByType(type: KnowledgeEntry['type'], tenantId?: string): Promise<KnowledgeEntry[]> {
+  async findByType(
+    type: KnowledgeEntry['type'],
+    tenantId?: string
+  ): Promise<KnowledgeEntry[]> {
     const entryIds = this.typeIndex.get(type) || new Set();
     const entries: KnowledgeEntry[] = [];
-    
+
     for (const entryId of entryIds) {
       const entry = this.storage.get(entryId);
       if (entry && (!tenantId || entry.tenantId === tenantId)) {
         entries.push(entry);
       }
     }
-    
+
     return entries.sort((a, b) => b.confidence - a.confidence);
   }
 
-  async findTopByConfidence(limit = 10, tenantId?: string): Promise<KnowledgeEntry[]> {
+  async findTopByConfidence(
+    limit = 10,
+    tenantId?: string
+  ): Promise<KnowledgeEntry[]> {
     const entries = await this.findAll(tenantId);
-    return entries
-      .sort((a, b) => b.confidence - a.confidence)
-      .slice(0, limit);
+    return entries.sort((a, b) => b.confidence - a.confidence).slice(0, limit);
   }
 
   async findRecent(limit = 10, tenantId?: string): Promise<KnowledgeEntry[]> {
     const entries = await this.findAll(tenantId);
     return entries
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
       .slice(0, limit);
   }
 
@@ -102,41 +118,50 @@ export class ContentManager {
     if (tenantId) {
       const entryIds = this.tenantIndex.get(tenantId) || new Set();
       const entries: KnowledgeEntry[] = [];
-      
+
       for (const entryId of entryIds) {
         const entry = this.storage.get(entryId);
         if (entry) {
           entries.push(entry);
         }
       }
-      
+
       return entries;
     }
-    
+
     return Array.from(this.storage.values());
   }
 
-  async findOlderThan(date: Date, tenantId?: string): Promise<KnowledgeEntry[]> {
+  async findOlderThan(
+    date: Date,
+    tenantId?: string
+  ): Promise<KnowledgeEntry[]> {
     const entries = await this.findAll(tenantId);
-    return entries.filter(entry => new Date(entry.createdAt) < date);
+    return entries.filter((entry) => new Date(entry.createdAt) < date);
   }
 
-  async findByTags(tags: string[], tenantId?: string): Promise<KnowledgeEntry[]> {
+  async findByTags(
+    tags: string[],
+    tenantId?: string
+  ): Promise<KnowledgeEntry[]> {
     const entries = await this.findAll(tenantId);
-    return entries.filter(entry => 
-      tags.some(tag => 
-        entry.tags.some(entryTag => 
+    return entries.filter((entry) =>
+      tags.some((tag) =>
+        entry.tags.some((entryTag) =>
           entryTag.toLowerCase().includes(tag.toLowerCase())
         )
       )
     );
   }
 
-  async findByConditions(conditions: string[], tenantId?: string): Promise<KnowledgeEntry[]> {
+  async findByConditions(
+    conditions: string[],
+    tenantId?: string
+  ): Promise<KnowledgeEntry[]> {
     const entries = await this.findAll(tenantId);
-    return entries.filter(entry => 
-      conditions.some(condition => 
-        entry.conditions.some(entryCondition => 
+    return entries.filter((entry) =>
+      conditions.some((condition) =>
+        entry.conditions.some((entryCondition) =>
           entryCondition.toLowerCase().includes(condition.toLowerCase())
         )
       )
@@ -147,50 +172,61 @@ export class ContentManager {
     totalEntries: number;
     entriesByType: Record<string, number>;
     averageConfidence: number;
-    topContributors: Array<{ authorId: string; authorName: string; count: number }>;
+    topContributors: Array<{
+      authorId: string;
+      authorName: string;
+      count: number;
+    }>;
     recentActivity: number; // entries added in last 7 days
   }> {
     const entries = await this.findAll(tenantId);
-    
+
     // Contar por tipo
     const entriesByType: Record<string, number> = {};
-    entries.forEach(entry => {
+    entries.forEach((entry) => {
       entriesByType[entry.type] = (entriesByType[entry.type] || 0) + 1;
     });
-    
+
     // Calcular confiança média
-    const averageConfidence = entries.length > 0 
-      ? entries.reduce((sum, entry) => sum + entry.confidence, 0) / entries.length
-      : 0;
-    
+    const averageConfidence =
+      entries.length > 0
+        ? entries.reduce((sum, entry) => sum + entry.confidence, 0) /
+          entries.length
+        : 0;
+
     // Top contribuidores
-    const contributorCounts: Record<string, { name: string; count: number }> = {};
-    entries.forEach(entry => {
+    const contributorCounts: Record<string, { name: string; count: number }> =
+      {};
+    entries.forEach((entry) => {
       const authorId = entry.author.id;
       if (!contributorCounts[authorId]) {
         contributorCounts[authorId] = { name: entry.author.name, count: 0 };
       }
       contributorCounts[authorId].count++;
     });
-    
+
     const topContributors = Object.entries(contributorCounts)
-      .map(([authorId, data]) => ({ authorId, authorName: data.name, count: data.count }))
+      .map(([authorId, data]) => ({
+        authorId,
+        authorName: data.name,
+        count: data.count,
+      }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
-    
+
     // Atividade recente (últimos 7 dias)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentActivity = entries.filter(entry => 
-      new Date(entry.createdAt) >= sevenDaysAgo
+    const recentActivity = entries.filter(
+      (entry) => new Date(entry.createdAt) >= sevenDaysAgo
     ).length;
-    
+
     return {
       totalEntries: entries.length,
       entriesByType,
       averageConfidence,
       topContributors,
-      recentActivity
+      recentActivity,
     };
   }
 
@@ -200,13 +236,13 @@ export class ContentManager {
       this.tenantIndex.set(entry.tenantId, new Set());
     }
     this.tenantIndex.get(entry.tenantId)!.add(entry.id);
-    
+
     // Índice por autor
     if (!this.authorIndex.has(entry.author.id)) {
       this.authorIndex.set(entry.author.id, new Set());
     }
     this.authorIndex.get(entry.author.id)!.add(entry.id);
-    
+
     // Índice por tipo
     if (!this.typeIndex.has(entry.type)) {
       this.typeIndex.set(entry.type, new Set());
@@ -223,7 +259,7 @@ export class ContentManager {
         this.tenantIndex.delete(entry.tenantId);
       }
     }
-    
+
     // Remover do índice de autor
     const authorEntries = this.authorIndex.get(entry.author.id);
     if (authorEntries) {
@@ -232,7 +268,7 @@ export class ContentManager {
         this.authorIndex.delete(entry.author.id);
       }
     }
-    
+
     // Remover do índice de tipo
     const typeEntries = this.typeIndex.get(entry.type);
     if (typeEntries) {
@@ -247,12 +283,19 @@ export class ContentManager {
     try {
       const data = {
         entries: Array.from(this.storage.entries()),
-        tenantIndex: Array.from(this.tenantIndex.entries()).map(([key, value]) => [key, Array.from(value)]),
-        authorIndex: Array.from(this.authorIndex.entries()).map(([key, value]) => [key, Array.from(value)]),
-        typeIndex: Array.from(this.typeIndex.entries()).map(([key, value]) => [key, Array.from(value)]),
-        lastUpdated: new Date().toISOString()
+        tenantIndex: Array.from(this.tenantIndex.entries()).map(
+          ([key, value]) => [key, Array.from(value)]
+        ),
+        authorIndex: Array.from(this.authorIndex.entries()).map(
+          ([key, value]) => [key, Array.from(value)]
+        ),
+        typeIndex: Array.from(this.typeIndex.entries()).map(([key, value]) => [
+          key,
+          Array.from(value),
+        ]),
+        lastUpdated: new Date().toISOString(),
       };
-      
+
       localStorage.setItem('ai_economica_knowledge_base', JSON.stringify(data));
     } catch (error) {
       console.error('Failed to persist knowledge base to storage:', error);
@@ -263,33 +306,41 @@ export class ContentManager {
     try {
       const stored = localStorage.getItem('ai_economica_knowledge_base');
       if (!stored) return;
-      
+
       const data = JSON.parse(stored);
-      
+
       // Restaurar entries
       if (data.entries) {
         this.storage = new Map(data.entries);
       }
-      
+
       // Restaurar índices
       if (data.tenantIndex) {
         this.tenantIndex = new Map(
-          data.tenantIndex.map(([key, value]: [string, string[]]) => [key, new Set(value)])
+          data.tenantIndex.map(([key, value]: [string, string[]]) => [
+            key,
+            new Set(value),
+          ])
         );
       }
-      
+
       if (data.authorIndex) {
         this.authorIndex = new Map(
-          data.authorIndex.map(([key, value]: [string, string[]]) => [key, new Set(value)])
+          data.authorIndex.map(([key, value]: [string, string[]]) => [
+            key,
+            new Set(value),
+          ])
         );
       }
-      
+
       if (data.typeIndex) {
         this.typeIndex = new Map(
-          data.typeIndex.map(([key, value]: [string, string[]]) => [key, new Set(value)])
+          data.typeIndex.map(([key, value]: [string, string[]]) => [
+            key,
+            new Set(value),
+          ])
         );
       }
-      
     } catch (error) {
       console.error('Failed to load knowledge base from storage:', error);
       // Continuar com storage vazio em caso de erro
@@ -301,23 +352,25 @@ export class ContentManager {
     const data = {
       entries: Array.from(this.storage.values()),
       exportDate: new Date().toISOString(),
-      version: '1.0'
+      version: '1.0',
     };
-    
+
     return JSON.stringify(data, null, 2);
   }
 
-  async importData(jsonData: string): Promise<{ imported: number; errors: string[] }> {
+  async importData(
+    jsonData: string
+  ): Promise<{ imported: number; errors: string[] }> {
     const errors: string[] = [];
     let imported = 0;
-    
+
     try {
       const data = JSON.parse(jsonData);
-      
+
       if (!data.entries || !Array.isArray(data.entries)) {
         throw new Error('Invalid data format: entries array not found');
       }
-      
+
       for (const entry of data.entries) {
         try {
           // Validar estrutura da entrada
@@ -325,18 +378,17 @@ export class ContentManager {
             errors.push(`Invalid entry structure: ${entry.id || 'unknown'}`);
             continue;
           }
-          
+
           await this.save(entry);
           imported++;
         } catch (error) {
           errors.push(`Failed to import entry ${entry.id}: ${error}`);
         }
       }
-      
     } catch (error) {
       errors.push(`Failed to parse JSON data: ${error}`);
     }
-    
+
     return { imported, errors };
   }
 
@@ -348,28 +400,30 @@ export class ContentManager {
   }> {
     let removedDuplicates = 0;
     let fixedIndices = 0;
-    
+
     // Remover duplicatas baseadas em conteúdo similar
     const entries = Array.from(this.storage.values());
     const duplicates: string[] = [];
-    
+
     for (let i = 0; i < entries.length; i++) {
       for (let j = i + 1; j < entries.length; j++) {
         const entry1 = entries[i];
         const entry2 = entries[j];
-        
+
         // Verificar se são duplicatas (mesmo título e conteúdo similar)
-        if (entry1.tenantId === entry2.tenantId && 
-            entry1.title === entry2.title &&
-            this.calculateSimilarity(entry1.content, entry2.content) > 0.9) {
-          
+        if (
+          entry1.tenantId === entry2.tenantId &&
+          entry1.title === entry2.title &&
+          this.calculateSimilarity(entry1.content, entry2.content) > 0.9
+        ) {
           // Manter a entrada com maior confiança
-          const toRemove = entry1.confidence >= entry2.confidence ? entry2.id : entry1.id;
+          const toRemove =
+            entry1.confidence >= entry2.confidence ? entry2.id : entry1.id;
           duplicates.push(toRemove);
         }
       }
     }
-    
+
     // Remover duplicatas
     for (const duplicateId of duplicates) {
       const entry = this.storage.get(duplicateId);
@@ -379,27 +433,27 @@ export class ContentManager {
         removedDuplicates++;
       }
     }
-    
+
     // Verificar e corrigir índices
     const allEntries = Array.from(this.storage.values());
-    
+
     // Reconstruir índices
     this.tenantIndex.clear();
     this.authorIndex.clear();
     this.typeIndex.clear();
-    
-    allEntries.forEach(entry => {
+
+    allEntries.forEach((entry) => {
       this.updateIndices(entry);
       fixedIndices++;
     });
-    
+
     // Persistir mudanças
     await this.persistToStorage();
-    
+
     return {
       removedDuplicates,
       fixedIndices,
-      compactedStorage: true
+      compactedStorage: true,
     };
   }
 
@@ -407,10 +461,12 @@ export class ContentManager {
     // Algoritmo simples de similaridade baseado em palavras comuns
     const words1 = new Set(text1.toLowerCase().split(/\s+/));
     const words2 = new Set(text2.toLowerCase().split(/\s+/));
-    
-    const intersection = new Set([...words1].filter(word => words2.has(word)));
+
+    const intersection = new Set(
+      [...words1].filter((word) => words2.has(word))
+    );
     const union = new Set([...words1, ...words2]);
-    
+
     return intersection.size / union.size;
   }
 }

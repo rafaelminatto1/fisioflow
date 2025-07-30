@@ -1,7 +1,11 @@
 // services/ai-economica/monitoringService.ts
 // Sistema de monitoramento em tempo real para IA econômica
 
-import { PremiumProvider, ResponseSource, UsageStatus } from '../../types/ai-economica.types';
+import {
+  PremiumProvider,
+  ResponseSource,
+  UsageStatus,
+} from '../../types/ai-economica.types';
 import { aiEconomicaLogger } from './logger';
 import { AI_ECONOMICA_CONFIG } from '../../config/ai-economica.config';
 
@@ -17,7 +21,12 @@ export interface SystemMetrics {
 }
 
 export interface AlertConfig {
-  type: 'usage_warning' | 'usage_critical' | 'error_rate' | 'slow_response' | 'cost_threshold';
+  type:
+    | 'usage_warning'
+    | 'usage_critical'
+    | 'error_rate'
+    | 'slow_response'
+    | 'cost_threshold';
   threshold: number;
   enabled: boolean;
   channels: ('email' | 'dashboard' | 'webhook')[];
@@ -104,10 +113,14 @@ export class MonitoringService {
   }
 
   // Coleta de métricas
-  recordQuery(source: ResponseSource, provider?: PremiumProvider, responseTime?: number): void {
+  recordQuery(
+    source: ResponseSource,
+    provider?: PremiumProvider,
+    responseTime?: number
+  ): void {
     this.metrics.totalQueries++;
     this.metrics.queriesBySource[source]++;
-    
+
     if (provider) {
       this.metrics.queriesByProvider[provider]++;
     }
@@ -116,22 +129,24 @@ export class MonitoringService {
       // Calcular média móvel do tempo de resposta
       const currentAvg = this.metrics.averageResponseTime;
       const totalQueries = this.metrics.totalQueries;
-      this.metrics.averageResponseTime = (currentAvg * (totalQueries - 1) + responseTime) / totalQueries;
-      
+      this.metrics.averageResponseTime =
+        (currentAvg * (totalQueries - 1) + responseTime) / totalQueries;
+
       // Verificar alerta de resposta lenta
       this.checkSlowResponseAlert(responseTime);
     }
 
     this.updateCacheHitRate();
     this.metrics.lastUpdated = new Date();
-    
+
     aiEconomicaLogger.logQuery('', 'GENERAL_QUESTION', source);
   }
 
   recordError(source: ResponseSource, error: Error): void {
     const totalQueries = this.metrics.totalQueries || 1;
-    this.metrics.errorRate = (this.metrics.errorRate * (totalQueries - 1) + 1) / totalQueries;
-    
+    this.metrics.errorRate =
+      (this.metrics.errorRate * (totalQueries - 1) + 1) / totalQueries;
+
     this.checkErrorRateAlert();
     aiEconomicaLogger.logQueryError('', error);
   }
@@ -149,7 +164,7 @@ export class MonitoringService {
 
   // Sistema de alertas
   private checkSlowResponseAlert(responseTime: number): void {
-    const config = this.alertConfigs.find(c => c.type === 'slow_response');
+    const config = this.alertConfigs.find((c) => c.type === 'slow_response');
     if (config && config.enabled && responseTime > config.threshold) {
       this.createAlert({
         type: 'slow_response',
@@ -161,31 +176,46 @@ export class MonitoringService {
   }
 
   private checkErrorRateAlert(): void {
-    const config = this.alertConfigs.find(c => c.type === 'error_rate');
+    const config = this.alertConfigs.find((c) => c.type === 'error_rate');
     if (config && config.enabled && this.metrics.errorRate > config.threshold) {
       this.createAlert({
         type: 'error_rate',
         message: `Taxa de erro alta: ${(this.metrics.errorRate * 100).toFixed(1)}%`,
         severity: 'high',
-        data: { errorRate: this.metrics.errorRate, threshold: config.threshold },
+        data: {
+          errorRate: this.metrics.errorRate,
+          threshold: config.threshold,
+        },
       });
     }
   }
 
   checkUsageAlert(provider: PremiumProvider, usageStatus: UsageStatus): void {
     const usagePercentage = usageStatus.currentUsage / usageStatus.monthlyLimit;
-    
-    const warningConfig = this.alertConfigs.find(c => c.type === 'usage_warning');
-    const criticalConfig = this.alertConfigs.find(c => c.type === 'usage_critical');
-    
-    if (criticalConfig && criticalConfig.enabled && usagePercentage >= criticalConfig.threshold) {
+
+    const warningConfig = this.alertConfigs.find(
+      (c) => c.type === 'usage_warning'
+    );
+    const criticalConfig = this.alertConfigs.find(
+      (c) => c.type === 'usage_critical'
+    );
+
+    if (
+      criticalConfig &&
+      criticalConfig.enabled &&
+      usagePercentage >= criticalConfig.threshold
+    ) {
       this.createAlert({
         type: 'usage_critical',
         message: `${provider} atingiu ${(usagePercentage * 100).toFixed(1)}% do limite mensal`,
         severity: 'critical',
         data: { provider, usagePercentage, usageStatus },
       });
-    } else if (warningConfig && warningConfig.enabled && usagePercentage >= warningConfig.threshold) {
+    } else if (
+      warningConfig &&
+      warningConfig.enabled &&
+      usagePercentage >= warningConfig.threshold
+    ) {
       this.createAlert({
         type: 'usage_warning',
         message: `${provider} atingiu ${(usagePercentage * 100).toFixed(1)}% do limite mensal`,
@@ -195,7 +225,9 @@ export class MonitoringService {
     }
   }
 
-  private createAlert(alertData: Omit<Alert, 'id' | 'timestamp' | 'acknowledged'>): void {
+  private createAlert(
+    alertData: Omit<Alert, 'id' | 'timestamp' | 'acknowledged'>
+  ): void {
     const alert: Alert = {
       id: this.generateAlertId(),
       timestamp: new Date(),
@@ -204,7 +236,7 @@ export class MonitoringService {
     };
 
     this.alerts.push(alert);
-    
+
     // Manter apenas os últimos 1000 alertas
     if (this.alerts.length > 1000) {
       this.alerts = this.alerts.slice(-1000);
@@ -212,7 +244,7 @@ export class MonitoringService {
 
     // Enviar notificações
     this.sendAlertNotifications(alert);
-    
+
     aiEconomicaLogger.log('WARN', 'ALERT_CREATED', alert.message, alert.data);
   }
 
@@ -221,10 +253,10 @@ export class MonitoringService {
   }
 
   private sendAlertNotifications(alert: Alert): void {
-    const config = this.alertConfigs.find(c => c.type === alert.type);
+    const config = this.alertConfigs.find((c) => c.type === alert.type);
     if (!config) return;
 
-    config.channels.forEach(channel => {
+    config.channels.forEach((channel) => {
       switch (channel) {
         case 'dashboard':
           // Notificação será exibida no dashboard
@@ -255,7 +287,7 @@ export class MonitoringService {
   }
 
   getActiveAlerts(): Alert[] {
-    return this.alerts.filter(alert => !alert.acknowledged);
+    return this.alerts.filter((alert) => !alert.acknowledged);
   }
 
   getAllAlerts(limit = 100): Alert[] {
@@ -263,7 +295,7 @@ export class MonitoringService {
   }
 
   acknowledgeAlert(alertId: string): boolean {
-    const alert = this.alerts.find(a => a.id === alertId);
+    const alert = this.alerts.find((a) => a.id === alertId);
     if (alert) {
       alert.acknowledged = true;
       return true;
@@ -274,8 +306,8 @@ export class MonitoringService {
   getMetricsHistory(hours = 24): SystemMetrics[] {
     const cutoff = new Date();
     cutoff.setHours(cutoff.getHours() - hours);
-    
-    return this.metricsHistory.filter(m => m.lastUpdated >= cutoff);
+
+    return this.metricsHistory.filter((m) => m.lastUpdated >= cutoff);
   }
 
   // Dashboard data
@@ -290,31 +322,41 @@ export class MonitoringService {
 
   private calculateSystemHealth(): 'healthy' | 'warning' | 'critical' {
     const activeAlerts = this.getActiveAlerts();
-    const criticalAlerts = activeAlerts.filter(a => a.severity === 'critical');
-    const highAlerts = activeAlerts.filter(a => a.severity === 'high');
-    
+    const criticalAlerts = activeAlerts.filter(
+      (a) => a.severity === 'critical'
+    );
+    const highAlerts = activeAlerts.filter((a) => a.severity === 'high');
+
     if (criticalAlerts.length > 0) return 'critical';
-    if (highAlerts.length > 0 || this.metrics.errorRate > 0.05) return 'warning';
+    if (highAlerts.length > 0 || this.metrics.errorRate > 0.05)
+      return 'warning';
     return 'healthy';
   }
 
   // Coleta periódica de métricas
   private startMetricsCollection(): void {
-    setInterval(() => {
-      // Salvar snapshot das métricas atuais
-      this.metricsHistory.push({ ...this.metrics });
-      
-      // Manter apenas as últimas 24 horas de histórico
-      const cutoff = new Date();
-      cutoff.setHours(cutoff.getHours() - 24);
-      this.metricsHistory = this.metricsHistory.filter(m => m.lastUpdated >= cutoff);
-      
-    }, 5 * 60 * 1000); // A cada 5 minutos
+    setInterval(
+      () => {
+        // Salvar snapshot das métricas atuais
+        this.metricsHistory.push({ ...this.metrics });
+
+        // Manter apenas as últimas 24 horas de histórico
+        const cutoff = new Date();
+        cutoff.setHours(cutoff.getHours() - 24);
+        this.metricsHistory = this.metricsHistory.filter(
+          (m) => m.lastUpdated >= cutoff
+        );
+      },
+      5 * 60 * 1000
+    ); // A cada 5 minutos
   }
 
   // Configuração de alertas
-  updateAlertConfig(type: AlertConfig['type'], config: Partial<AlertConfig>): void {
-    const index = this.alertConfigs.findIndex(c => c.type === type);
+  updateAlertConfig(
+    type: AlertConfig['type'],
+    config: Partial<AlertConfig>
+  ): void {
+    const index = this.alertConfigs.findIndex((c) => c.type === type);
     if (index >= 0) {
       this.alertConfigs[index] = { ...this.alertConfigs[index], ...config };
     } else {

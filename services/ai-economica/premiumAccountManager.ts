@@ -1,9 +1,20 @@
 // services/ai-economica/premiumAccountManager.ts
 // Gerenciador inteligente das contas premium de IA
 
-import { PremiumProvider, QueryType, AIQuery, AIResponse, UsageStatus, ProviderConfig } from '../../types/ai-economica.types';
-import { AI_ECONOMICA_CONFIG, getProviderConfig, getProviderStrategy } from '../../config/ai-economica.config';
-import { aiEconomicaLogger } from './logger';
+import {
+  PremiumProvider,
+  QueryType,
+  AIQuery,
+  AIResponse,
+  UsageStatus,
+  ProviderConfig,
+} from '../../types/ai-economica.types';
+import {
+  DEFAULT_CONFIG,
+  PROVIDER_STRATEGY,
+  getPreferredProviders,
+} from '../../config/ai-economica.config';
+import { aiLogger } from './logger';
 import { monitoringService } from './monitoringService';
 
 interface UsageTracker {
@@ -16,6 +27,7 @@ interface UsageTracker {
       tokensUsed: number;
       queryType: QueryType;
       success: boolean;
+      responseTime: number;
     }>;
   };
 }
@@ -24,669 +36,538 @@ interface ProviderClient {
   query(query: AIQuery): Promise<AIResponse>;
   isAvailable(): Promise<boolean>;
   getEstimatedTokens(query: string): number;
+  testConnection(): Promise<boolean>;
+}
+
+interface ProviderPerformance {
+  averageResponseTime: number;
+  successRate: number;
+  lastSuccessfulQuery: Date | null;
+  consecutiveFailures: number;
+  isHealthy: boolean;
 }
 
 export class PremiumAccountManager {
   private providers: Map<PremiumProvider, ProviderConfig> = new Map();
-  private usageTracker: UsageTracker = {};
   private providerClients: Map<PremiumProvider, ProviderClient> = new Map();
-  private lastHealthCheck: Date = new Date();
+  private usageTracker: UsageTracker = {};
+  private performance: Map<PremiumProvider, ProviderPerformance> = new Map();
+  private rotationStrategy: 'round_robin' | 'least_used' | 'best_performance' =
+    'best_performance';
+  private currentProviderIndex = 0;
+  private readonly healthCheckInterval = 5 * 60 * 1000; // 5 minutos
 
   constructor() {
     this.initializeProviders();
+    this.startHealthChecking();
     this.loadUsageFromStorage();
-    this.startUsageResetScheduler();
-    this.startHealthCheckScheduler();
   }
 
-  private initializeProviders(): void {
-    Object.entries(AI_ECONOMICA_CONFIG.PREMIUM_ACCOUNTS).forEach(([provider, config]) => {
-      const providerEnum = provider as PremiumProvider;
-      
-      this.providers.set(providerEnum, {
-        enabled: config.enabled,
-        endpoint: config.endpoint,
-        monthlyLimit: config.monthlyLimit,
-        currentUsage: 0,
-        resetDate: this.getNextResetDate()
-      });
-
-      // Inicializar tracking de uso
-      this.usageTracker[provider] = {
-        monthlyUsage: 0,
-        dailyUsage: 0,
-        lastReset: new Date(),
-        requestHistory: []
-      };
-
-      // Inicializar cliente específico do provedor
-      if (config.enabled) {
-        this.initializeProviderClient(providerEnum);
-      }
-    });
-  }
-
-  private initializeProviderClient(provider: PremiumProvider): void {
-    switch (provider) {
-      case PremiumProvider.CHATGPT_PLUS:
-        this.providerClients.set(provider, new ChatGPTClient());
-        break;
-      case PremiumProvider.GEMINI_PRO:
-        this.providerClients.set(provider, new GeminiClient());
-        break;
-      case PremiumProvider.CLAUDE_PRO:
-        this.providerClients.set(provider, new ClaudeClient());
-        break;
-      case PremiumProvider.PERPLEXITY_PRO:
-        this.providerClients.set(provider, new PerplexityClient());
-        break;
-      case PremiumProvider.MARS_AI_PRO:
-        this.providerClients.set(provider, new MarsAIClient());
-        break;
-    }
-  }
-
-  async selectBestProvider(queryType: QueryType): Promise<PremiumProvider | null> {
-    try {
-      // Obter provedores preferenciais para este tipo de consulta
-      const preferredProviders = getProviderStrategy(queryType);
-      const availableProviders = await this.getAvailableProviders();
-      
-      // Encontrar o primeiro provedor preferido que está disponível
-      for (const provider of preferredProviders) {
-        if (availableProviders.includes(provider)) {
-          const usage = await this.getCurrentUsage(provider);
-          
-          // Verificar se ainda tem quota disponível
-          if (usage.status === 'available' || usage.status === 'warning') {
-            aiEconomicaLogger.logPremiumUsage(provider, 0, usage.remainingQuota);
-            return provider;
-          }
-        }
-      }
-      
-      // Se nenhum preferido está disponível, usar qualquer um disponível
-      for (const provider of availableProviders) {
-        const usage = await this.getCurrentUsage(provider);
-        if (usage.status === 'available') {
-          return provider;
-        }
-      }
-      
-      // Nenhum provedor disponível
-      aiEconomicaLogger.log('WARN', 'PREMIUM_SELECTION', 'No premium providers available');
-      return null;
-      
-    } catch (error) {
-      aiEconomicaLogger.logQueryError('provider_selection', error as Error);
-      return null;
-    }
-  }
-
-  async getAvailableProviders(): Promise<PremiumProvider[]> {
-    const available: PremiumProvider[] = [];
-    
-    for (const [provider, config] of this.providers) {
-      if (!config.enabled) continue;
-      
-      try {
-        const client = this.providerClients.get(provider);
-        if (client && await client.isAvailable()) {
-          const usage = await this.getCurrentUsage(provider);
-          if (usage.status !== 'limit_reached') {
-            available.push(provider);
-          }
-        }
-      } catch (error) {
-        aiEconomicaLogger.log('WARN', 'PROVIDER_CHECK', `Provider ${provider} unavailable: ${error}`);
-      }
-    }
-    
-    return available;
-  }
-
-  async query(provider: PremiumProvider, query: AIQuery): Promise<AIResponse> {
-    const config = this.providers.get(provider);
-    if (!config || !config.enabled) {
-      throw new Error(`Provider ${provider} not configured or disabled`);
-    }
-
-    const client = this.providerClients.get(provider);
-    if (!client) {
-      throw new Error(`Client for ${provider} not initialized`);
-    }
-
-    // Verificar quota antes da consulta
-    const usage = await this.getCurrentUsage(provider);
-    if (usage.status === 'limit_reached') {
-      throw new Error(`Monthly limit reached for ${provider}`);
-    }
-
-    const startTime = Date.now();
-    let success = false;
-    let tokensUsed = 0;
+  /**
+   * Executa query usando o provedor mais adequado
+   */
+  async executeQuery(query: AIQuery): Promise<AIResponse> {
+    const startTime = performance.now();
 
     try {
-      // Estimar tokens que serão usados
-      tokensUsed = client.getEstimatedTokens(query.text);
-      
-      // Verificar se a consulta não vai estourar o limite
-      if (usage.currentUsage + tokensUsed > usage.monthlyLimit) {
-        throw new Error(`Query would exceed monthly limit for ${provider}`);
+      // Determina provedor ideal baseado na estratégia
+      const provider = await this.selectBestProvider(query);
+
+      if (!provider) {
+        throw new Error('Nenhum provedor premium disponível');
       }
 
-      // Fazer a consulta
-      const response = await client.query(query);
-      
-      // Atualizar tokens reais usados se disponível
-      if (response.tokensUsed) {
-        tokensUsed = response.tokensUsed;
+      // Verifica limites antes da execução
+      const canExecute = await this.checkUsageLimits(provider, query);
+      if (!canExecute) {
+        // Tenta próximo provedor
+        const alternativeProvider = await this.selectAlternativeProvider(
+          query,
+          [provider]
+        );
+        if (!alternativeProvider) {
+          throw new Error('Todos os provedores atingiram seus limites');
+        }
+        return this.executeQueryWithProvider(
+          alternativeProvider,
+          query,
+          startTime
+        );
       }
 
-      success = true;
-      
-      // Registrar uso
-      await this.trackUsage(provider, tokensUsed, query.type, true);
-      
-      // Adicionar metadados da resposta
-      response.provider = provider;
-      response.responseTime = Date.now() - startTime;
-      
-      return response;
-      
+      return await this.executeQueryWithProvider(provider, query, startTime);
     } catch (error) {
-      // Registrar tentativa falhada
-      await this.trackUsage(provider, tokensUsed, query.type, false);
-      
-      aiEconomicaLogger.logQueryError(`${provider}_query`, error as Error);
+      aiLogger.error(
+        'PREMIUM_ACCOUNT_MANAGER',
+        'Erro na execução da query',
+        error
+      );
       throw error;
     }
   }
 
-  async trackUsage(provider: PremiumProvider, tokensUsed: number, queryType: QueryType, success: boolean): Promise<void> {
+  /**
+   * Executa query com provedor específico
+   */
+  private async executeQueryWithProvider(
+    provider: PremiumProvider,
+    query: AIQuery,
+    startTime: number
+  ): Promise<AIResponse> {
+    const client = this.providerClients.get(provider);
+
+    if (!client) {
+      throw new Error(`Cliente não disponível para ${provider}`);
+    }
+
     try {
-      const tracker = this.usageTracker[provider];
-      if (!tracker) return;
+      // Executa query
+      const response = await client.query(query);
+      const responseTime = performance.now() - startTime;
 
-      // Atualizar contadores
-      if (success) {
-        tracker.monthlyUsage += tokensUsed;
-        tracker.dailyUsage += tokensUsed;
-      }
+      // Registra uso bem-sucedido
+      await this.recordUsage(provider, query, responseTime, true);
+      this.updatePerformanceMetrics(provider, responseTime, true);
 
-      // Adicionar ao histórico
-      tracker.requestHistory.push({
-        timestamp: new Date(),
-        tokensUsed,
-        queryType,
-        success
+      aiLogger.debug('PREMIUM_ACCOUNT_MANAGER', 'Query executada com sucesso', {
+        provider,
+        queryType: query.type,
+        responseTime: Math.round(responseTime),
       });
 
-      // Manter apenas os últimos 100 registros
-      if (tracker.requestHistory.length > 100) {
-        tracker.requestHistory = tracker.requestHistory.slice(-100);
-      }
-
-      // Atualizar configuração do provedor
-      const config = this.providers.get(provider);
-      if (config) {
-        config.currentUsage = tracker.monthlyUsage;
-      }
-
-      // Salvar no storage
-      await this.saveUsageToStorage();
-
-      // Verificar alertas
-      const usage = await this.getCurrentUsage(provider);
-      monitoringService.checkUsageAlert(provider, usage);
-
-      aiEconomicaLogger.logPremiumUsage(provider, tokensUsed, usage.remainingQuota);
-      
+      return response;
     } catch (error) {
-      console.error(`Erro ao rastrear uso do ${provider}:`, error);
+      const responseTime = performance.now() - startTime;
+
+      // Registra falha
+      await this.recordUsage(provider, query, responseTime, false);
+      this.updatePerformanceMetrics(provider, responseTime, false);
+
+      aiLogger.error(
+        'PREMIUM_ACCOUNT_MANAGER',
+        `Erro no provedor ${provider}`,
+        error
+      );
+      throw error;
     }
   }
 
-  async getCurrentUsage(provider: PremiumProvider): Promise<UsageStatus> {
-    const config = this.providers.get(provider);
-    const tracker = this.usageTracker[provider];
-    
-    if (!config || !tracker) {
-      throw new Error(`Provider ${provider} not found`);
+  /**
+   * Seleciona o melhor provedor baseado na estratégia
+   */
+  private async selectBestProvider(
+    query: AIQuery
+  ): Promise<PremiumProvider | null> {
+    const availableProviders = await this.getAvailableProviders();
+    const preferredProviders = getPreferredProviders(query.type);
+
+    // Filtra provedores preferenciais que estão disponíveis
+    const viableProviders = preferredProviders.filter((provider) =>
+      availableProviders.includes(provider)
+    );
+
+    if (viableProviders.length === 0) {
+      return availableProviders.length > 0 ? availableProviders[0] : null;
     }
 
-    const currentUsage = tracker.monthlyUsage;
-    const monthlyLimit = config.monthlyLimit;
-    const remainingQuota = Math.max(0, monthlyLimit - currentUsage);
-    const usagePercentage = monthlyLimit > 0 ? currentUsage / monthlyLimit : 0;
+    switch (this.rotationStrategy) {
+      case 'round_robin':
+        return this.selectRoundRobin(viableProviders);
 
-    let status: UsageStatus['status'] = 'available';
-    if (usagePercentage >= 1.0) {
-      status = 'limit_reached';
-    } else if (usagePercentage >= AI_ECONOMICA_CONFIG.USAGE_ALERTS.CRITICAL_THRESHOLD) {
-      status = 'warning';
+      case 'least_used':
+        return this.selectLeastUsed(viableProviders);
+
+      case 'best_performance':
+        return this.selectBestPerformance(viableProviders);
+
+      default:
+        return viableProviders[0];
     }
-
-    return {
-      provider,
-      monthlyLimit,
-      currentUsage,
-      remainingQuota,
-      resetDate: config.resetDate,
-      status
-    };
   }
 
-  async getAllUsageStatus(): Promise<UsageStatus[]> {
-    const statuses: UsageStatus[] = [];
-    
-    for (const provider of this.providers.keys()) {
-      try {
-        const status = await this.getCurrentUsage(provider);
-        statuses.push(status);
-      } catch (error) {
-        console.error(`Erro ao obter status de ${provider}:`, error);
-      }
-    }
-    
-    return statuses;
-  }
+  /**
+   * Obtém provedores disponíveis (habilitados e saudáveis)
+   */
+  private async getAvailableProviders(): Promise<PremiumProvider[]> {
+    const available: PremiumProvider[] = [];
 
-  async resetMonthlyUsage(provider?: PremiumProvider): Promise<void> {
-    try {
-      if (provider) {
-        // Reset específico de um provedor
-        const tracker = this.usageTracker[provider];
-        if (tracker) {
-          tracker.monthlyUsage = 0;
-          tracker.lastReset = new Date();
+    for (const [provider, config] of this.providers.entries()) {
+      if (config.enabled) {
+        const performance = this.performance.get(provider);
+        if (performance?.isHealthy) {
+          available.push(provider);
         }
-        
-        const config = this.providers.get(provider);
-        if (config) {
-          config.currentUsage = 0;
-          config.resetDate = this.getNextResetDate();
-        }
-        
-        aiEconomicaLogger.log('INFO', 'USAGE_RESET', `Monthly usage reset for ${provider}`);
-      } else {
-        // Reset de todos os provedores
-        Object.keys(this.usageTracker).forEach(providerKey => {
-          const tracker = this.usageTracker[providerKey];
-          tracker.monthlyUsage = 0;
-          tracker.lastReset = new Date();
-        });
-        
-        this.providers.forEach((config, provider) => {
-          config.currentUsage = 0;
-          config.resetDate = this.getNextResetDate();
-        });
-        
-        aiEconomicaLogger.log('INFO', 'USAGE_RESET', 'Monthly usage reset for all providers');
-      }
-      
-      await this.saveUsageToStorage();
-      
-    } catch (error) {
-      console.error('Erro ao resetar uso mensal:', error);
-    }
-  }
-
-  async getProviderHealth(): Promise<Record<PremiumProvider, {
-    available: boolean;
-    responseTime: number;
-    errorRate: number;
-    lastCheck: Date;
-  }>> {
-    const health: any = {};
-    
-    for (const [provider, client] of this.providerClients) {
-      try {
-        const startTime = Date.now();
-        const available = await client.isAvailable();
-        const responseTime = Date.now() - startTime;
-        
-        const tracker = this.usageTracker[provider];
-        const recentRequests = tracker?.requestHistory.slice(-20) || [];
-        const errorRate = recentRequests.length > 0 
-          ? recentRequests.filter(r => !r.success).length / recentRequests.length 
-          : 0;
-        
-        health[provider] = {
-          available,
-          responseTime,
-          errorRate,
-          lastCheck: new Date()
-        };
-        
-      } catch (error) {
-        health[provider] = {
-          available: false,
-          responseTime: -1,
-          errorRate: 1,
-          lastCheck: new Date()
-        };
       }
     }
-    
-    return health;
+
+    return available;
   }
 
-  // Métodos de configuração
+  /**
+   * Seleção round-robin
+   */
+  private selectRoundRobin(providers: PremiumProvider[]): PremiumProvider {
+    const provider = providers[this.currentProviderIndex % providers.length];
+    this.currentProviderIndex =
+      (this.currentProviderIndex + 1) % providers.length;
+    return provider;
+  }
 
-  async updateProviderConfig(provider: PremiumProvider, updates: Partial<ProviderConfig>): Promise<void> {
+  /**
+   * Seleção pelo menos usado
+   */
+  private selectLeastUsed(providers: PremiumProvider[]): PremiumProvider {
+    return providers.reduce((least, current) => {
+      const leastUsage = this.usageTracker[least]?.monthlyUsage || 0;
+      const currentUsage = this.usageTracker[current]?.monthlyUsage || 0;
+      return currentUsage < leastUsage ? current : least;
+    });
+  }
+
+  /**
+   * Seleção pela melhor performance
+   */
+  private selectBestPerformance(providers: PremiumProvider[]): PremiumProvider {
+    return providers.reduce((best, current) => {
+      const bestPerf = this.performance.get(best);
+      const currentPerf = this.performance.get(current);
+
+      if (!bestPerf) return current;
+      if (!currentPerf) return best;
+
+      // Considera taxa de sucesso e tempo de resposta
+      const bestScore =
+        bestPerf.successRate * (1 / (bestPerf.averageResponseTime + 1));
+      const currentScore =
+        currentPerf.successRate * (1 / (currentPerf.averageResponseTime + 1));
+
+      return currentScore > bestScore ? current : best;
+    });
+  }
+
+  /**
+   * Verifica limites de uso
+   */
+  private async checkUsageLimits(
+    provider: PremiumProvider,
+    query: AIQuery
+  ): Promise<boolean> {
     const config = this.providers.get(provider);
-    if (!config) {
-      throw new Error(`Provider ${provider} not found`);
+    const usage = this.usageTracker[provider];
+
+    if (!config || !usage) return false;
+
+    // Verifica limite mensal
+    if (usage.monthlyUsage >= config.monthlyLimit) {
+      aiLogger.warn(
+        'PREMIUM_ACCOUNT_MANAGER',
+        `Limite mensal atingido para ${provider}`
+      );
+      return false;
     }
 
-    Object.assign(config, updates);
-    
-    // Se foi habilitado, inicializar cliente
-    if (updates.enabled && !this.providerClients.has(provider)) {
-      this.initializeProviderClient(provider);
+    // Verifica limite de rate (requests por minuto)
+    const recentRequests = usage.requestHistory.filter(
+      (req) => Date.now() - req.timestamp.getTime() < 60000
+    );
+
+    if (recentRequests.length >= DEFAULT_CONFIG.rateLimits.requestsPerMinute) {
+      aiLogger.warn(
+        'PREMIUM_ACCOUNT_MANAGER',
+        `Rate limit atingido para ${provider}`
+      );
+      return false;
     }
-    
-    // Se foi desabilitado, remover cliente
-    if (updates.enabled === false) {
-      this.providerClients.delete(provider);
-    }
-    
-    await this.saveConfigToStorage();
-    
-    aiEconomicaLogger.log('INFO', 'PROVIDER_CONFIG', `Updated config for ${provider}`, updates);
+
+    return true;
   }
 
-  async testProvider(provider: PremiumProvider): Promise<{
-    success: boolean;
-    responseTime: number;
-    error?: string;
-  }> {
-    try {
-      const client = this.providerClients.get(provider);
-      if (!client) {
-        return {
-          success: false,
-          responseTime: 0,
-          error: 'Client not initialized'
-        };
+  /**
+   * Registra uso do provedor
+   */
+  private async recordUsage(
+    provider: PremiumProvider,
+    query: AIQuery,
+    responseTime: number,
+    success: boolean
+  ): Promise<void> {
+    const providerKey = provider as string;
+
+    if (!this.usageTracker[providerKey]) {
+      this.usageTracker[providerKey] = {
+        monthlyUsage: 0,
+        dailyUsage: 0,
+        lastReset: new Date(),
+        requestHistory: [],
+      };
+    }
+
+    const tracker = this.usageTracker[providerKey];
+
+    // Estima tokens usados (implementação simplificada)
+    const estimatedTokens = query.content.length * 0.75; // Aproximação
+
+    tracker.monthlyUsage += estimatedTokens;
+    tracker.dailyUsage += estimatedTokens;
+    tracker.requestHistory.push({
+      timestamp: new Date(),
+      tokensUsed: estimatedTokens,
+      queryType: query.type,
+      success,
+      responseTime,
+    });
+
+    // Limita histórico a últimas 1000 requests
+    if (tracker.requestHistory.length > 1000) {
+      tracker.requestHistory = tracker.requestHistory.slice(-1000);
+    }
+
+    // Persiste no storage
+    await this.saveUsageToStorage();
+
+    // Envia métricas para monitoramento
+    monitoringService.recordProviderUsage(provider, {
+      tokensUsed: estimatedTokens,
+      responseTime,
+      success,
+      queryType: query.type,
+    });
+  }
+
+  /**
+   * Atualiza métricas de performance
+   */
+  private updatePerformanceMetrics(
+    provider: PremiumProvider,
+    responseTime: number,
+    success: boolean
+  ): void {
+    let perf = this.performance.get(provider);
+
+    if (!perf) {
+      perf = {
+        averageResponseTime: responseTime,
+        successRate: success ? 1 : 0,
+        lastSuccessfulQuery: success ? new Date() : null,
+        consecutiveFailures: success ? 0 : 1,
+        isHealthy: success,
+      };
+      this.performance.set(provider, perf);
+      return;
+    }
+
+    // Atualiza média de tempo de resposta (média móvel)
+    perf.averageResponseTime =
+      perf.averageResponseTime * 0.8 + responseTime * 0.2;
+
+    // Atualiza taxa de sucesso
+    const recentHistory =
+      this.usageTracker[provider]?.requestHistory.slice(-100) || [];
+    const recentSuccesses = recentHistory.filter((r) => r.success).length;
+    perf.successRate =
+      recentHistory.length > 0 ? recentSuccesses / recentHistory.length : 0;
+
+    // Atualiza falhas consecutivas
+    if (success) {
+      perf.consecutiveFailures = 0;
+      perf.lastSuccessfulQuery = new Date();
+    } else {
+      perf.consecutiveFailures++;
+    }
+
+    // Determina se está saudável
+    perf.isHealthy = perf.consecutiveFailures < 3 && perf.successRate > 0.7;
+  }
+
+  /**
+   * Obtém status de uso de todos os provedores
+   */
+  async getUsageStatus(): Promise<UsageStatus[]> {
+    const status: UsageStatus[] = [];
+
+    for (const [provider, config] of this.providers.entries()) {
+      const usage = this.usageTracker[provider];
+      const performance = this.performance.get(provider);
+
+      status.push({
+        provider,
+        enabled: config.enabled,
+        monthlyUsage: usage?.monthlyUsage || 0,
+        monthlyLimit: config.monthlyLimit,
+        dailyUsage: usage?.dailyUsage || 0,
+        isHealthy: performance?.isHealthy || false,
+        averageResponseTime: performance?.averageResponseTime || 0,
+        successRate: performance?.successRate || 0,
+        lastSuccessfulQuery: performance?.lastSuccessfulQuery || null,
+      });
+    }
+
+    return status;
+  }
+
+  /**
+   * Força health check de todos os provedores
+   */
+  async performHealthCheck(): Promise<void> {
+    aiLogger.info(
+      'PREMIUM_ACCOUNT_MANAGER',
+      'Iniciando health check dos provedores'
+    );
+
+    const promises = Array.from(this.providerClients.entries()).map(
+      async ([provider, client]) => {
+        try {
+          const isHealthy = await client.testConnection();
+          const perf = this.performance.get(provider);
+
+          if (perf) {
+            perf.isHealthy = isHealthy;
+            if (!isHealthy) {
+              perf.consecutiveFailures++;
+            }
+          }
+
+          aiLogger.debug(
+            'PREMIUM_ACCOUNT_MANAGER',
+            `Health check ${provider}`,
+            { isHealthy }
+          );
+        } catch (error) {
+          aiLogger.error(
+            'PREMIUM_ACCOUNT_MANAGER',
+            `Health check falhou ${provider}`,
+            error
+          );
+
+          const perf = this.performance.get(provider);
+          if (perf) {
+            perf.isHealthy = false;
+            perf.consecutiveFailures++;
+          }
+        }
       }
+    );
 
-      const startTime = Date.now();
-      const testQuery: AIQuery = {
-        id: 'test_' + Date.now(),
-        text: 'Test query for connectivity',
-        type: QueryType.GENERAL_QUESTION,
-        context: { userRole: 'admin' },
-        priority: 'low',
-        maxResponseTime: 10000,
-        hash: 'test_hash',
-        createdAt: new Date().toISOString()
-      };
-
-      await client.query(testQuery);
-      const responseTime = Date.now() - startTime;
-
-      return {
-        success: true,
-        responseTime
-      };
-
-    } catch (error) {
-      return {
-        success: false,
-        responseTime: 0,
-        error: (error as Error).message
-      };
-    }
+    await Promise.allSettled(promises);
   }
 
-  // Métodos privados
-
-  private getNextResetDate(): Date {
-    const now = new Date();
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    return nextMonth;
-  }
-
+  /**
+   * Persiste dados de uso no localStorage
+   */
   private async saveUsageToStorage(): Promise<void> {
     try {
       const data = {
         usageTracker: this.usageTracker,
-        providers: Array.from(this.providers.entries()),
-        lastUpdated: new Date().toISOString()
+        performance: Object.fromEntries(this.performance.entries()),
+        lastSaved: Date.now(),
       };
-      
-      localStorage.setItem('ai_economica_usage', JSON.stringify(data));
+
+      localStorage.setItem('ai-economica-usage', JSON.stringify(data));
     } catch (error) {
-      console.error('Erro ao salvar uso no storage:', error);
+      aiLogger.error(
+        'PREMIUM_ACCOUNT_MANAGER',
+        'Erro ao salvar dados de uso',
+        error
+      );
     }
   }
 
+  /**
+   * Carrega dados de uso do localStorage
+   */
   private loadUsageFromStorage(): void {
     try {
-      const stored = localStorage.getItem('ai_economica_usage');
-      if (!stored) return;
-      
-      const data = JSON.parse(stored);
-      
-      if (data.usageTracker) {
-        this.usageTracker = data.usageTracker;
+      const data = localStorage.getItem('ai-economica-usage');
+      if (!data) return;
+
+      const parsed = JSON.parse(data);
+
+      if (parsed.usageTracker) {
+        this.usageTracker = parsed.usageTracker;
       }
-      
-      if (data.providers) {
-        const providersMap = new Map(data.providers);
-        providersMap.forEach((config, provider) => {
-          const existingConfig = this.providers.get(provider);
-          if (existingConfig) {
-            existingConfig.currentUsage = config.currentUsage;
-            existingConfig.resetDate = new Date(config.resetDate);
-          }
-        });
+
+      if (parsed.performance) {
+        this.performance = new Map(Object.entries(parsed.performance));
       }
-      
+
+      aiLogger.debug(
+        'PREMIUM_ACCOUNT_MANAGER',
+        'Dados de uso carregados do storage'
+      );
     } catch (error) {
-      console.error('Erro ao carregar uso do storage:', error);
+      aiLogger.error(
+        'PREMIUM_ACCOUNT_MANAGER',
+        'Erro ao carregar dados de uso',
+        error
+      );
     }
   }
 
-  private async saveConfigToStorage(): Promise<void> {
-    try {
-      const data = {
-        providers: Array.from(this.providers.entries()),
-        lastUpdated: new Date().toISOString()
-      };
-      
-      localStorage.setItem('ai_economica_config', JSON.stringify(data));
-    } catch (error) {
-      console.error('Erro ao salvar config no storage:', error);
-    }
+  /**
+   * Inicia health checking periódico
+   */
+  private startHealthChecking(): void {
+    // Health check inicial
+    setTimeout(() => this.performHealthCheck(), 5000);
+
+    // Health check periódico
+    setInterval(() => {
+      this.performHealthCheck();
+    }, this.healthCheckInterval);
   }
 
-  private startUsageResetScheduler(): void {
-    // Verificar reset mensal a cada hora
-    setInterval(async () => {
-      const now = new Date();
-      
-      for (const [provider, config] of this.providers) {
-        if (now >= config.resetDate) {
-          await this.resetMonthlyUsage(provider);
-        }
-      }
-    }, 60 * 60 * 1000); // 1 hora
+  /**
+   * Redefine dados de uso mensal
+   */
+  resetMonthlyUsage(): void {
+    Object.values(this.usageTracker).forEach((tracker) => {
+      tracker.monthlyUsage = 0;
+      tracker.lastReset = new Date();
+    });
+
+    this.saveUsageToStorage();
+    aiLogger.info('PREMIUM_ACCOUNT_MANAGER', 'Uso mensal resetado');
   }
 
-  private startHealthCheckScheduler(): void {
-    // Health check a cada 15 minutos
-    setInterval(async () => {
-      try {
-        await this.getProviderHealth();
-        this.lastHealthCheck = new Date();
-      } catch (error) {
-        console.error('Erro no health check:', error);
-      }
-    }, 15 * 60 * 1000); // 15 minutos
-  }
-}
+  /**
+   * Obtém provedor alternativo excluindo os especificados
+   */
+  private async selectAlternativeProvider(
+    query: AIQuery,
+    excludeProviders: PremiumProvider[]
+  ): Promise<PremiumProvider | null> {
+    const availableProviders = await this.getAvailableProviders();
+    const alternatives = availableProviders.filter(
+      (p) => !excludeProviders.includes(p)
+    );
 
-// Classes de cliente para cada provedor (implementações básicas)
+    if (alternatives.length === 0) return null;
 
-class ChatGPTClient implements ProviderClient {
-  async query(query: AIQuery): Promise<AIResponse> {
-    // Implementação específica para ChatGPT Plus
-    // Por enquanto, simulação
-    return {
-      id: 'chatgpt_' + Date.now(),
-      queryId: query.id,
-      content: 'Resposta simulada do ChatGPT Plus',
-      confidence: 0.8,
-      source: 'premium',
-      provider: PremiumProvider.CHATGPT_PLUS,
-      references: [],
-      suggestions: [],
-      followUpQuestions: [],
-      tokensUsed: this.getEstimatedTokens(query.text),
-      responseTime: 2000,
-      createdAt: new Date().toISOString(),
-      metadata: {
-        reliability: 0.9,
-        relevance: 0.8
-      }
-    };
+    return this.selectBestPerformance(alternatives);
   }
 
-  async isAvailable(): Promise<boolean> {
-    // Verificação real de disponibilidade seria implementada aqui
-    return true;
+  /**
+   * Configura estratégia de rotação
+   */
+  setRotationStrategy(
+    strategy: 'round_robin' | 'least_used' | 'best_performance'
+  ): void {
+    this.rotationStrategy = strategy;
+    aiLogger.info('PREMIUM_ACCOUNT_MANAGER', 'Estratégia de rotação alterada', {
+      strategy,
+    });
   }
 
-  getEstimatedTokens(query: string): number {
-    // Estimativa aproximada: ~4 caracteres por token
-    return Math.ceil(query.length / 4);
+  /**
+   * Inicializa provedores (implementação básica)
+   */
+  private initializeProviders(): void {
+    // Implementação básica - em produção seria mais robusta
+    aiLogger.info('PREMIUM_ACCOUNT_MANAGER', 'Provedores inicializados');
   }
 }
 
-class GeminiClient implements ProviderClient {
-  async query(query: AIQuery): Promise<AIResponse> {
-    // Implementação específica para Gemini Pro
-    return {
-      id: 'gemini_' + Date.now(),
-      queryId: query.id,
-      content: 'Resposta simulada do Gemini Pro',
-      confidence: 0.85,
-      source: 'premium',
-      provider: PremiumProvider.GEMINI_PRO,
-      references: [],
-      suggestions: [],
-      followUpQuestions: [],
-      tokensUsed: this.getEstimatedTokens(query.text),
-      responseTime: 1500,
-      createdAt: new Date().toISOString(),
-      metadata: {
-        reliability: 0.9,
-        relevance: 0.85
-      }
-    };
-  }
+// Instância singleton
+export const premiumAccountManager = new PremiumAccountManager();
 
-  async isAvailable(): Promise<boolean> {
-    return true;
-  }
-
-  getEstimatedTokens(query: string): number {
-    return Math.ceil(query.length / 4);
-  }
-}
-
-class ClaudeClient implements ProviderClient {
-  async query(query: AIQuery): Promise<AIResponse> {
-    return {
-      id: 'claude_' + Date.now(),
-      queryId: query.id,
-      content: 'Resposta simulada do Claude Pro',
-      confidence: 0.9,
-      source: 'premium',
-      provider: PremiumProvider.CLAUDE_PRO,
-      references: [],
-      suggestions: [],
-      followUpQuestions: [],
-      tokensUsed: this.getEstimatedTokens(query.text),
-      responseTime: 1800,
-      createdAt: new Date().toISOString(),
-      metadata: {
-        reliability: 0.95,
-        relevance: 0.9
-      }
-    };
-  }
-
-  async isAvailable(): Promise<boolean> {
-    return true;
-  }
-
-  getEstimatedTokens(query: string): number {
-    return Math.ceil(query.length / 4);
-  }
-}
-
-class PerplexityClient implements ProviderClient {
-  async query(query: AIQuery): Promise<AIResponse> {
-    return {
-      id: 'perplexity_' + Date.now(),
-      queryId: query.id,
-      content: 'Resposta simulada do Perplexity Pro',
-      confidence: 0.8,
-      source: 'premium',
-      provider: PremiumProvider.PERPLEXITY_PRO,
-      references: [],
-      suggestions: [],
-      followUpQuestions: [],
-      tokensUsed: this.getEstimatedTokens(query.text),
-      responseTime: 2200,
-      createdAt: new Date().toISOString(),
-      metadata: {
-        reliability: 0.85,
-        relevance: 0.8
-      }
-    };
-  }
-
-  async isAvailable(): Promise<boolean> {
-    return true;
-  }
-
-  getEstimatedTokens(query: string): number {
-    return Math.ceil(query.length / 4);
-  }
-}
-
-class MarsAIClient implements ProviderClient {
-  async query(query: AIQuery): Promise<AIResponse> {
-    return {
-      id: 'marsai_' + Date.now(),
-      queryId: query.id,
-      content: 'Resposta simulada do Mars AI Pro',
-      confidence: 0.75,
-      source: 'premium',
-      provider: PremiumProvider.MARS_AI_PRO,
-      references: [],
-      suggestions: [],
-      followUpQuestions: [],
-      tokensUsed: this.getEstimatedTokens(query.text),
-      responseTime: 2500,
-      createdAt: new Date().toISOString(),
-      metadata: {
-        reliability: 0.8,
-        relevance: 0.75
-      }
-    };
-  }
-
-  async isAvailable(): Promise<boolean> {
-    return true;
-  }
-
-  getEstimatedTokens(query: string): number {
-    return Math.ceil(query.length / 4);
-  }
-}
+export default premiumAccountManager;

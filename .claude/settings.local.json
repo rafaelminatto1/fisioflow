@@ -53,7 +53,8 @@
       "Bash(true)",
       "Bash(timeout 10 npm run dev)",
       "Bash(timeout 15 npm run dev)",
-      "Bash(vercel inspect:*)"
+      "Bash(vercel inspect:*)",
+      "Bash(git -c user.useConfigOnly=true commit --quiet --allow-empty-message --file -)"
     ],
     "deny": []
   }
