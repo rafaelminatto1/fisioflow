@@ -1,0 +1,20 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="192" height="192" rx="24" fill="#3B82F6"/>
+  
+  <!-- Main Icon - Medical Cross with Movement Lines -->
+  <g transform="translate(48, 48)">
+    <!-- Cross -->
+    <rect x="40" y="20" width="16" height="56" rx="8" fill="white"/>
+    <rect x="20" y="40" width="56" height="16" rx="8" fill="white"/>
+    
+    <!-- Movement/Flow Lines -->
+    <path d="M12 24 Q24 12 36 24" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M12 72 Q24 84 36 72" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M60 24 Q72 12 84 24" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <path d="M60 72 Q72 84 84 72" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+  </g>
+  
+  <!-- App Name -->
+  <text x="96" y="170" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">FisioFlow</text>
+</svg>

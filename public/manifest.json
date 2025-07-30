@@ -1,0 +1,29 @@
+{
+  "name": "FisioFlow - Gestão de Fisioterapia",
+  "short_name": "FisioFlow",
+  "description": "Sistema completo de gestão para clínicas de fisioterapia",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#3B82F6",
+  "background_color": "#FFFFFF",
+  "scope": "/",
+  "lang": "pt-BR",
+  "categories": ["health", "medical", "productivity"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
