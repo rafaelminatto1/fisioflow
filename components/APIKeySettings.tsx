@@ -176,7 +176,7 @@ export function APIKeySettings({ isOpen, onClose }: APIKeySettingsProps) {
             <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
               <li>Acesse <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google AI Studio</a></li>
               <li>Faça login com sua conta Google</li>
-              <li>Clique em "Create API Key"</li>
+              <li>Clique em &quot;Create API Key&quot;</li>
               <li>Cole a chave gerada no campo acima</li>
             </ol>
           </div>

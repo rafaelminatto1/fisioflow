@@ -1,20 +1,15 @@
 import { 
   Zap, 
-  Coins, 
-  Shield, 
-  Settings, 
   CheckCircle, 
-  AlertCircle,
   CreditCard,
   Gift,
-  Cpu,
   Cloud
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 import { useNotification } from '../hooks/useNotification';
 import { freeAI } from '../services/freeAIService';
-import { subscriptionAI, SUBSCRIPTION_PLANS, type SubscriptionPlan } from '../services/subscriptionAIService';
+import { subscriptionAI, SUBSCRIPTION_PLANS } from '../services/subscriptionAIService';
 
 interface AIModeProps {
   isOpen: boolean;
