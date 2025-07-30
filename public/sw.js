@@ -112,6 +112,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Ignora métodos que não são GET ou HEAD
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return;
+  }
+
   // Determina estratégia de cache baseada na URL
   const strategy = getStrategy(url.pathname + url.search);
   
@@ -174,8 +179,8 @@ async function cacheFirst(request) {
     }
     const networkResponse = await fetch(request);
     
-    if (networkResponse.ok && networkResponse.status < 400) {
-      // Só cacheia respostas válidas
+    if (networkResponse.ok && networkResponse.status < 400 && request.method === 'GET') {
+      // Só cacheia respostas GET válidas
       const responseToCache = networkResponse.clone();
       
       // Adiciona headers de cache
@@ -223,8 +228,8 @@ async function networkFirst(request) {
     }
     const networkResponse = await fetch(request);
     
-    if (networkResponse.ok) {
-      // Cache API responses por tempo limitado
+    if (networkResponse.ok && request.method === 'GET') {
+      // Cache API responses por tempo limitado (apenas GET)
       const cache = await caches.open(API_CACHE);
       const responseToCache = networkResponse.clone();
       
@@ -281,7 +286,8 @@ async function staleWhileRevalidate(request) {
   
   // Fetch em background para atualizar cache
   const fetchPromise = fetch(request).then((networkResponse) => {
-    if (networkResponse.ok) {
+    if (networkResponse.ok && request.method === 'GET') {
+      // Só cacheia requests GET válidas
       cache.put(request, networkResponse.clone());
     } else if (networkResponse.status === 401 && request.url.includes('manifest.json')) {
       // Tratamento específico para erro 401 no manifest.json

@@ -162,25 +162,43 @@ if ('performance' in window && 'PerformanceObserver' in window) {
   }
 }
 
-// Renderizar a aplicação
-const root = createRoot(
-  document.getElementById('root') as HTMLElement
-);
+// Renderizar a aplicação com tratamento de erro
+const rootElement = document.getElementById('root');
 
-root.render(
-  React.createElement(React.StrictMode, null,
-    React.createElement(App)
-  )
-);
+if (!rootElement) {
+  console.error('❌ Elemento root não encontrado');
+  document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Erro: Elemento root não encontrado</h1></div>';
+} else {
+  try {
+    const root = createRoot(rootElement);
+    
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+    
+    console.log('✅ App renderizada com sucesso');
+  } catch (error) {
+    console.error('❌ Erro ao renderizar a aplicação:', error);
+    rootElement.innerHTML = `
+      <div style="padding: 20px; text-align: center; color: red;">
+        <h1>Erro ao carregar a aplicação</h1>
+        <p>${error}</p>
+        <button onclick="window.location.reload()">Recarregar</button>
+      </div>
+    `;
+  }
+}
 
 // Hot Module Replacement (HMR) para desenvolvimento
 if (process.env.NODE_ENV === 'development' && typeof module !== 'undefined' && (module as any).hot) {
   (module as any).hot.accept('./App', () => {
     const NextApp = require('./App').default;
     root.render(
-      React.createElement(React.StrictMode, null,
-        React.createElement(NextApp)
-      )
+      <React.StrictMode>
+        <NextApp />
+      </React.StrictMode>
     );
   });
 }
