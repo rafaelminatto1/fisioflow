@@ -286,6 +286,11 @@ dist/
 # Gatsby
 .cache/
 public/
+# Allow essential PWA files
+!public/manifest.json
+!public/sw.js
+!public/icons/
+!public/demo-setup.js
 
 # Vuepress
 .vuepress/dist
