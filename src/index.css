@@ -210,6 +210,12 @@ body {
   user-select: inherit;
 }
 
+/* Text size adjust for mobile compatibility */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 input, textarea, button, select {
   -webkit-user-select: text;
   -moz-user-select: text;
