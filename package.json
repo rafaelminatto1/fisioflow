@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npx vite build",
     "build:check": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit --skipLibCheck && vite build",
     "build:deploy": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build --mode deploy",
     "build:minimal": "vite build --mode minimal",
