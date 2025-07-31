@@ -1,8 +1,7 @@
 {
   "framework": "vite",
-  "buildCommand": "npm ci && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "installCommand": "npm ci",
   "regions": ["gru1"],
   "rewrites": [
     {
