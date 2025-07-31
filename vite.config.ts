@@ -1,21 +1,28 @@
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '');
   const isProduction = mode === 'production' || mode === 'deploy';
   const isMinimal = mode === 'minimal';
+  const isVercelBuild = process.env.VERCEL === '1' || mode === 'deploy';
   
   return {
     plugins: [
       react({
-        jsxRuntime: 'automatic'
+        jsxRuntime: 'automatic',
+        // Otimizações específicas para produção
+        babel: isProduction ? {
+          plugins: [
+            ['babel-plugin-transform-remove-console', { exclude: ['error', 'warn'] }]
+          ]
+        } : undefined
       })
     ],
     define: {
       // Definir variáveis globais para produção
       __DEV__: !isProduction,
+      'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
     },
     resolve: {
       alias: {
@@ -28,83 +35,138 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      // Otimizações para produção
+      // Otimizações específicas para Vercel
       minify: isProduction ? 'terser' : false,
       sourcemap: false, // Desabilitar sourcemap em produção para reduzir tamanho
-      target: 'es2020',
+      target: isVercelBuild ? 'es2020' : 'esnext',
       cssCodeSplit: true,
-      reportCompressedSize: false, // Acelerar build
+      reportCompressedSize: false, // Acelerar build na Vercel
+      assetsInlineLimit: 4096, // Inline assets menores que 4KB
       
-      // Configuração de chunks para melhor cache
+      // Configurações específicas para Vercel
+      outDir: 'dist',
+      emptyOutDir: true,
+      
+      // Configuração otimizada de chunks para Vercel
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html')
         },
+        
+        // Configurações específicas para Vercel
+        ...(isVercelBuild && {
+          maxParallelFileOps: 5,
+          cache: false, // Desabilitar cache para builds consistentes na Vercel
+        }),
         output: {
-          manualChunks: {
-            // Vendor chunks
-            'react-vendor': ['react', 'react-dom'],
-            'query-vendor': ['@tanstack/react-query'],
-            'ui-vendor': ['lucide-react', 'recharts'],
-            'ai-vendor': ['@google/generative-ai'],
+          // Estratégia de chunks otimizada para cache na Vercel
+          manualChunks: (id) => {
+            // Vendor chunks principais
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'react-vendor';
+              }
+              if (id.includes('@tanstack/react-query')) {
+                return 'query-vendor';
+              }
+              if (id.includes('lucide-react') || id.includes('recharts')) {
+                return 'ui-vendor';
+              }
+              if (id.includes('@google/generative-ai')) {
+                return 'ai-vendor';
+              }
+              if (id.includes('react-router')) {
+                return 'router-vendor';
+              }
+              // Outros vendors em chunk separado
+              return 'vendor';
+            }
             
-            // Core app chunks
-            'auth': ['./hooks/useAuth.tsx'],
-            'data-core': ['./hooks/data/useOptimizedStorage.ts'],
-            'data-users': ['./hooks/data/useUsers.ts'],
-            'data-patients': ['./hooks/data/usePatients.ts'],
-            'data-tasks': ['./hooks/data/useTasks.ts'],
+            // Chunks de componentes principais
+            if (id.includes('/components/Dashboard')) {
+              return 'dashboard';
+            }
+            if (id.includes('/components/') && (
+              id.includes('Patient') || 
+              id.includes('Calendar') || 
+              id.includes('Reports')
+            )) {
+              return 'pages';
+            }
             
-            // Component chunks
-            'components-core': ['./components/LazyRoutes.tsx'],
-            'components-dashboard': ['./components/Dashboard.tsx'],
-            'services': ['./services/geminiService.ts', './services/notificationService.ts'],
+            // Chunks de hooks e serviços
+            if (id.includes('/hooks/') || id.includes('/services/')) {
+              return 'core';
+            }
           },
           
-          // Nomes de arquivo com hash para cache busting
-          chunkFileNames: (chunkInfo) => {
-            const facadeModuleId = chunkInfo.facadeModuleId
-              ? chunkInfo.facadeModuleId.split('/').pop().replace('.tsx', '').replace('.ts', '')
-              : 'chunk';
-            return `assets/${facadeModuleId}-[hash].js`;
-          },
+          // Nomes de arquivo otimizados para cache na Vercel
+          chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash].[ext]',
           entryFileNames: 'assets/[name]-[hash].js',
         },
         
         // Configurações para evitar dependências circulares
-        external: (id) => {
-          // Não externalizar dependências locais
-          return false;
-        },
+        external: [],
       },
       
-      // Configurações de terser para produção
+      // Configurações otimizadas de terser para Vercel
       terserOptions: isProduction ? {
         compress: {
-          drop_console: true,
+          drop_console: isVercelBuild, // Remover console apenas na Vercel
           drop_debugger: true,
-          pure_funcs: ['console.log', 'console.info', 'console.warn'],
-          passes: 2, // Múltiplas passadas para melhor compressão
+          pure_funcs: isVercelBuild ? ['console.log', 'console.info', 'console.debug'] : [],
+          passes: isVercelBuild ? 2 : 1, // Múltiplas passadas apenas na Vercel
+          unsafe_arrows: true,
+          unsafe_methods: true,
+          unsafe_proto: true,
+          // Otimizações adicionais para Vercel
+          dead_code: true,
+          unused: true,
+          conditionals: true,
+          evaluate: true,
+          booleans: true,
+          loops: true,
+          hoist_funs: true,
+          hoist_vars: false,
+          if_return: true,
+          join_vars: true,
+          reduce_vars: true,
+          warnings: false,
         },
         mangle: {
           safari10: true,
+          properties: {
+            regex: /^_/
+          }
         },
         format: {
           safari10: true,
-          comments: false, // Remover comentários
+          comments: false,
+          ecma: 2020,
+          ascii_only: true, // Garantir compatibilidade
         },
       } : undefined,
       
-      // Limite de tamanho de chunk
-      chunkSizeWarningLimit: isMinimal ? 2000 : 1000,
+      // Limites otimizados para Vercel
+      chunkSizeWarningLimit: isVercelBuild ? 1500 : (isMinimal ? 2000 : 1000),
     },
     
     // Configurações específicas por modo
     esbuild: {
-      logLevel: isMinimal ? 'silent' : 'info',
+      logLevel: isMinimal ? 'silent' : (isVercelBuild ? 'error' : 'info'),
       jsx: 'automatic',
       jsxDev: !isProduction,
+      target: isVercelBuild ? 'es2020' : 'esnext',
+      // Otimizações específicas para produção
+      ...(isProduction && {
+        drop: isVercelBuild ? ['console', 'debugger'] : ['debugger'],
+        minifyIdentifiers: true,
+        minifySyntax: true,
+        minifyWhitespace: true,
+        legalComments: 'none',
+        treeShaking: true,
+      }),
     },
     
     // Configurações de desenvolvimento
@@ -116,19 +178,65 @@ export default defineConfig(({ mode }) => {
       },
     },
     
-    // Otimizações de dependências
+    // Otimizações de dependências para Vercel
     optimizeDeps: {
       include: [
         'react',
         'react-dom',
+        'react/jsx-runtime',
         '@tanstack/react-query',
         'lucide-react',
         'recharts',
+        'react-router-dom',
+        'crypto-js',
+        'bcryptjs',
+        'zod',
       ],
       exclude: [
-        // Excluir dependências que causam problemas
+        // Excluir dependências que causam problemas na Vercel
+        '@google/generative-ai',
+        'jspdf',
+        'exceljs',
       ],
+      // Força re-otimização em mudanças
+      force: isVercelBuild,
+      // Configurações específicas para Vercel
+      ...(isVercelBuild && {
+        esbuildOptions: {
+          target: 'es2020',
+          supported: {
+            'top-level-await': false
+          }
+        }
+      })
     },
+    
+    // Configurações específicas para Vercel
+    ...(isVercelBuild && {
+      logLevel: 'warn',
+      clearScreen: false,
+      build: {
+        // Configurações específicas para build na Vercel
+        chunkSizeWarningLimit: 1500,
+        rollupOptions: {
+          // Otimizações específicas para Vercel
+          treeshake: {
+            preset: 'recommended',
+            moduleSideEffects: false,
+          },
+        },
+      },
+    }),
+    
+    // Configurações de performance
+    ...(isProduction && {
+      experimental: {
+        renderBuiltUrl(filename) {
+          // Otimizar URLs de assets para CDN da Vercel
+          return `/${filename}`;
+        },
+      },
+    }),
     
     // Configuração para usar apenas o index.html principal
     root: '.',

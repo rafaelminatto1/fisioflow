@@ -1,15 +1,13 @@
 {
+  "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite",
-  "installCommand": "npm install --legacy-peer-deps",
-  "devCommand": "npm run dev",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "regions": ["gru1"],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
+  "rewrites": [
+    {
+      "source": "/((?!api|assets|icons|manifest\\.json|sw\\.js|demo-setup\\.js).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
@@ -123,6 +121,21 @@
   ],
   "env": {
     "NODE_ENV": "production",
-    "VITE_BUILD_MODE": "deploy"
+    "VITE_BUILD_MODE": "deploy",
+    "NODE_OPTIONS": "--max-old-space-size=8192",
+    "VITE_APP_ENV": "production",
+    "VITE_API_URL": "https://fisioflow.vercel.app",
+    "VITE_APP_NAME": "FisioFlow",
+    "VITE_APP_VERSION": "1.0.0",
+    "VITE_FREE_PLAN_PATIENTS": "5",
+    "VITE_PRO_PLAN_PATIENTS": "50",
+    "VITE_PREMIUM_PLAN_PATIENTS": "500"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production",
+      "VITE_BUILD_MODE": "deploy",
+      "NODE_OPTIONS": "--max-old-space-size=8192"
+    }
   }
 }

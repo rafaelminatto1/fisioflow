@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:check": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit --skipLibCheck && vite build",
     "build:deploy": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build --mode deploy",
-    "build:minimal": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build --mode minimal",
+    "build:minimal": "vite build --mode minimal",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 50",
     "lint:fix": "eslint . --ext ts,tsx --fix --max-warnings 50",
     "lint:incremental": "eslint --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 50 .",
@@ -17,12 +17,14 @@
     "preview": "vite preview",
     "type-check": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit --incremental",
     "type-check:fast": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit --skipLibCheck --incremental",
-    "prepare": "husky install",
+    "prepare": "husky install || true",
     "pre-commit": "lint-staged",
     "analyze": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" vite build && npx vite-bundle-analyzer dist",
     "analyze:serve": "npx vite-bundle-analyzer dist --open",
     "clean": "rimraf dist build .tsbuildinfo node_modules/.cache",
-    "postinstall": "npm run prepare"
+    "deploy:vercel": "node scripts/deploy-vercel.js",
+    "deploy:vercel:prod": "node scripts/deploy-vercel.js --prod",
+    "postinstall": "npm run prepare || true"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

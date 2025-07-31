@@ -1118,7 +1118,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteCourse = (courseId: string, __actingUser: User) => {
+  const deleteCourse = (courseId: string, _actingUser: User) => {
     const courseToDelete = allCourses.find((c) => c.id === courseId);
     if (!courseToDelete) return;
     setAllCourses((prev) => prev.filter((c) => c.id !== courseId));
@@ -1851,7 +1851,7 @@ export const useData = (): DataContextType => {
       : actingUser
         ? [actingUser]
         : [];
-  }, [allUsers, _actingUser, tenantId]);
+  }, [allUsers, actingUser, tenantId]);
   const tasks = useMemo(() => {
     if (!allTasks || !Array.isArray(allTasks)) {
       return [];
@@ -2492,7 +2492,7 @@ export const useData = (): DataContextType => {
         context.saveExerciseLog(log, actingUser);
       }
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const sendChatMessage = useCallback(
@@ -2501,56 +2501,56 @@ export const useData = (): DataContextType => {
         context.sendChatMessage(message, actingUser);
       }
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const saveDocument = useCallback(
     (document: Document) => {
       if (actingUser) context.saveDocument(document, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const deleteDocument = useCallback(
     (documentId: string) => {
       if (actingUser) context.deleteDocument(documentId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const saveCourse = useCallback(
     (course: Course) => {
       if (actingUser) context.saveCourse(course, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const deleteCourse = useCallback(
     (courseId: string) => {
       if (actingUser) context.deleteCourse(courseId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const saveStudentProgress = useCallback(
     (progress: StudentProgress) => {
       if (actingUser) context.saveStudentProgress(progress, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const saveMentorshipSession = useCallback(
     (session: MentorshipSession) => {
       if (actingUser) context.saveMentorshipSession(session, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const deleteMentorshipSession = useCallback(
     (sessionId: string) => {
       if (actingUser) context.deleteMentorshipSession(sessionId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   // Clinical Cases callbacks
@@ -2558,49 +2558,49 @@ export const useData = (): DataContextType => {
     (clinicalCase: ClinicalCase) => {
       if (actingUser) context.saveClinicalCase(clinicalCase, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const deleteClinicalCase = useCallback(
     (caseId: string) => {
       if (actingUser) context.deleteClinicalCase(caseId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const saveCaseAttachment = useCallback(
     (attachment: CaseAttachment) => {
       if (actingUser) context.saveCaseAttachment(attachment, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const deleteCaseAttachment = useCallback(
     (attachmentId: string) => {
       if (actingUser) context.deleteCaseAttachment(attachmentId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const saveCaseComment = useCallback(
     (comment: Omit<CaseComment, 'id' | 'createdAt'>) => {
       if (actingUser) context.saveCaseComment(comment, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const deleteCaseComment = useCallback(
     (commentId: string) => {
       if (actingUser) context.deleteCaseComment(commentId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const likeCaseComment = useCallback(
     (commentId: string) => {
       if (actingUser) context.likeCaseComment(commentId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const recordCaseView = useCallback(
@@ -2608,21 +2608,21 @@ export const useData = (): DataContextType => {
       if (actingUser)
         context.recordCaseView(caseId, duration, completed, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const saveCaseRating = useCallback(
     (rating: Omit<CaseRating, 'id' | 'createdAt'>) => {
       if (actingUser) context.saveCaseRating(rating, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const toggleCaseFavorite = useCallback(
     (caseId: string) => {
       if (actingUser) context.toggleCaseFavorite(caseId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   // Clinical Protocols callbacks
@@ -2630,14 +2630,14 @@ export const useData = (): DataContextType => {
     (protocol: ClinicalProtocol) => {
       if (actingUser) context.saveClinicalProtocol(protocol, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const deleteClinicalProtocol = useCallback(
     (protocolId: string) => {
       if (actingUser) context.deleteClinicalProtocol(protocolId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const prescribeProtocol = useCallback(
@@ -2654,7 +2654,7 @@ export const useData = (): DataContextType => {
           actingUser
         );
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const updatePatientProtocolStatus = useCallback(
@@ -2666,21 +2666,21 @@ export const useData = (): DataContextType => {
           actingUser
         );
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const addProtocolProgressNote = useCallback(
     (note: Omit<ProtocolProgressNote, 'id'>) => {
       if (actingUser) context.addProtocolProgressNote(note, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const updateProtocolOutcome = useCallback(
     (outcome: Omit<ProtocolOutcome, 'id'>) => {
       if (actingUser) context.updateProtocolOutcome(outcome, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const advanceProtocolPhase = useCallback(
@@ -2688,7 +2688,7 @@ export const useData = (): DataContextType => {
       if (actingUser)
         context.advanceProtocolPhase(patientProtocolId, newPhaseId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const customizeProtocolExercise = useCallback(
@@ -2696,21 +2696,21 @@ export const useData = (): DataContextType => {
       if (actingUser)
         context.customizeProtocolExercise(customization, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const saveTimeBlock = useCallback(
     (timeBlock: TimeBlock) => {
       if (actingUser) context.saveTimeBlock(timeBlock, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   const deleteTimeBlock = useCallback(
     (timeBlockId: string) => {
       if (actingUser) context.deleteTimeBlock(timeBlockId, actingUser);
     },
-    [_actingUser, context]
+    [actingUser, context]
   );
 
   // Patient-related data filtering functions

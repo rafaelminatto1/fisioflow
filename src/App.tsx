@@ -7,6 +7,8 @@ import {
 } from 'react-router-dom';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ProductionErrorFallback } from './components/ProductionErrorFallback';
+import { errorMonitoring } from './utils/errorMonitoring';
 import { useAuth, AuthProvider } from './hooks/useAuthSimple';
 import { DataProvider } from '../hooks/useData';
 import './index.css';
@@ -61,7 +63,21 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <DataProvider>
-        <ErrorBoundary>
+        <ErrorBoundary
+          fallback={import.meta.env.PROD ? <ProductionErrorFallback /> : undefined}
+          onError={(error, errorInfo) => {
+            // Reportar erro para o sistema de monitoramento
+            errorMonitoring.reportError({
+              message: error.message,
+              stack: error.stack,
+              severity: 'critical',
+              context: {
+                componentStack: errorInfo.componentStack,
+                type: 'react-error-boundary'
+              }
+            });
+          }}
+        >
           <Router>
             <div className="min-h-screen bg-gray-50">
               <Suspense fallback={<LoadingSpinner />}>

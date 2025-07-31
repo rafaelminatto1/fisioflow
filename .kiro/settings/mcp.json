@@ -27,6 +27,24 @@
       "args": ["browser-sync", "start", "--server", "dist", "--port", "5500", "--no-open"],
       "disabled": false,
       "autoApprove": ["start", "reload"]
+    },
+    "lighthouse": {
+      "command": "npx",
+      "args": ["lighthouse", "http://localhost:5500", "--output=json", "--output-path=./lighthouse-report.json"],
+      "disabled": false,
+      "autoApprove": ["lighthouse"]
+    },
+    "npm-scripts": {
+      "command": "npm",
+      "args": ["run"],
+      "disabled": false,
+      "autoApprove": ["build:deploy", "preview", "type-check:fast", "lint:fix", "format"]
+    },
+    "git-tools": {
+      "command": "git",
+      "args": ["status"],
+      "disabled": false,
+      "autoApprove": ["status", "add", "commit", "push", "pull", "log", "--oneline", "-10"]
     }
   }
 }

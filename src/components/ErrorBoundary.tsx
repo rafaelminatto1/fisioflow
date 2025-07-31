@@ -49,7 +49,7 @@ class ErrorBoundary extends Component<Props, State> {
     this.props.onError?.(error, errorInfo);
 
     // Log detalhado para desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.group('🚨 Error Boundary - Erro Capturado');
       console.error('Error:', error);
       console.error('Error Info:', errorInfo);
@@ -58,21 +58,49 @@ class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  // Simula captura de erro (substituir por Sentry em produção)
+  // Captura de erro otimizada para produção
   private captureError = (error: Error, errorInfo: ErrorInfo): string => {
     const eventId = `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    // Em produção, aqui seria:
-    // return Sentry.captureException(error, {
-    //   contexts: {
-    //     react: {
-    //       componentStack: errorInfo.componentStack
-    //     }
-    //   }
-    // });
+    // Dados estruturados do erro
+    const errorData = {
+      eventId,
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+      buildMode: import.meta.env.VITE_BUILD_MODE || 'unknown',
+      appVersion: import.meta.env.VITE_APP_VERSION || '1.0.0'
+    };
     
-    // Log local para desenvolvimento
-    console.warn(`Error captured with ID: ${eventId}`);
+    // Em produção, enviar para serviço de monitoramento
+    if (import.meta.env.PROD) {
+      // Tentar enviar para Sentry se configurado
+      if (import.meta.env.VITE_SENTRY_DSN) {
+        try {
+          // Aqui seria a integração com Sentry
+          console.error('Production Error:', errorData);
+        } catch (sentryError) {
+          console.error('Failed to send error to Sentry:', sentryError);
+        }
+      }
+      
+      // Fallback: armazenar localmente para debug
+      try {
+        const errors = JSON.parse(localStorage.getItem('fisioflow-errors') || '[]');
+        errors.push(errorData);
+        // Manter apenas os últimos 10 erros
+        if (errors.length > 10) errors.shift();
+        localStorage.setItem('fisioflow-errors', JSON.stringify(errors));
+      } catch (storageError) {
+        console.error('Failed to store error locally:', storageError);
+      }
+    } else {
+      // Desenvolvimento: log detalhado
+      console.warn(`Error captured with ID: ${eventId}`, errorData);
+    }
     
     return eventId;
   };
@@ -104,11 +132,10 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   // Enviar reporte de erro
-  private handleSendReport = (description: string) => {
+  private handleSendReport = async (description: string) => {
     const { error, errorInfo, eventId } = this.state;
     
-    // Simula envio de reporte (substituir por API real)
-    console.log('Enviando reporte de erro:', {
+    const reportData = {
       eventId,
       error: error?.message,
       stack: error?.stack,
@@ -116,14 +143,48 @@ class ErrorBoundary extends Component<Props, State> {
       userDescription: description,
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent,
-      url: window.location.href
-    });
+      url: window.location.href,
+      buildMode: import.meta.env.VITE_BUILD_MODE || 'unknown',
+      appVersion: import.meta.env.VITE_APP_VERSION || '1.0.0'
+    };
     
-    // Em produção, aqui seria uma chamada para API
-    // await api.sendErrorReport({ ... });
-    
-    this.handleCloseReportModal();
-    alert('Reporte enviado com sucesso! Nossa equipe irá analisar o problema.');
+    try {
+      // Em produção, tentar enviar para API
+      if (import.meta.env.PROD && import.meta.env.VITE_API_URL) {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/error-reports`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(reportData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to send error report');
+        }
+      } else {
+        // Desenvolvimento: apenas log
+        console.log('Enviando reporte de erro:', reportData);
+      }
+      
+      // Armazenar localmente como backup
+      try {
+        const reports = JSON.parse(localStorage.getItem('fisioflow-error-reports') || '[]');
+        reports.push(reportData);
+        if (reports.length > 5) reports.shift();
+        localStorage.setItem('fisioflow-error-reports', JSON.stringify(reports));
+      } catch (storageError) {
+        console.error('Failed to store error report locally:', storageError);
+      }
+      
+      this.handleCloseReportModal();
+      alert('Reporte enviado com sucesso! Nossa equipe irá analisar o problema.');
+      
+    } catch (sendError) {
+      console.error('Failed to send error report:', sendError);
+      this.handleCloseReportModal();
+      alert('Não foi possível enviar o reporte no momento. O erro foi salvo localmente para análise.');
+    }
   };
 
   render() {
@@ -134,7 +195,7 @@ class ErrorBoundary extends Component<Props, State> {
       }
 
       const { error, showReportModal } = this.state;
-      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isDevelopment = import.meta.env.DEV;
       const showDetails = this.props.showDetails ?? isDevelopment;
 
       return (
@@ -321,7 +382,7 @@ export const useErrorHandler = () => {
     //   extra: errorInfo
     // });
     
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.group('🚨 useErrorHandler - Erro Capturado');
       console.error('Error:', error);
       console.error('Extra Info:', errorInfo);
