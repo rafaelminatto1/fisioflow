@@ -1,9 +1,13 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build:deploy",
   "outputDirectory": "dist",
   "regions": ["gru1"],
   "rewrites": [
+    {
+      "source": "/manifest.json",
+      "destination": "/manifest.json"
+    },
     {
       "source": "/((?!api|assets|icons|manifest\\.json|sw\\.js|demo-setup\\.js).*)",
       "destination": "/index.html"
