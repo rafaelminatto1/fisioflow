@@ -1,7 +1,7 @@
 import { Brain } from 'lucide-react';
 import React, { useState, useMemo, useEffect } from 'react';
 
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../src/hooks/useAuthSimple';
 import { useData } from '../hooks/useData';
 import { Patient } from '../types';
 

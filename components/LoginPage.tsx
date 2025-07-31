@@ -2,7 +2,7 @@ import { Stethoscope } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../src/hooks/useAuthSimple';
 import { UserRole } from '../types';
 
 import {

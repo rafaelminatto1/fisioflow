@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../src/hooks/useAuthSimple';
 import { useData } from '../hooks/useData';
 import { predictAbandonmentRisk } from '../services/geminiService';
 import type { AbandonmentRiskPrediction } from '../types';
