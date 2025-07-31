@@ -55,7 +55,9 @@
       "Bash(timeout 15 npm run dev)",
       "Bash(vercel inspect:*)",
       "Bash(git -c user.useConfigOnly=true commit --quiet --allow-empty-message --file -)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(vercel logs:*)",
+      "WebFetch(domain:fisioflow-cy2yfuc9f-rafael-minattos-projects.vercel.app)"
     ],
     "deny": []
   }
