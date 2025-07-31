@@ -11,11 +11,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react({
         jsxRuntime: 'automatic',
-        // Otimizações específicas para produção
+        // Simplificar configuração Babel para evitar problemas de dependência
         babel: isProduction ? {
-          plugins: [
-            ['babel-plugin-transform-remove-console', { exclude: ['error', 'warn'] }]
-          ]
+          plugins: []
         } : undefined
       })
     ],
