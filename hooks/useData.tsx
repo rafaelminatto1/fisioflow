@@ -59,7 +59,7 @@ import {
   Task,
   Patient,
   Notebook,
-  Page,
+  // Page,
   Appointment,
   TimeBlock,
   Exercise,
@@ -71,7 +71,7 @@ import {
   AuditLog,
   LogAction,
   Tenant,
-  SubscriptionPlan,
+  // SubscriptionPlan,
   Document,
   Chat,
   ChatMessage,
@@ -106,9 +106,8 @@ import {
   ImageCategory,
 } from '../types';
 
-import { useAuth } from './useAuth';
-import { useNotification, NotificationContext } from './useNotification';
-
+import { useAuth } from '../src/hooks/useAuthSimple';
+import { /* useNotification, */ NotificationContext } from './useNotification';
 
 export const DataContext = createContext<any | undefined>(undefined);
 
@@ -154,7 +153,7 @@ const useOptimizedStorage = (
 const useLocalStorage = (
   key: string,
   initialValue: any,
-  validator?: (data: any) => boolean
+  _validator?: (data: any) => boolean
 ): [any, React.Dispatch<React.SetStateAction<any>>] => {
   const [storedValue, setStoredValue] = useState<any>(() => {
     try {
@@ -318,10 +317,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   >('fisioflow-all-protocol-analytics', INITIAL_PROTOCOL_ANALYTICS);
 
   // Operational Management data
-  const [allQualityIndicators, setAllQualityIndicators] = useLocalStorage<
+  const [allQualityIndicators, _setAllQualityIndicators] = useLocalStorage<
     QualityIndicator[]
   >('fisioflow-all-quality-indicators', INITIAL_QUALITY_INDICATORS);
-  const [allProductivityMetrics, setAllProductivityMetrics] = useLocalStorage<
+  const [allProductivityMetrics, _setAllProductivityMetrics] = useLocalStorage<
     ProductivityMetric[]
   >('fisioflow-all-productivity-metrics', INITIAL_PRODUCTIVITY_METRICS);
   const [allEquipment, setAllEquipment] = useLocalStorage<Equipment[]>(
@@ -344,15 +343,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   >('fisioflow-all-exercise-ratings', INITIAL_EXERCISE_RATINGS);
 
   // === SISTEMA DE VÍDEOS E IMAGENS ===
-  const [allExerciseVideos, setAllExerciseVideos] = useLocalStorage<
+  const [allExerciseVideos, _setAllExerciseVideos] = useLocalStorage<
     ExerciseVideo[]
   >('fisioflow-all-exercise-videos', INITIAL_EXERCISE_VIDEOS);
-  const [allExerciseImages, setAllExerciseImages] = useLocalStorage<
+  const [allExerciseImages, _setAllExerciseImages] = useLocalStorage<
     ExerciseImage[]
   >('fisioflow-all-exercise-images', INITIAL_EXERCISE_IMAGES);
 
   // === SISTEMA DE DIÁRIO DE SINTOMAS ===
-  const [allSymptomDiaryEntries, setAllSymptomDiaryEntries] = useLocalStorage<
+  const [_allSymptomDiaryEntries, _setAllSymptomDiaryEntries] = useLocalStorage<
     any[]
   >('fisioflow-all-symptom-diary-entries', []);
 
@@ -362,7 +361,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   // All setter functions remain here. They get 'actingUser' passed in, so they are independent.
   const logAction = (
-    actingUser: User,
+    _actingUser: User,
     action: LogAction,
     targetCollection: string,
     targetId: string,
@@ -386,7 +385,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   // Função saveAuditLog para compatibilidade com outros hooks
-  const saveAuditLog = (logEntry: Partial<AuditLog>) => {
+  const _saveAuditLog = (logEntry: Partial<AuditLog>) => {
     const newLog: AuditLog = {
       id: `log-${crypto.randomUUID()}`,
       timestamp: new Date().toISOString(),
@@ -402,7 +401,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     setAllAuditLogs((prev) => [newLog, ...prev]);
   };
 
-  const saveTenant = (tenantToSave: Partial<Tenant>, actingUser: User) => {
+  const saveTenant = (tenantToSave: Partial<Tenant>, _actingUser: User) => {
     let finalTenant = { ...tenantToSave };
     const isNew =
       !('id' in finalTenant) || !tenants.some((t) => t.id === finalTenant.id);
@@ -435,7 +434,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const saveUser = (userToSave: User, actingUser: User) => {
+  const saveUser = (userToSave: User, _actingUser: User) => {
     let finalUser = { ...userToSave };
     const isNew =
       !('id' in finalUser) || !allUsers.some((u) => u.id === finalUser.id);
@@ -453,7 +452,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         : prev.map((u) => (u.id === finalUser.id ? finalUser : u))
     );
     logAction(
-      actingUser,
+      _actingUser,
       isNew ? LogAction.CREATE_USER : LogAction.UPDATE_USER,
       'users',
       finalUser.id,
@@ -467,7 +466,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteUser = (userId: string, actingUser: User) => {
+  const deleteUser = (userId: string, _actingUser: User) => {
     const userToDelete = allUsers.find((u) => u.id === userId);
     if (!userToDelete) return;
 
@@ -479,7 +478,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     );
 
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_USER,
       'users',
       userId,
@@ -493,7 +492,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const saveTask = (taskToSave: Task, actingUser: User) => {
+  const saveTask = (taskToSave: Task, _actingUser: User) => {
     let finalTask = { ...taskToSave };
     const isNew =
       !('id' in finalTask) || !allTasks.some((t) => t.id === finalTask.id);
@@ -511,7 +510,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         : prev.map((t) => (t.id === finalTask.id ? finalTask : t))
     );
     logAction(
-      actingUser,
+      _actingUser,
       isNew ? LogAction.CREATE_TASK : LogAction.UPDATE_TASK,
       'tasks',
       finalTask.id,
@@ -525,13 +524,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteTask = (taskId: string, actingUser: User) => {
+  const deleteTask = (taskId: string, _actingUser: User) => {
     const taskToDelete = allTasks.find((t) => t.id === taskId);
     if (!taskToDelete) return;
 
     setAllTasks((prevTasks) => prevTasks.filter((t) => t.id !== taskId));
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_TASK,
       'tasks',
       taskId,
@@ -545,7 +544,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const savePatient = (patientToSave: Patient, actingUser: User) => {
+  const savePatient = (patientToSave: Patient, _actingUser: User) => {
     let finalPatient = { ...patientToSave };
     const isNew =
       !('id' in finalPatient) ||
@@ -567,7 +566,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     ) {
       finalPatient.consent.timestamp = new Date().toISOString();
       logAction(
-        actingUser,
+        _actingUser,
         LogAction.GIVE_CONSENT,
         'patients',
         finalPatient.id,
@@ -581,7 +580,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         : prev.map((p) => (p.id === finalPatient.id ? finalPatient : p))
     );
     logAction(
-      actingUser,
+      _actingUser,
       isNew ? LogAction.CREATE_PATIENT : LogAction.UPDATE_PATIENT,
       'patients',
       finalPatient.id,
@@ -595,7 +594,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deletePatient = (patientId: string, actingUser: User) => {
+  const deletePatient = (patientId: string, _actingUser: User) => {
     const patientToDelete = allPatients.find((p) => p.id === patientId);
     if (!patientToDelete) return;
 
@@ -612,7 +611,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       prevPatients.filter((p) => p.id !== patientId)
     );
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_PATIENT,
       'patients',
       patientId,
@@ -628,7 +627,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const saveAppointment = (
     appointmentToSave: Appointment,
-    actingUser: User
+    _actingUser: User
   ) => {
     let finalAppointment = { ...appointmentToSave };
     const isNew =
@@ -649,7 +648,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     const patientName =
       allPatients.find((p) => p.id === finalAppointment.patientId)?.name || '';
     logAction(
-      actingUser,
+      _actingUser,
       isNew ? LogAction.CREATE_APPOINTMENT : LogAction.UPDATE_APPOINTMENT,
       'appointments',
       finalAppointment.id,
@@ -663,14 +662,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteAppointment = (appointmentId: string, actingUser: User) => {
+  const deleteAppointment = (appointmentId: string, _actingUser: User) => {
     const apptToDelete = allAppointments.find((a) => a.id === appointmentId);
     if (!apptToDelete) return;
     setAllAppointments((prev) => prev.filter((a) => a.id !== appointmentId));
     const patientName =
       allPatients.find((p) => p.id === apptToDelete.patientId)?.name || '';
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_APPOINTMENT,
       'appointments',
       appointmentId,
@@ -684,7 +683,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const saveTimeBlock = (timeBlockToSave: TimeBlock, actingUser: User) => {
+  const saveTimeBlock = (timeBlockToSave: TimeBlock, _actingUser: User) => {
     let finalTimeBlock = { ...timeBlockToSave };
     const isNew =
       !('id' in finalTimeBlock) ||
@@ -702,7 +701,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         : prev.map((tb) => (tb.id === finalTimeBlock.id ? finalTimeBlock : tb))
     );
     logAction(
-      actingUser,
+      _actingUser,
       isNew ? LogAction.CREATE_APPOINTMENT : LogAction.UPDATE_APPOINTMENT,
       'timeblocks',
       finalTimeBlock.id,
@@ -716,12 +715,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteTimeBlock = (timeBlockId: string, actingUser: User) => {
+  const deleteTimeBlock = (timeBlockId: string, _actingUser: User) => {
     const tbToDelete = allTimeBlocks.find((tb) => tb.id === timeBlockId);
     if (!tbToDelete) return;
     setAllTimeBlocks((prev) => prev.filter((tb) => tb.id !== timeBlockId));
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_APPOINTMENT,
       'timeblocks',
       timeBlockId,
@@ -735,7 +734,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const savePage = (pageId: string, content: string, actingUser: User) => {
+  const savePage = (pageId: string, content: string, _actingUser: User) => {
     let pageTitle = '';
     setAllNotebooks((prevNotebooks) => {
       return prevNotebooks.map((notebook) => ({
@@ -750,7 +749,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       }));
     });
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.UPDATE_PAGE,
       'notebooks',
       pageId,
@@ -764,7 +763,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const saveExercise = (exerciseToSave: Exercise, actingUser: User) => {
+  const saveExercise = (exerciseToSave: Exercise, _actingUser: User) => {
     let finalExercise = { ...exerciseToSave };
     const isNew =
       !('id' in finalExercise) ||
@@ -778,7 +777,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         : prev.map((e) => (e.id === finalExercise.id ? finalExercise : e))
     );
     logAction(
-      actingUser,
+      _actingUser,
       isNew ? LogAction.CREATE_EXERCISE : LogAction.UPDATE_EXERCISE,
       'exercises',
       finalExercise.id,
@@ -792,12 +791,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteExercise = (exerciseId: string, actingUser: User) => {
+  const deleteExercise = (exerciseId: string, _actingUser: User) => {
     const exerciseToDelete = exercises.find((e) => e.id === exerciseId);
     if (!exerciseToDelete) return;
     setExercises((prev) => prev.filter((e) => e.id !== exerciseId));
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_EXERCISE,
       'exercises',
       exerciseId,
@@ -813,7 +812,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const savePrescription = (
     prescriptionToSave: Prescription,
-    actingUser: User
+    _actingUser: User
   ) => {
     let finalPrescription = { ...prescriptionToSave };
     const isNew =
@@ -836,7 +835,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     const exerciseName =
       exercises.find((e) => e.id === finalPrescription.exerciseId)?.name || '';
     logAction(
-      actingUser,
+      _actingUser,
       isNew ? LogAction.CREATE_PRESCRIPTION : LogAction.UPDATE_PRESCRIPTION,
       'prescriptions',
       finalPrescription.id,
@@ -850,7 +849,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deletePrescription = (prescriptionId: string, actingUser: User) => {
+  const deletePrescription = (prescriptionId: string, _actingUser: User) => {
     const prescriptionToDelete = allPrescriptions.find(
       (p) => p.id === prescriptionId
     );
@@ -860,7 +859,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       exercises.find((e) => e.id === prescriptionToDelete.exerciseId)?.name ||
       '';
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_PRESCRIPTION,
       'prescriptions',
       prescriptionId,
@@ -874,7 +873,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const saveAssessment = (assessmentToSave: Assessment, actingUser: User) => {
+  const saveAssessment = (assessmentToSave: Assessment, _actingUser: User) => {
     let finalAssessment = { ...assessmentToSave };
     const isNew =
       !('id' in finalAssessment) ||
@@ -892,7 +891,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         : prev.map((a) => (a.id === finalAssessment.id ? finalAssessment : a))
     );
     logAction(
-      actingUser,
+      _actingUser,
       isNew ? LogAction.CREATE_ASSESSMENT : LogAction.UPDATE_ASSESSMENT,
       'assessments',
       finalAssessment.id,
@@ -906,14 +905,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteAssessment = (assessmentId: string, actingUser: User) => {
+  const deleteAssessment = (assessmentId: string, _actingUser: User) => {
     const assessmentToDelete = allAssessments.find(
       (a) => a.id === assessmentId
     );
     if (!assessmentToDelete) return;
     setAllAssessments((prev) => prev.filter((a) => a.id !== assessmentId));
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_ASSESSMENT,
       'assessments',
       assessmentId,
@@ -929,7 +928,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const saveTransaction = (
     transactionToSave: Transaction,
-    actingUser: User
+    _actingUser: User
   ) => {
     let finalTransaction = { ...transactionToSave };
     const isNew =
@@ -948,7 +947,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         : prev.map((t) => (t.id === finalTransaction.id ? finalTransaction : t))
     );
     logAction(
-      actingUser,
+      _actingUser,
       isNew ? LogAction.CREATE_TRANSACTION : LogAction.UPDATE_TRANSACTION,
       'transactions',
       finalTransaction.id,
@@ -962,14 +961,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteTransaction = (transactionId: string, actingUser: User) => {
+  const deleteTransaction = (transactionId: string, _actingUser: User) => {
     const transactionToDelete = allTransactions.find(
       (t) => t.id === transactionId
     );
     if (!transactionToDelete) return;
     setAllTransactions((prev) => prev.filter((t) => t.id !== transactionId));
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_TRANSACTION,
       'transactions',
       transactionId,
@@ -985,7 +984,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const saveExerciseLog = (
     logToSave: Omit<ExerciseLog, 'id' | 'tenantId'>,
-    actingUser: User
+    _actingUser: User
   ) => {
     if (!actingUser || !actingUser.tenantId) return;
     setAllExerciseLogs((prevLogs) => {
@@ -1023,10 +1022,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const saveDocument = (documentToSave: Document, actingUser: User) => {
+  const saveDocument = (documentToSave: Document, _actingUser: User) => {
     setAllDocuments((prev) => [...prev, documentToSave]);
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.CREATE_DOCUMENT,
       'documents',
       documentToSave.id,
@@ -1040,12 +1039,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteDocument = (documentId: string, actingUser: User) => {
+  const deleteDocument = (documentId: string, _actingUser: User) => {
     const docToDelete = allDocuments.find((d) => d.id === documentId);
     if (!docToDelete) return;
     setAllDocuments((prev) => prev.filter((d) => d.id !== documentId));
     logAction(
-      actingUser,
+      _actingUser,
       LogAction.DELETE_DOCUMENT,
       'documents',
       documentId,
@@ -1061,7 +1060,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const sendChatMessage = (
     message: Omit<ChatMessage, 'id' | 'timestamp'>,
-    actingUser: User
+    _actingUser: User
   ) => {
     const now = new Date().toISOString();
     const newMessage: ChatMessage = {
@@ -1092,10 +1091,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       }
     });
     // Not logging chat messages to avoid clutter, can be enabled if needed
-    // logAction(actingUser, LogAction.CREATE_CHAT_MESSAGE, 'chatMessages', newMessage.id);
+    // logAction(_actingUser, LogAction.CREATE_CHAT_MESSAGE, 'chatMessages', newMessage.id);
   };
 
-  const saveCourse = (courseToSave: Course, actingUser: User) => {
+  const saveCourse = (courseToSave: Course, _actingUser: User) => {
     let finalCourse = { ...courseToSave };
     const isNew =
       !('id' in finalCourse) ||
@@ -1119,7 +1118,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteCourse = (courseId: string, actingUser: User) => {
+  const deleteCourse = (courseId: string, __actingUser: User) => {
     const courseToDelete = allCourses.find((c) => c.id === courseId);
     if (!courseToDelete) return;
     setAllCourses((prev) => prev.filter((c) => c.id !== courseId));
@@ -1135,7 +1134,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const saveStudentProgress = (
     progressToSave: StudentProgress,
-    actingUser: User
+    _actingUser: User
   ) => {
     let finalProgress = { ...progressToSave };
     const isNew =
@@ -1162,7 +1161,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const saveMentorshipSession = (
     sessionToSave: MentorshipSession,
-    actingUser: User
+    _actingUser: User
   ) => {
     let finalSession = { ...sessionToSave };
     const isNew =
@@ -1187,7 +1186,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteMentorshipSession = (sessionId: string, actingUser: User) => {
+  const deleteMentorshipSession = (sessionId: string, _actingUser: User) => {
     const sessionToDelete = allMentorshipSessions.find(
       (s) => s.id === sessionId
     );
@@ -1201,7 +1200,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   // Clinical Cases functions
-  const saveClinicalCase = (caseToSave: ClinicalCase, actingUser: User) => {
+  const saveClinicalCase = (caseToSave: ClinicalCase, _actingUser: User) => {
     let finalCase = { ...caseToSave };
     const isNew =
       !('id' in finalCase) ||
@@ -1225,7 +1224,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteClinicalCase = (caseId: string, actingUser: User) => {
+  const deleteClinicalCase = (caseId: string, _actingUser: User) => {
     const caseToDelete = allClinicalCases.find((c) => c.id === caseId);
     if (!caseToDelete) return;
 
@@ -1250,7 +1249,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const saveCaseAttachment = (attachment: CaseAttachment, actingUser: User) => {
+  const saveCaseAttachment = (
+    attachment: CaseAttachment,
+    _actingUser: User
+  ) => {
     setAllCaseAttachments((prev) => [...prev, attachment]);
     addNotification({
       type: 'success',
@@ -1259,7 +1261,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteCaseAttachment = (attachmentId: string, actingUser: User) => {
+  const deleteCaseAttachment = (attachmentId: string, _actingUser: User) => {
     const attachmentToDelete = allCaseAttachments.find(
       (att) => att.id === attachmentId
     );
@@ -1276,7 +1278,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const saveCaseComment = (
     comment: Omit<CaseComment, 'id' | 'createdAt'>,
-    actingUser: User
+    _actingUser: User
   ) => {
     const newComment: CaseComment = {
       ...comment,
@@ -1291,7 +1293,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteCaseComment = (commentId: string, actingUser: User) => {
+  const deleteCaseComment = (commentId: string, _actingUser: User) => {
     const commentToDelete = allCaseComments.find(
       (comment) => comment.id === commentId
     );
@@ -1311,7 +1313,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const likeCaseComment = (commentId: string, actingUser: User) => {
+  const likeCaseComment = (commentId: string, _actingUser: User) => {
     setAllCaseComments((prev) =>
       prev.map((comment) => {
         if (comment.id === commentId) {
@@ -1333,7 +1335,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     caseId: string,
     duration: number,
     completed: boolean,
-    actingUser: User
+    _actingUser: User
   ) => {
     // Check if user already viewed this case today
     const today = new Date().toDateString();
@@ -1369,7 +1371,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const saveCaseRating = (
     rating: Omit<CaseRating, 'id' | 'createdAt'>,
-    actingUser: User
+    _actingUser: User
   ) => {
     const existingRating = allCaseRatings.find(
       (r) => r.caseId === rating.caseId && r.userId === actingUser.id
@@ -1422,7 +1424,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const toggleCaseFavorite = (caseId: string, actingUser: User) => {
+  const toggleCaseFavorite = (caseId: string, _actingUser: User) => {
     const existingFavorite = allCaseFavorites.find(
       (fav) => fav.caseId === caseId && fav.userId === actingUser.id
     );
@@ -1456,7 +1458,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   // Clinical Protocols functions
   const saveClinicalProtocol = (
     protocolToSave: ClinicalProtocol,
-    actingUser: User
+    _actingUser: User
   ) => {
     let finalProtocol = { ...protocolToSave };
     const isNew =
@@ -1481,7 +1483,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const deleteClinicalProtocol = (protocolId: string, actingUser: User) => {
+  const deleteClinicalProtocol = (protocolId: string, _actingUser: User) => {
     const protocolToDelete = allClinicalProtocols.find(
       (p) => p.id === protocolId
     );
@@ -1521,7 +1523,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     patientId: string,
     protocolId: string,
     customizations: ProtocolCustomization[],
-    actingUser: User
+    _actingUser: User
   ) => {
     const protocol = allClinicalProtocols.find((p) => p.id === protocolId);
     if (!protocol) return;
@@ -1573,7 +1575,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const updatePatientProtocolStatus = (
     patientProtocolId: string,
     status: PatientProtocol['status'],
-    actingUser: User
+    _actingUser: User
   ) => {
     setAllPatientProtocols((prev) =>
       prev.map((pp) => (pp.id === patientProtocolId ? { ...pp, status } : pp))
@@ -1587,7 +1589,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addProtocolProgressNote = (
     note: Omit<ProtocolProgressNote, 'id'>,
-    actingUser: User
+    _actingUser: User
   ) => {
     const newNote: ProtocolProgressNote = {
       ...note,
@@ -1604,7 +1606,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateProtocolOutcome = (
     outcome: Omit<ProtocolOutcome, 'id'>,
-    actingUser: User
+    _actingUser: User
   ) => {
     const existingOutcome = allProtocolOutcomes.find(
       (o) =>
@@ -1636,7 +1638,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const advanceProtocolPhase = (
     patientProtocolId: string,
     newPhaseId: string,
-    actingUser: User
+    _actingUser: User
   ) => {
     setAllPatientProtocols((prev) =>
       prev.map((pp) =>
@@ -1652,7 +1654,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const customizeProtocolExercise = (
     customization: Omit<ProtocolCustomization, 'id'>,
-    actingUser: User
+    _actingUser: User
   ) => {
     const newCustomization: ProtocolCustomization = {
       ...customization,
@@ -1840,39 +1842,32 @@ export const useData = (): DataContextType => {
 
   const tenantId = useMemo(() => actingUser?.tenantId, [actingUser]);
 
-  const users = useMemo(
-    () => {
-      if (!allUsers || !Array.isArray(allUsers)) {
-        return actingUser ? [actingUser] : [];
-      }
-      return tenantId
-        ? allUsers.filter((u: User) => u.tenantId === tenantId || !u.tenantId)
-        : actingUser
-          ? [actingUser]
-          : [];
-    },
-    [allUsers, actingUser, tenantId]
-  );
-  const tasks = useMemo(
-    () => {
-      if (!allTasks || !Array.isArray(allTasks)) {
-        return [];
-      }
-      return tenantId ? allTasks.filter((t: Task) => t.tenantId === tenantId) : [];
-    },
-    [allTasks, tenantId]
-  );
-  const patients = useMemo(
-    () => {
-      if (!allPatients || !Array.isArray(allPatients)) {
-        return [];
-      }
-      return tenantId
-        ? allPatients.filter((p: Patient) => p.tenantId === tenantId)
+  const users = useMemo(() => {
+    if (!allUsers || !Array.isArray(allUsers)) {
+      return actingUser ? [actingUser] : [];
+    }
+    return tenantId
+      ? allUsers.filter((u: User) => u.tenantId === tenantId || !u.tenantId)
+      : actingUser
+        ? [actingUser]
         : [];
-    },
-    [allPatients, tenantId]
-  );
+  }, [allUsers, _actingUser, tenantId]);
+  const tasks = useMemo(() => {
+    if (!allTasks || !Array.isArray(allTasks)) {
+      return [];
+    }
+    return tenantId
+      ? allTasks.filter((t: Task) => t.tenantId === tenantId)
+      : [];
+  }, [allTasks, tenantId]);
+  const patients = useMemo(() => {
+    if (!allPatients || !Array.isArray(allPatients)) {
+      return [];
+    }
+    return tenantId
+      ? allPatients.filter((p: Patient) => p.tenantId === tenantId)
+      : [];
+  }, [allPatients, tenantId]);
   const notebooks = useMemo(
     () =>
       tenantId
@@ -2147,19 +2142,16 @@ export const useData = (): DataContextType => {
   );
 
   // === SISTEMA DE FAVORITOS E AVALIAÇÕES - FILTERED ARRAYS ===
-  const exerciseFavorites = useMemo(
-    () => {
-      if (!allExerciseFavorites || !Array.isArray(allExerciseFavorites)) {
-        return [];
-      }
-      return tenantId
-        ? allExerciseFavorites.filter(
-            (ef: ExerciseFavorite) => ef.tenantId === tenantId
-          )
-        : [];
-    },
-    [allExerciseFavorites, tenantId]
-  );
+  const exerciseFavorites = useMemo(() => {
+    if (!allExerciseFavorites || !Array.isArray(allExerciseFavorites)) {
+      return [];
+    }
+    return tenantId
+      ? allExerciseFavorites.filter(
+          (ef: ExerciseFavorite) => ef.tenantId === tenantId
+        )
+      : [];
+  }, [allExerciseFavorites, tenantId]);
 
   const exerciseRatings = useMemo(
     () =>
@@ -2181,22 +2173,24 @@ export const useData = (): DataContextType => {
         : [],
     [allExerciseVideos, tenantId]
   );
-  const exerciseImages = useMemo(
-    () => {
-      if (!tenantId || !allExerciseImages || !Array.isArray(allExerciseImages)) {
-        return [];
-      }
-      return allExerciseImages.filter(
-        (ei: ExerciseImage) => ei.tenantId === tenantId
-      );
-    },
-    [allExerciseImages, tenantId]
-  );
+  const exerciseImages = useMemo(() => {
+    if (!tenantId || !allExerciseImages || !Array.isArray(allExerciseImages)) {
+      return [];
+    }
+    return allExerciseImages.filter(
+      (ei: ExerciseImage) => ei.tenantId === tenantId
+    );
+  }, [allExerciseImages, tenantId]);
 
   // === SISTEMA DE FAVORITOS E AVALIAÇÕES - FUNCTIONS ===
   const toggleExerciseFavorite = useCallback(
-    (exerciseId: string, actingUser: User) => {
-      if (!tenantId || !allExerciseFavorites || !Array.isArray(allExerciseFavorites)) return;
+    (exerciseId: string, _actingUser: User) => {
+      if (
+        !tenantId ||
+        !allExerciseFavorites ||
+        !Array.isArray(allExerciseFavorites)
+      )
+        return;
 
       const existingFavorite = allExerciseFavorites.find(
         (f) => f.userId === actingUser.id && f.exerciseId === exerciseId
@@ -2233,7 +2227,7 @@ export const useData = (): DataContextType => {
   );
 
   const saveExerciseRating = useCallback(
-    (rating: Omit<ExerciseRating, 'id'>, actingUser: User) => {
+    (rating: Omit<ExerciseRating, 'id'>, _actingUser: User) => {
       if (!rating.tenantId) {
         rating.tenantId = tenantId || '';
       }
@@ -2309,7 +2303,7 @@ export const useData = (): DataContextType => {
   );
 
   const getMostUsedExercises = useCallback(
-    (userId?: string): ExerciseStatistics[] => {
+    (_userId?: string): ExerciseStatistics[] => {
       const stats: ExerciseStatistics[] = [];
 
       exercises.forEach((exercise) => {
@@ -2327,7 +2321,7 @@ export const useData = (): DataContextType => {
   // === SISTEMA DE VÍDEOS ===
 
   const saveExerciseVideo = useCallback(
-    (video: Omit<ExerciseVideo, 'id'>, actingUser: User) => {
+    (video: Omit<ExerciseVideo, 'id'>, _actingUser: User) => {
       const newVideo: ExerciseVideo = {
         ...video,
         id: `video-${crypto.randomUUID()}`,
@@ -2348,9 +2342,9 @@ export const useData = (): DataContextType => {
   );
 
   const deleteExerciseVideo = useCallback(
-    (videoId: string, actingUser: User) => {
+    (videoId: string, _actingUser: User) => {
       if (!allExerciseVideos || !Array.isArray(allExerciseVideos)) return;
-      
+
       const videoToDelete = allExerciseVideos.find((v) => v.id === videoId);
       if (!videoToDelete) return;
 
@@ -2370,7 +2364,7 @@ export const useData = (): DataContextType => {
       if (!allExerciseVideos || !Array.isArray(allExerciseVideos)) {
         return [];
       }
-      
+
       return allExerciseVideos
         .filter(
           (v) =>
@@ -2382,7 +2376,7 @@ export const useData = (): DataContextType => {
   );
 
   const incrementVideoView = useCallback(
-    (videoId: string, actingUser: User) => {
+    (videoId: string, _actingUser: User) => {
       setAllExerciseVideos((videos) =>
         videos.map((v) =>
           v.id === videoId
@@ -2401,7 +2395,7 @@ export const useData = (): DataContextType => {
   // === SISTEMA DE IMAGENS ===
 
   const saveExerciseImage = useCallback(
-    (image: Omit<ExerciseImage, 'id'>, actingUser: User) => {
+    (image: Omit<ExerciseImage, 'id'>, _actingUser: User) => {
       const newImage: ExerciseImage = {
         ...image,
         id: `image-${crypto.randomUUID()}`,
@@ -2421,7 +2415,7 @@ export const useData = (): DataContextType => {
   );
 
   const updateExerciseImage = useCallback(
-    (imageId: string, updates: Partial<ExerciseImage>, actingUser: User) => {
+    (imageId: string, updates: Partial<ExerciseImage>, _actingUser: User) => {
       const updatedImages = (allExerciseImages || []).map((img) =>
         img.id === imageId ? { ...img, ...updates } : img
       );
@@ -2438,8 +2432,10 @@ export const useData = (): DataContextType => {
   );
 
   const deleteExerciseImage = useCallback(
-    (imageId: string, actingUser: User) => {
-      const imageToDelete = (allExerciseImages || []).find((img) => img.id === imageId);
+    (imageId: string, _actingUser: User) => {
+      const imageToDelete = (allExerciseImages || []).find(
+        (img) => img.id === imageId
+      );
       if (!imageToDelete) return;
 
       setAllExerciseImages(
@@ -2496,7 +2492,7 @@ export const useData = (): DataContextType => {
         context.saveExerciseLog(log, actingUser);
       }
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const sendChatMessage = useCallback(
@@ -2505,56 +2501,56 @@ export const useData = (): DataContextType => {
         context.sendChatMessage(message, actingUser);
       }
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const saveDocument = useCallback(
     (document: Document) => {
       if (actingUser) context.saveDocument(document, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const deleteDocument = useCallback(
     (documentId: string) => {
       if (actingUser) context.deleteDocument(documentId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const saveCourse = useCallback(
     (course: Course) => {
       if (actingUser) context.saveCourse(course, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const deleteCourse = useCallback(
     (courseId: string) => {
       if (actingUser) context.deleteCourse(courseId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const saveStudentProgress = useCallback(
     (progress: StudentProgress) => {
       if (actingUser) context.saveStudentProgress(progress, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const saveMentorshipSession = useCallback(
     (session: MentorshipSession) => {
       if (actingUser) context.saveMentorshipSession(session, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const deleteMentorshipSession = useCallback(
     (sessionId: string) => {
       if (actingUser) context.deleteMentorshipSession(sessionId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   // Clinical Cases callbacks
@@ -2562,49 +2558,49 @@ export const useData = (): DataContextType => {
     (clinicalCase: ClinicalCase) => {
       if (actingUser) context.saveClinicalCase(clinicalCase, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const deleteClinicalCase = useCallback(
     (caseId: string) => {
       if (actingUser) context.deleteClinicalCase(caseId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const saveCaseAttachment = useCallback(
     (attachment: CaseAttachment) => {
       if (actingUser) context.saveCaseAttachment(attachment, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const deleteCaseAttachment = useCallback(
     (attachmentId: string) => {
       if (actingUser) context.deleteCaseAttachment(attachmentId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const saveCaseComment = useCallback(
     (comment: Omit<CaseComment, 'id' | 'createdAt'>) => {
       if (actingUser) context.saveCaseComment(comment, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const deleteCaseComment = useCallback(
     (commentId: string) => {
       if (actingUser) context.deleteCaseComment(commentId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const likeCaseComment = useCallback(
     (commentId: string) => {
       if (actingUser) context.likeCaseComment(commentId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const recordCaseView = useCallback(
@@ -2612,21 +2608,21 @@ export const useData = (): DataContextType => {
       if (actingUser)
         context.recordCaseView(caseId, duration, completed, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const saveCaseRating = useCallback(
     (rating: Omit<CaseRating, 'id' | 'createdAt'>) => {
       if (actingUser) context.saveCaseRating(rating, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const toggleCaseFavorite = useCallback(
     (caseId: string) => {
       if (actingUser) context.toggleCaseFavorite(caseId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   // Clinical Protocols callbacks
@@ -2634,14 +2630,14 @@ export const useData = (): DataContextType => {
     (protocol: ClinicalProtocol) => {
       if (actingUser) context.saveClinicalProtocol(protocol, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const deleteClinicalProtocol = useCallback(
     (protocolId: string) => {
       if (actingUser) context.deleteClinicalProtocol(protocolId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const prescribeProtocol = useCallback(
@@ -2658,7 +2654,7 @@ export const useData = (): DataContextType => {
           actingUser
         );
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const updatePatientProtocolStatus = useCallback(
@@ -2670,21 +2666,21 @@ export const useData = (): DataContextType => {
           actingUser
         );
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const addProtocolProgressNote = useCallback(
     (note: Omit<ProtocolProgressNote, 'id'>) => {
       if (actingUser) context.addProtocolProgressNote(note, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const updateProtocolOutcome = useCallback(
     (outcome: Omit<ProtocolOutcome, 'id'>) => {
       if (actingUser) context.updateProtocolOutcome(outcome, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const advanceProtocolPhase = useCallback(
@@ -2692,7 +2688,7 @@ export const useData = (): DataContextType => {
       if (actingUser)
         context.advanceProtocolPhase(patientProtocolId, newPhaseId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const customizeProtocolExercise = useCallback(
@@ -2700,21 +2696,21 @@ export const useData = (): DataContextType => {
       if (actingUser)
         context.customizeProtocolExercise(customization, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const saveTimeBlock = useCallback(
     (timeBlock: TimeBlock) => {
       if (actingUser) context.saveTimeBlock(timeBlock, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   const deleteTimeBlock = useCallback(
     (timeBlockId: string) => {
       if (actingUser) context.deleteTimeBlock(timeBlockId, actingUser);
     },
-    [actingUser, context]
+    [_actingUser, context]
   );
 
   // Patient-related data filtering functions
@@ -2769,7 +2765,7 @@ export const useData = (): DataContextType => {
 
   // Alert Management Functions
   const acknowledgeAlert = useCallback(
-    (alertId: string, actingUser: User) => {
+    (alertId: string, _actingUser: User) => {
       if (!actingUser.tenantId) return;
 
       setAllOperationalAlerts((prev) =>
@@ -2799,7 +2795,7 @@ export const useData = (): DataContextType => {
   );
 
   const resolveAlert = useCallback(
-    (alertId: string, actingUser: User) => {
+    (alertId: string, _actingUser: User) => {
       if (!actingUser.tenantId) return;
 
       setAllOperationalAlerts((prev) =>
@@ -2831,7 +2827,7 @@ export const useData = (): DataContextType => {
 
   // Equipment Management Functions
   const saveEquipment = useCallback(
-    (equipment: Equipment, actingUser: User) => {
+    (equipment: Equipment, _actingUser: User) => {
       if (!actingUser.tenantId) return;
 
       const equipmentWithTenant = {
@@ -2875,7 +2871,7 @@ export const useData = (): DataContextType => {
   );
 
   const deleteEquipment = useCallback(
-    (equipmentId: string, actingUser: User) => {
+    (equipmentId: string, _actingUser: User) => {
       if (!actingUser.tenantId) return;
 
       const equipment = allEquipment.find((eq) => eq.id === equipmentId);
@@ -2901,7 +2897,7 @@ export const useData = (): DataContextType => {
     (
       type: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annual' | 'custom',
       period: { start: string; end: string },
-      actingUser: User
+      _actingUser: User
     ) => {
       if (!actingUser.tenantId) return;
 
@@ -3030,17 +3026,14 @@ export const useData = (): DataContextType => {
   );
 
   // === FUNÇÕES DO DIÁRIO DE SINTOMAS ===
-  const symptomDiaryEntries = useMemo(
-    () => {
-      if (!allSymptomDiaryEntries || !Array.isArray(allSymptomDiaryEntries)) {
-        return [];
-      }
-      return allSymptomDiaryEntries.filter(
-        (entry) => entry.tenantId === currentUser?.tenantId
-      );
-    },
-    [allSymptomDiaryEntries, currentUser?.tenantId]
-  );
+  const symptomDiaryEntries = useMemo(() => {
+    if (!allSymptomDiaryEntries || !Array.isArray(allSymptomDiaryEntries)) {
+      return [];
+    }
+    return allSymptomDiaryEntries.filter(
+      (entry) => entry.tenantId === currentUser?.tenantId
+    );
+  }, [allSymptomDiaryEntries, currentUser?.tenantId]);
 
   const addSymptomDiaryEntry = (entryData: any) => {
     if (!currentUser?.tenantId) return;
