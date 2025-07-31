@@ -57,7 +57,9 @@
       "Bash(git -c user.useConfigOnly=true commit --quiet --allow-empty-message --file -)",
       "Bash(git check-ignore:*)",
       "Bash(vercel logs:*)",
-      "WebFetch(domain:fisioflow-cy2yfuc9f-rafael-minattos-projects.vercel.app)"
+      "WebFetch(domain:fisioflow-cy2yfuc9f-rafael-minattos-projects.vercel.app)",
+      "Bash(vercel ls:*)",
+      "WebFetch(domain:fisioflow-b9j7ngl1l-rafael-minattos-projects.vercel.app)"
     ],
     "deny": []
   }
