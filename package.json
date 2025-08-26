@@ -42,7 +42,7 @@
     "idb": "^8.0.3",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
-    "lucide-react": "^0.468.0",
+    "lucide-react": "^0.541.0",
     "qrcode": "^1.5.4",
     "qrcode.js": "^0.0.1",
     "react": "^19.1.1",
