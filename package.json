@@ -82,7 +82,7 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.4",
     "fake-indexeddb": "^6.0.0",
-    "husky": "^8.0.3",
+    "husky": "^9.1.7",
     "identity-obj-proxy": "^3.0.0",
     "jsdom": "^23.0.1",
     "lint-staged": "^15.5.2",
